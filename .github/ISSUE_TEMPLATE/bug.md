@@ -1,7 +1,7 @@
 ---
 name: "bug"
 about: 버그 제보 및 수정
-title: "[FE or BE] "
+title: "[Bug] "
 labels: bug
 assignees: ""
 ---
@@ -19,3 +19,6 @@ assignees: ""
 
 ## 참고 사항
 <!-- 스크린샷, 에러 로그 등 -->
+
+---
+브랜치: `bug/#이슈번호`
