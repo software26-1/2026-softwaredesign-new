@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Backend (Gradle)
+backend/build/
+backend/.gradle/
+backend/out/
+backend/*.class
+
+# Backend (Spring Boot)
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-secret.properties
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
