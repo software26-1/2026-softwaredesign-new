@@ -1,17 +1,16 @@
 import client from '../api/client';
-import type { LoginRequest, LoginResponse } from '../types/user';
 import type { ApiResponse } from '../types/common';
 
 export const authService = {
-  async login(data: LoginRequest): Promise<LoginResponse> {
-    const res = await client.post<ApiResponse<LoginResponse>>('/auth/login', data);
-    return res.data.data;
+  redirectToGoogle(role: string): void {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/oauth2/google?role=${role}`;
   },
 
   async logout(): Promise<void> {
     await client.post('/auth/logout');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   },
 
   async refresh(refreshToken: string): Promise<{ accessToken: string }> {

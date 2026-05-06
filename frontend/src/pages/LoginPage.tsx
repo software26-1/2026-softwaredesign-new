@@ -1,28 +1,21 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/authService';
-import { useAuth } from '../hooks/useAuth';
+
+const ROLE_OPTIONS = [
+  { value: 'teacher', label: '교사' },
+  { value: 'student', label: '학생' },
+  { value: 'parent', label: '학부모' },
+];
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [form, setForm] = useState({ userType: '', loginId: '', password: '' });
+  const [role, setRole] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-    try {
-      const res = await authService.login(form);
-      login(res.user, res.accessToken, res.refreshToken);
-      navigate('/dashboard');
-    } catch {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.');
-    } finally {
-      setIsLoading(false);
+  const handleGoogleLogin = () => {
+    if (!role) {
+      setError('사용자 구분을 선택해주세요.');
+      return;
     }
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/oauth2/google?role=${role}`;
   };
 
   return (
@@ -47,139 +40,77 @@ export function LoginPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div
-            style={{
-              width: '80px',
-              height: '80px',
-              background: 'var(--primary-blue)',
-              borderRadius: '50%',
-              margin: '0 auto 20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '36px',
-            }}
-          >
-            🦈
-          </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--primary-dark)', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1e3a5f', marginBottom: '8px' }}>
             학생 생활기록부 관리
           </h1>
-          <p style={{ fontSize: '14px', color: 'var(--text-gray)' }}>STUDENT RECORD MANAGEMENT SYSTEM</p>
+          <p style={{ fontSize: '14px', color: '#888' }}>STUDENT RECORD MANAGEMENT SYSTEM</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
-              사용자 구분
-            </label>
-            <select
-              required
-              value={form.userType}
-              onChange={(e) => setForm({ ...form, userType: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: '1px solid var(--border-gray)',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: "'Noto Sans KR', sans-serif",
-                background: 'white',
-                outline: 'none',
-              }}
-            >
-              <option value="">선택하세요</option>
-              <option value="teacher">교사</option>
-              <option value="student">학생</option>
-              <option value="parent">학부모</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
-              아이디
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="아이디를 입력하세요"
-              value={form.loginId}
-              onChange={(e) => setForm({ ...form, loginId: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: '1px solid var(--border-gray)',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: "'Noto Sans KR', sans-serif",
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
-              비밀번호
-            </label>
-            <input
-              type="password"
-              required
-              placeholder="비밀번호를 입력하세요"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: '1px solid var(--border-gray)',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: "'Noto Sans KR', sans-serif",
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          {error && (
-            <div
-              style={{
-                padding: '12px 16px',
-                background: '#fdecea',
-                color: 'var(--danger-red)',
-                borderRadius: '4px',
-                fontSize: '14px',
-                marginBottom: '16px',
-                borderLeft: '4px solid var(--danger-red)',
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
+            사용자 구분
+          </label>
+          <select
+            value={role}
+            onChange={(e) => { setRole(e.target.value); setError(''); }}
             style={{
               width: '100%',
-              padding: '14px',
-              background: isLoading ? 'var(--text-gray)' : 'var(--primary-blue)',
-              color: 'white',
-              border: 'none',
+              padding: '12px 16px',
+              border: '1px solid #ddd',
               borderRadius: '4px',
-              fontSize: '16px',
-              fontWeight: 500,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              fontFamily: "'Noto Sans KR', sans-serif",
+              fontSize: '14px',
+              background: 'white',
+              outline: 'none',
             }}
           >
-            {isLoading ? '로그인 중...' : '로그인'}
-          </button>
+            <option value="">선택하세요</option>
+            {ROLE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
 
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <a href="#" style={{ color: 'var(--primary-blue)', textDecoration: 'none', fontSize: '14px' }}>
-              비밀번호 찾기
-            </a>
+        {error && (
+          <div
+            style={{
+              padding: '12px 16px',
+              background: '#fdecea',
+              color: '#e53935',
+              borderRadius: '4px',
+              fontSize: '14px',
+              marginBottom: '16px',
+              borderLeft: '4px solid #e53935',
+            }}
+          >
+            {error}
           </div>
-        </form>
+        )}
+
+        <button
+          onClick={handleGoogleLogin}
+          style={{
+            width: '100%',
+            padding: '14px',
+            background: 'white',
+            color: '#333',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '15px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+          }}
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            style={{ width: '20px', height: '20px' }}
+          />
+          Google 로그인
+        </button>
       </div>
     </div>
   );
