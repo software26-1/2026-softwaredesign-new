@@ -1,7 +1,7 @@
 ---
 name: "feat"
 about: 새로운 기능 구현
-title: "[FE or BE] "
+title: "[Feat] "
 labels: feat
 assignees: ""
 ---
@@ -16,3 +16,6 @@ assignees: ""
 
 ## 참고 사항
 <!-- API 명세, 관련 이슈, 디자인 등 -->
+
+---
+브랜치: `feat/#이슈번호`

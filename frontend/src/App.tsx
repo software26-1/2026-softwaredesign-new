@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './pages/LoginPage';
+import { OAuthCallbackPage } from './pages/OAuthCallbackPage';
+import { ProfileSetupPage } from './pages/ProfileSetupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { StudentSearchPage } from './pages/StudentSearchPage';
 import { GradeManagementPage } from './pages/GradeManagementPage';
@@ -25,6 +27,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/profile-setup" element={<ProfileSetupPage />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/notifications" element={<NotificationPage />} />
