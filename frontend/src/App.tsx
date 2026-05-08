@@ -21,14 +21,18 @@ import { ChildFeedbackPage } from './pages/parent/ChildFeedbackPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { SchoolManagementPage } from './pages/admin/SchoolManagementPage';
 import { MyPage } from './pages/MyPage';
+import { WaitingApprovalPage } from './pages/WaitingApprovalPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         <Route path="/profile-setup" element={<ProfileSetupPage />} />
+        <Route path="/waiting-approval" element={<WaitingApprovalPage />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/notifications" element={<NotificationPage />} />

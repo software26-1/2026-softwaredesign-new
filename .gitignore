@@ -21,3 +21,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env
 frontend/.env.local
+backend/.env
+
+# 로컬 전용 프로젝트 컨텍스트 파일
+.project-context.md
