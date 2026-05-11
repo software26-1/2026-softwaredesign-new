@@ -32,7 +32,7 @@ public class SchoolController {
     // GET /api/schools?school_type=
     @GetMapping
     public ResponseEntity<List<SchoolResponse>> getSchools(
-            @RequestParam(value = "school_type", required = false)SchoolType schoolType) {
+            @RequestParam(value = "school_type", required = false) SchoolType schoolType) {
         List<School> schools = schoolService.getSchools(schoolType);
         List<SchoolResponse> response = schools.stream()
                 .map(SchoolResponse::from)
