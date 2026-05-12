@@ -4,6 +4,13 @@ import com.softwaredesign.schoolsystem.auth.dto.AdminLoginRequest;
 import com.softwaredesign.schoolsystem.auth.dto.ProfileSetupRequest;
 import com.softwaredesign.schoolsystem.auth.dto.TokenResponse;
 import com.softwaredesign.schoolsystem.auth.jwt.JwtProvider;
+import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
+import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
+import com.softwaredesign.schoolsystem.domain.student.entity.Parent;
+import com.softwaredesign.schoolsystem.domain.student.entity.Student;
+import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
+import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
+import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
 import com.softwaredesign.schoolsystem.domain.user.entity.UserRole;
 import com.softwaredesign.schoolsystem.domain.user.entity.UserStatus;
@@ -22,6 +29,9 @@ import java.time.Duration;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final ParentRepository parentRepository;
+    private final StudentRepository studentRepository;
+    private final TeacherRepository teacherRepository;
     private final JwtProvider jwtProvider;
     private final StringRedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
@@ -36,6 +46,16 @@ public class AuthService {
         }
 
         user.setupProfile(request);
+
+        switch (request.getRole()) {
+            case TEACHER -> teacherRepository.save(
+                    Teacher.createTeacher(user, request.getPosition()));
+            case STUDENT -> studentRepository.save(
+                    Student.createStudent(user, null, null, 0));
+            case PARENT -> parentRepository.save(
+                    Parent.createParent(user));
+            default -> {} // ADMIN은 별도 생성 플로우
+        }
     }
 
     // Admin ID/Password 로그인

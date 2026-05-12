@@ -1,16 +1,18 @@
 package com.softwaredesign.schoolsystem.domain.student.entity;
 
+import com.softwaredesign.schoolsystem.common.entity.BaseEntity;
 import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.School;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor
-public class Student {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Student extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,11 +27,18 @@ public class Student {
     private School school;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_group")
+    @JoinColumn(name = "class_group_id")
     private ClassGroup classGroup;
 
     @Column(nullable = false)
     private int studentNumber;
+
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+
+    public void softDelete() {
+        this.isDeleted = true;
+    }
 
     public static Student createStudent(User user, School school, ClassGroup classGroup, int studentNumber) {
         Student student = new Student();

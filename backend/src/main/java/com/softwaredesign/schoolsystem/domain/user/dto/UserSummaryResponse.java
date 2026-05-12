@@ -15,7 +15,6 @@ public class UserSummaryResponse {
     private final String role;
     private final String status;
     private final String schoolName;
-    private final String position;
     private final LocalDateTime createdAt;
 
     public UserSummaryResponse(User user) {
@@ -26,7 +25,6 @@ public class UserSummaryResponse {
         this.role = user.getRole() != null ? user.getRole().name() : null;
         this.status = user.getStatus().name();
         this.schoolName = user.getSchoolName();
-        this.position = user.getPosition();
         this.createdAt = user.getCreatedAt();
     }
 }

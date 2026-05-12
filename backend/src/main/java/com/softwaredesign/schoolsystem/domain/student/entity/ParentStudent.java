@@ -2,12 +2,13 @@ package com.softwaredesign.schoolsystem.domain.student.entity;
 
 import com.softwaredesign.schoolsystem.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ParentStudent extends BaseEntity {
 
     @Id
@@ -15,12 +16,15 @@ public class ParentStudent extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student")
+    @JoinColumn(name = "student_id")
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent")
+    @JoinColumn(name = "parent_id")
     private Parent parent;
+
+    @Column(nullable = false)
+    private boolean isDeleted = false;
 
     public static ParentStudent createParentStudent(Student student, Parent parent) {
         ParentStudent parentStudent = new ParentStudent();
@@ -29,5 +33,9 @@ public class ParentStudent extends BaseEntity {
         parentStudent.parent = parent;
 
         return parentStudent;
+    }
+
+    public void softDelete() {
+        this.isDeleted = true;
     }
 }
