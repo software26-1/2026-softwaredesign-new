@@ -1,6 +1,6 @@
-package com.softwaredesign.schoolsystem.domain.classgroup.dto;
+package com.softwaredesign.schoolsystem.domain.school.dto;
 
-import com.softwaredesign.schoolsystem.domain.classgroup.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

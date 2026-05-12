@@ -1,10 +1,10 @@
-package com.softwaredesign.schoolsystem.domain.classgroup.service;
+package com.softwaredesign.schoolsystem.domain.school.service;
 
-import com.softwaredesign.schoolsystem.domain.classgroup.dto.ClassGroupCreateRequest;
-import com.softwaredesign.schoolsystem.domain.classgroup.dto.ClassGroupResponse;
-import com.softwaredesign.schoolsystem.domain.classgroup.dto.ClassGroupUpdateRequest;
-import com.softwaredesign.schoolsystem.domain.classgroup.entity.ClassGroup;
-import com.softwaredesign.schoolsystem.domain.classgroup.repository.ClassGroupRepository;
+import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupCreateRequest;
+import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupResponse;
+import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupUpdateRequest;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.School;
 import com.softwaredesign.schoolsystem.domain.school.repository.SchoolRepository;
 import lombok.RequiredArgsConstructor;
