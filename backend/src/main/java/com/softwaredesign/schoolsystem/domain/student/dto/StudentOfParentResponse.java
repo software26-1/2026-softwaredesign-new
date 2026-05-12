@@ -1,6 +1,7 @@
 package com.softwaredesign.schoolsystem.domain.student.dto;
 
 import com.softwaredesign.schoolsystem.domain.student.entity.ParentStudent;
+import com.softwaredesign.schoolsystem.domain.student.entity.Relationship;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class StudentOfParentResponse {
     private final Long studentId;
     private final String studentName;
-    private final String relationship;
+    private final Relationship relationship;
 
     public static StudentOfParentResponse from(ParentStudent parentStudent) {
         return new StudentOfParentResponse(

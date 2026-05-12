@@ -23,13 +23,14 @@ public class ParentStudent extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Parent parent;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String relationship;
+    private Relationship relationship;
 
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    public static ParentStudent createParentStudent(Student student, Parent parent, String relationship) {
+    public static ParentStudent createParentStudent(Student student, Parent parent, Relationship relationship) {
         ParentStudent parentStudent = new ParentStudent();
 
         parentStudent.student = student;

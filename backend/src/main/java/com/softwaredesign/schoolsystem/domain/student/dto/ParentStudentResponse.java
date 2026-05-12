@@ -1,6 +1,7 @@
 package com.softwaredesign.schoolsystem.domain.student.dto;
 
 import com.softwaredesign.schoolsystem.domain.student.entity.ParentStudent;
+import com.softwaredesign.schoolsystem.domain.student.entity.Relationship;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +13,7 @@ public class ParentStudentResponse {
     private final Long id;
     private final Long parentId;
     private final Long studentId;
-    private final String relationship;
+    private final Relationship relationship;
     private final LocalDateTime createdAt;
 
     public static ParentStudentResponse from(ParentStudent parentStudent) {
