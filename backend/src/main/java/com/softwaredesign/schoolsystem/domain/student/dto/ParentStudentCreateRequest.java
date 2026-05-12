@@ -14,5 +14,6 @@ public class ParentStudentCreateRequest {
     @NotNull(message = "학생 ID는 필수입니다.")
     private Long studentId;
 
+    @NotNull(message = "관계는 필수입니다.")
     private Relationship relationship;
 }
