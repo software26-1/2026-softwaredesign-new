@@ -40,6 +40,15 @@ public class Student extends BaseEntity {
         this.isDeleted = true;
     }
 
+    public void updateStudent(ClassGroup classGroup, Integer studentNumber) {
+        if (classGroup != null) this.classGroup = classGroup;
+        if (studentNumber != null) this.studentNumber = studentNumber;
+    }
+
+    public void assignSchool(School school) {
+        this.school = school;
+    }
+
     public static Student createStudent(User user, School school, ClassGroup classGroup, int studentNumber) {
         Student student = new Student();
 
