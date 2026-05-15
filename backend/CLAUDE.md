@@ -29,9 +29,13 @@ auth/                    # Google OAuth2 + JWT authentication
   oauth2/                # OAuth2 handlers, CustomOAuth2UserService
   dto/                   # TokenResponse, ProfileSetupRequest, AuthUser (record)
 
-domain/{name}/           # Business domains: user, school, classgroup, student
-  controller/ service/ repository/ entity/ dto/
-  # user, school, classgroup have full CRUD; student has entity only (in progress)
+domain/
+  user/                  # Base User entity, UserAdminController/Service, approval workflow
+  school/                # School, ClassGroup, Teacher, Admin — full CRUD for all four
+  student/               # Student, Parent, ParentStudent — full CRUD
+  academic/              # Curriculum, Course, Enrollment — in progress (controller stub, no service yet)
+  # Placeholder domains (DB tables exist, code not yet implemented):
+  # approval, attendance, counseling, feedback, grade, notification, record, report
 
 config/                  # SecurityConfig, RedisConfig, JpaConfig, FlywayConfig
 common/                  # ApiResponse<T> wrapper, BaseEntity (createdAt/updatedAt)
@@ -43,15 +47,21 @@ common/                  # ApiResponse<T> wrapper, BaseEntity (createdAt/updated
 - **All entities** extend `BaseEntity` which provides `createdAt`/`updatedAt` via JPA auditing.
 - **Domain modules** follow controller → service → repository → entity with separate DTOs.
 - **Admin endpoints** use `@PreAuthorize("hasRole('ADMIN')")`.
-- **Soft-delete entities** (School, ClassGroup, Student, Parent, ParentStudent) use `is_deleted` flag — filter these in queries.
+- **Soft-delete entities** (School, ClassGroup, Student, Parent, ParentStudent, Curriculum, Course, Enrollment) use `is_deleted` flag — filter these in queries.
+- **Enums:** `UserRole` (TEACHER, STUDENT, PARENT, ADMIN), `UserStatus` (PENDING, WAITING_APPROVAL, ACTIVE, INACTIVE), `SchoolType` (MIDDLE, HIGH), `CourseType` (COMMON, ELECTIVE, CAREER), `Relationship` (FATHER, MOTHER, GUARDIAN).
+- **Entity inheritance:** Teacher, Student, Parent, Admin all extend `User`. Course has a ratio constraint (midtermRatio + finalRatio + taskRatio = 100).
 
 ## Database
 
-PostgreSQL 16. Hibernate ddl-auto is `none` — **all schema changes must be Flyway migrations** in `src/main/resources/db/migration/`. Current version: V7 (7 migration files). Next migration should be `V8__description.sql`.
+PostgreSQL 16. Hibernate ddl-auto is `none` — **all schema changes must be Flyway migrations** in `src/main/resources/db/migration/`. Current version: V9 (9 migration files). Next migration should be `V10__description.sql`.
 
 Key tables: `users`, `school`, `teacher`, `student`, `parent`, `admin`, `class_group`, `parent_student`, `curriculum`, `course`, `enrollment`, `grade`, `grade_summary`, `attendance`, `feedback`, `counseling`, `student_record`, `approval_request`, `notification`, `report`.
 
-**Soft-delete pattern:** V7 added `is_deleted` (boolean, default false) to `school`, `class_group`, `student`, `parent_student`, and `parent` tables. Use this flag instead of hard deletes for these entities.
+**Soft-delete pattern:** Many entities use `is_deleted` (boolean, default false). Use this flag instead of hard deletes for these entities.
+
+**Recent migrations:**
+- V8 removed role-specific columns (grade, class_num, student_num, position, etc.) from `users` table.
+- V9 renamed `course.category` → `course_type`, added ratio sum check constraint, removed `enrollment.enrolled_at`.
 
 ## Authentication flow
 
@@ -73,13 +83,3 @@ Key tables: `users`, `school`, `teacher`, `student`, `parent`, `admin`, `class_g
 - `/swagger-ui/**`, `/api-docs/**` — API documentation
 
 **CORS:** Allows `http://localhost:5173` only. Methods: GET/POST/PUT/DELETE/PATCH/OPTIONS. Session management is STATELESS (JWT-based), CSRF is disabled.
-
-## Session Notes
-
-- **feat/#13 브랜치**: 교사/관리자/학생/학부모 CRUD 17개 엔드포인트 구현 완료 (PR #14, closes #11)
-- **구현 완료된 엔드포인트**: Teacher 4개, Admin 4개, Student 5개, ParentStudent 4개
-- **Relationship enum** (`FATHER`, `MOTHER`, `GUARDIAN`) 추가 — `ParentStudent` 엔티티 및 관련 DTO 적용
-- **신규 파일 20개**: DTO 11 + Service 4 + Controller 4 + Enum 1
-- **기존 파일 수정 7개**: Student, ParentStudent 엔티티 + 5개 Repository
-- `graphify-out/` 에 코드베이스 knowledge graph 저장됨 — `/graphify query` 로 탐색 가능
-- **다음 작업**: PR #14 리뷰 후 머지
