@@ -8,7 +8,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 
 @Entity
 @Getter
@@ -80,6 +79,21 @@ public class Course extends BaseEntity {
             throw new IllegalArgumentException(
                     "중간, 기말, 과제 점수 비율의 합은 100이 되어야 합니다. 현재 합: "
                     + (midtermRatio + finalRatio + taskRatio));
+        }
+    }
+
+    public void updateCourse(String courseName, CourseType courseType,
+                             Integer midtermRatio, Integer finalRatio, Integer taskRatio) {
+        if (courseName != null) this.courseName = courseName;
+        if (courseType != null) this.courseType = courseType;
+        if (midtermRatio != null || finalRatio != null || taskRatio != null) {
+            int newMid = midtermRatio != null ? midtermRatio : this.midtermRatio;
+            int newFin = finalRatio != null ? finalRatio : this.finalRatio;
+            int newTask = taskRatio != null ? taskRatio : this.taskRatio;
+            validateRatioSum(newMid, newFin, newTask);
+            this.midtermRatio = newMid;
+            this.finalRatio = newFin;
+            this.taskRatio = newTask;
         }
     }
 
