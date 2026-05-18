@@ -1,7 +1,6 @@
-package com.softwaredesign.schoolsystem.domain.classgroup.entity;
+package com.softwaredesign.schoolsystem.domain.school.entity;
 
 import com.softwaredesign.schoolsystem.common.entity.BaseEntity;
-import com.softwaredesign.schoolsystem.domain.school.entity.School;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,10 +1,10 @@
-package com.softwaredesign.schoolsystem.domain.classgroup.controller;
+package com.softwaredesign.schoolsystem.domain.school.controller;
 
-import com.softwaredesign.schoolsystem.domain.classgroup.dto.ClassGroupCreateRequest;
-import com.softwaredesign.schoolsystem.domain.classgroup.dto.ClassGroupResponse;
-import com.softwaredesign.schoolsystem.domain.classgroup.dto.ClassGroupUpdateRequest;
-import com.softwaredesign.schoolsystem.domain.classgroup.entity.ClassGroup;
-import com.softwaredesign.schoolsystem.domain.classgroup.service.ClassGroupService;
+import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupCreateRequest;
+import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupResponse;
+import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupUpdateRequest;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.service.ClassGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

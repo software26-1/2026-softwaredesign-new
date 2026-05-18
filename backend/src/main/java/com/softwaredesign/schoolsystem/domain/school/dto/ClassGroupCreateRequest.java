@@ -1,4 +1,4 @@
-package com.softwaredesign.schoolsystem.domain.classgroup.dto;
+package com.softwaredesign.schoolsystem.domain.school.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

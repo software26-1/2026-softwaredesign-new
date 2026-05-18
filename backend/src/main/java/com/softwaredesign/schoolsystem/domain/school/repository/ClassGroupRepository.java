@@ -1,7 +1,7 @@
-package com.softwaredesign.schoolsystem.domain.classgroup.repository;
+package com.softwaredesign.schoolsystem.domain.school.repository;
 
 
-import com.softwaredesign.schoolsystem.domain.classgroup.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

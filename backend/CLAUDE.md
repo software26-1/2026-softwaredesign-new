@@ -29,9 +29,9 @@ auth/                    # Google OAuth2 + JWT authentication
   oauth2/                # OAuth2 handlers, CustomOAuth2UserService
   dto/                   # TokenResponse, ProfileSetupRequest, AuthUser (record)
 
-domain/{name}/           # Business domains (currently: user, school)
+domain/{name}/           # Business domains: user, school, classgroup, student
   controller/ service/ repository/ entity/ dto/
-  # Note: school module has entities only — no controller/service/repository yet
+  # user, school, classgroup have full CRUD; student has entity only (in progress)
 
 config/                  # SecurityConfig, RedisConfig, JpaConfig, FlywayConfig
 common/                  # ApiResponse<T> wrapper, BaseEntity (createdAt/updatedAt)
