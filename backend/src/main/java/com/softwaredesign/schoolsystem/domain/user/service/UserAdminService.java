@@ -58,7 +58,7 @@ public class UserAdminService {
 
     public UserSummaryResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = findUser(userId);
-        user.adminUpdate(request.getRole(), request.getName(), request.getPhone(), request.getPosition());
+        user.adminUpdate(request.getRole(), request.getName(), request.getPhone());
         return new UserSummaryResponse(user);
     }
 

@@ -8,5 +8,4 @@ public class UserUpdateRequest {
     private UserRole role;
     private String name;
     private String phone;
-    private String position;
 }
