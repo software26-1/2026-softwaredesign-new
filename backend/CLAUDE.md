@@ -73,3 +73,13 @@ Key tables: `users`, `school`, `teacher`, `student`, `parent`, `admin`, `class_g
 - `/swagger-ui/**`, `/api-docs/**` — API documentation
 
 **CORS:** Allows `http://localhost:5173` only. Methods: GET/POST/PUT/DELETE/PATCH/OPTIONS. Session management is STATELESS (JWT-based), CSRF is disabled.
+
+## Session Notes
+
+- **feat/#13 브랜치**: 교사/관리자/학생/학부모 CRUD 17개 엔드포인트 구현 완료 (PR #14, closes #11)
+- **구현 완료된 엔드포인트**: Teacher 4개, Admin 4개, Student 5개, ParentStudent 4개
+- **Relationship enum** (`FATHER`, `MOTHER`, `GUARDIAN`) 추가 — `ParentStudent` 엔티티 및 관련 DTO 적용
+- **신규 파일 20개**: DTO 11 + Service 4 + Controller 4 + Enum 1
+- **기존 파일 수정 7개**: Student, ParentStudent 엔티티 + 5개 Repository
+- `graphify-out/` 에 코드베이스 knowledge graph 저장됨 — `/graphify query` 로 탐색 가능
+- **다음 작업**: PR #14 리뷰 후 머지

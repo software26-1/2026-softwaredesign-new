@@ -1,0 +1,370 @@
+{
+  "/Users/ijeong/projects/2026-1/backend/gradlew": {
+    "mtime": 1778486654.3342953,
+    "hash": "65578da0358a01f31a6a78dfcf47e2bf"
+  },
+  "/Users/ijeong/projects/2026-1/backend/build.gradle": {
+    "mtime": 1778588781.8578272,
+    "hash": "5d1985bf4b8666e3208983cfe48587e9"
+  },
+  "/Users/ijeong/projects/2026-1/backend/settings.gradle": {
+    "mtime": 1778486654.334933,
+    "hash": "1efb5696d8d4ea8a3d8e1c98a938b427"
+  },
+  "/Users/ijeong/projects/2026-1/backend/design/ERD.sql": {
+    "mtime": 1778488197.2929306,
+    "hash": "6e6ce6c481abf3417a00e9083e75d3d3"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/test/java/com/softwaredesign/schoolsystem/SchoolsystemApplicationTests.java": {
+    "mtime": 1778486654.3439026,
+    "hash": "477fabc480894735fa72a225b9f4ad7b"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V6__align_schema_with_api_spec.sql": {
+    "mtime": 1778489218.1816683,
+    "hash": "66347f15db0140fe6f32f18fa6caeb3f"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V5__test_accounts.sql": {
+    "mtime": 1778486654.3433738,
+    "hash": "751738afca12ea227b0aea774f54081d"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V7__add_is_deleted_and_fix_constraints.sql": {
+    "mtime": 1778500505.0701444,
+    "hash": "c88105bbfffb83e10bdec0fceb755e74"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V4__admin_login_support.sql": {
+    "mtime": 1778486654.3432133,
+    "hash": "b2bbe9d82bfca4b4f7beccd01beb53c0"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V1__create_users_table.sql": {
+    "mtime": 1778486654.3424618,
+    "hash": "9ed5a93f08d67cdf48b77c7933010d70"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V3__create_all_tables.sql": {
+    "mtime": 1778486654.343064,
+    "hash": "f9d9c39f55e0b92bcc453d2698cc05d4"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V2__add_profile_fields.sql": {
+    "mtime": 1778486654.3426037,
+    "hash": "df74b8fdea4c7d093037320eb9c5eb0b"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/db/migration/V8__remove_role_fields_from_users.sql": {
+    "mtime": 1778588320.0597975,
+    "hash": "f62f39fd9fe542bede517444464dcdc9"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/SchoolsystemApplication.java": {
+    "mtime": 1778486654.3355684,
+    "hash": "6a9287d9bac76172be4262fa9e4bac44"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/config/FlywayConfig.java": {
+    "mtime": 1778486654.3394623,
+    "hash": "43dfefeec0457b251f04ae0194a9c74d"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/config/SecurityConfig.java": {
+    "mtime": 1778486654.3399653,
+    "hash": "6759c0916a143b42cbdc90b5fb275429"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/config/RedisConfig.java": {
+    "mtime": 1778486654.3397985,
+    "hash": "e1866fe84ebd3401750b5870b52dbcc7"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/config/JpaConfig.java": {
+    "mtime": 1778486654.339645,
+    "hash": "fc8ee3bdbb90c0b47e5d1672a6efd209"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/dto/RefreshRequest.java": {
+    "mtime": 1778486654.3366058,
+    "hash": "de795d6a692574dfb84136a8201d3def"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/dto/ProfileSetupRequest.java": {
+    "mtime": 1778588056.4298635,
+    "hash": "104564871c7bdec12556f574a44c5845"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/dto/AdminLoginRequest.java": {
+    "mtime": 1778486654.3361332,
+    "hash": "1333c00f7f742f529f5c4853b3eb267c"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/dto/TokenResponse.java": {
+    "mtime": 1778486654.3367481,
+    "hash": "31aef81537159ec9657a6ac8f91f700b"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/dto/AuthUser.java": {
+    "mtime": 1778486654.336295,
+    "hash": "18477b7ea28c4e1065ebf149f5d7295c"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/jwt/JwtAuthFilter.java": {
+    "mtime": 1778486654.3369765,
+    "hash": "86e6ce3bd2888e6c02e17e1ab3cdf3b5"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/jwt/JwtProvider.java": {
+    "mtime": 1778486654.3371353,
+    "hash": "d81752e3afda3b9d9941dd6ddbc244d0"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/oauth2/CustomOAuth2User.java": {
+    "mtime": 1778486654.3373678,
+    "hash": "077d8c05e43ab77a757a5f058843f003"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/oauth2/OAuth2SuccessHandler.java": {
+    "mtime": 1778486654.338012,
+    "hash": "dddcac68ab8e69a085b90856a9fc2c0d"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/oauth2/GoogleOAuth2UserInfo.java": {
+    "mtime": 1778486654.337687,
+    "hash": "df7d332c788156e7da133a058449be29"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/oauth2/CustomOAuth2UserService.java": {
+    "mtime": 1778486654.3375237,
+    "hash": "0c666ba90c4ac5b33f241f6e5b1f0746"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/oauth2/OAuth2FailureHandler.java": {
+    "mtime": 1778486654.3378625,
+    "hash": "dae5bf0cfd9d1e0bf6ad167f30e14bdf"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/controller/AuthController.java": {
+    "mtime": 1778486654.3358896,
+    "hash": "de71dfa0ef2e122c98eeb1348f25abd9"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/auth/service/AuthService.java": {
+    "mtime": 1778587179.2295988,
+    "hash": "5d808fe30fa98e3bb9daa821711ba02a"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/common/response/ApiResponse.java": {
+    "mtime": 1778486654.339144,
+    "hash": "fa66a5971dd550a2bcc35ffe258f0479"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/common/entity/BaseEntity.java": {
+    "mtime": 1778486654.3389177,
+    "hash": "b6891c52c389fa56d7d56102e0944443"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/StudentResponse.java": {
+    "mtime": 1778591166.0270658,
+    "hash": "ea54c4ac0063919d65e73c92bffa7056"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/ParentStudentCreateRequest.java": {
+    "mtime": 1778592548.3648193,
+    "hash": "2165a9f442574c86c73f06ebfc4de473"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/ParentOfStudentResponse.java": {
+    "mtime": 1778592202.9116602,
+    "hash": "be80e3eed02dc3af7a4f5ea046c6087d"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/StudentCreateRequest.java": {
+    "mtime": 1778591168.265603,
+    "hash": "bb855d85ecc1502fc130cd7ccda397d6"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/ParentStudentResponse.java": {
+    "mtime": 1778592207.669078,
+    "hash": "3827c3f869cfb91507fd47f322cb46ee"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/StudentUpdateRequest.java": {
+    "mtime": 1778591169.3140168,
+    "hash": "8e329bee5041fa771b139ddaae7ca551"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/StudentOfParentResponse.java": {
+    "mtime": 1778592205.3076136,
+    "hash": "9b3164fbc6fb40fc304be2a04aac3371"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/repository/StudentRepository.java": {
+    "mtime": 1778591110.3210022,
+    "hash": "fd95249285402972f9efc2a541ffec08"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/repository/ParentRepository.java": {
+    "mtime": 1778591111.5701725,
+    "hash": "6c7a53800323cf348706f2ffe94c64a1"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/repository/ParentStudentRepository.java": {
+    "mtime": 1778591113.254988,
+    "hash": "50c2126e90baebf74dfeace681a55ab5"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/entity/ParentStudent.java": {
+    "mtime": 1778592194.4848497,
+    "hash": "f6d9323e23fadb2624f6470b5dbab325"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/entity/Parent.java": {
+    "mtime": 1778588056.4076278,
+    "hash": "edb5636560e2d5edd4aca04322a0e198"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/entity/Student.java": {
+    "mtime": 1778591090.5893598,
+    "hash": "427f738c631e3f322329e6726d83f592"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/entity/Relationship.java": {
+    "mtime": 1778592189.4134245,
+    "hash": "a659fc75f8019cc42b61709435a7bfa7"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/controller/StudentController.java": {
+    "mtime": 1778591184.8958633,
+    "hash": "a2ae00f6b91dee8f093fd44cc3379a49"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/controller/ParentStudentController.java": {
+    "mtime": 1778591212.9873493,
+    "hash": "aa75e03ab3c89aba7aca67feadc0b6a2"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/service/StudentService.java": {
+    "mtime": 1778591178.2573922,
+    "hash": "dc7d247f82a6fac826d6a9d0bd408e63"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/service/ParentStudentService.java": {
+    "mtime": 1778591207.713326,
+    "hash": "685edade1a9b06e824fc466ce9668b7b"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/dto/UserSummaryResponse.java": {
+    "mtime": 1778586720.3116379,
+    "hash": "be3b0a8e4028b1d805fe908c2ac0c8bc"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/dto/UserUpdateRequest.java": {
+    "mtime": 1778586982.8233263,
+    "hash": "bc693d5d022f961e59ca8d655b833f43"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/repository/UserRepository.java": {
+    "mtime": 1778486654.3415499,
+    "hash": "9e99b61aac84946c761f159f16690d05"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/entity/UserRole.java": {
+    "mtime": 1778486654.341134,
+    "hash": "f9385d88a8e36fe2f9f069456c7cb52a"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/entity/User.java": {
+    "mtime": 1778586720.3169825,
+    "hash": "f21670888df49f6fe1bc478c3bbacaf7"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/entity/UserStatus.java": {
+    "mtime": 1778486654.341285,
+    "hash": "1938d5ae7a1c29c56f84e5db41cdaa38"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/controller/UserAdminController.java": {
+    "mtime": 1778486654.3403795,
+    "hash": "a8b4921b63c3ea1bf2d873dde735642f"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/service/UserAdminService.java": {
+    "mtime": 1778586845.194253,
+    "hash": "e0dff7ed34f633fd625776b593c29901"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/SchoolUpdateRequest.java": {
+    "mtime": 1778515188.1500378,
+    "hash": "946904acc345e17fb477b7f4a7b9bf98"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/ClassGroupResponse.java": {
+    "mtime": 1778582768.5188727,
+    "hash": "ce59210501be864bab9568773c3493fe"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/SchoolCreateRequest.java": {
+    "mtime": 1778515188.1561651,
+    "hash": "30b50b5ed6c2743f424a4c34e4064b24"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/TeacherUpdateRequest.java": {
+    "mtime": 1778591124.5253756,
+    "hash": "8e2d1299214feef37c95b54ab2fa72e7"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/ClassGroupCreateRequest.java": {
+    "mtime": 1778582768.4849854,
+    "hash": "a71f8795148ff1e45d27d9104d6e3ec8"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/SchoolResponse.java": {
+    "mtime": 1778515027.239912,
+    "hash": "b2f7316b6450d0a7ac25f7c7cc945235"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/TeacherResponse.java": {
+    "mtime": 1778591123.3207164,
+    "hash": "12d6ea316686da5953162b38e436b363"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/AdminUpdateRequest.java": {
+    "mtime": 1778591146.6730404,
+    "hash": "94f7615c2eeb3e1c7738548e983d28a8"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/ClassGroupUpdateRequest.java": {
+    "mtime": 1778582768.4998534,
+    "hash": "594806630b654c19154d7d80d4c1045d"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/dto/AdminResponse.java": {
+    "mtime": 1778591145.9091778,
+    "hash": "6e22201e296e6428613bf9f00637ca8c"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/repository/AdminRepository.java": {
+    "mtime": 1778591108.4124386,
+    "hash": "0b6c8bf97d307bd20c5503088aa765ed"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/repository/SchoolRepository.java": {
+    "mtime": 1778517133.2020085,
+    "hash": "1dffe2514bc10f32a8b26192e329bd0a"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/repository/ClassGroupRepository.java": {
+    "mtime": 1778582768.5124342,
+    "hash": "2088c3d69c2654c0163231b9130298ec"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/repository/TeacherRepository.java": {
+    "mtime": 1778591106.5540369,
+    "hash": "2193086ace5eda6bb650e5b736b473b3"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/entity/ClassGroup.java": {
+    "mtime": 1778582768.4784572,
+    "hash": "68c04f71b077e70b1d15aa21e4f51009"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/entity/School.java": {
+    "mtime": 1778515582.7371817,
+    "hash": "12c69fef44f872e0e1ed56b12a3ef96e"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/entity/Admin.java": {
+    "mtime": 1778589346.248883,
+    "hash": "e0fa37287ff6458486fe88b1be9413b5"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/entity/SchoolType.java": {
+    "mtime": 1778501426.1970913,
+    "hash": "5bbdd7ae64f1fc01b4bfcc2eb31e8d72"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/entity/Teacher.java": {
+    "mtime": 1778589346.264585,
+    "hash": "a9e93ffe9e71c7b6040763f82db96340"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/controller/AdminController.java": {
+    "mtime": 1778591156.6768117,
+    "hash": "d9d96885e5960bcc0e506b35cb524176"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/controller/SchoolController.java": {
+    "mtime": 1778526027.4400575,
+    "hash": "81c23e7ad900915f197e5872c897ff27"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/controller/ClassGroupController.java": {
+    "mtime": 1778582768.4716144,
+    "hash": "a71be40c886eef7a3b4c7bec6869993e"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/controller/TeacherController.java": {
+    "mtime": 1778591136.366332,
+    "hash": "70e0ce8a192a3b7122fade3c139d6e71"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/service/ClassGroupService.java": {
+    "mtime": 1778582768.5068998,
+    "hash": "1eedb59ddc4d6ea80bb80b13fbc83ebd"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/service/TeacherService.java": {
+    "mtime": 1778591131.1391356,
+    "hash": "636fda040ec945b335ae45c206408c36"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/service/AdminService.java": {
+    "mtime": 1778591152.4705143,
+    "hash": "b62fc65885822b96f483491ba34f38cd"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/service/SchoolService.java": {
+    "mtime": 1778515582.742445,
+    "hash": "682ff4d393232fbc8507b33473b33c5e"
+  },
+  "/Users/ijeong/projects/2026-1/backend/CLAUDE.md": {
+    "mtime": 1778574942.2140436,
+    "hash": "ebb95f1bf2c75c2b2b00ffb9253ec6b8"
+  },
+  "/Users/ijeong/projects/2026-1/backend/src/main/resources/application.yml": {
+    "mtime": 1778486654.3421645,
+    "hash": "dc6fab55def3e2931224221854fbbc5f"
+  },
+  "/Users/ijeong/projects/2026-1/backend/design/ERD.png": {
+    "mtime": 1778488175.7083704,
+    "hash": "66553fc1738c60545a2c1585824fd34a"
+  },
+  "/Users/ijeong/projects/2026-1/backend/design/RDD.png": {
+    "mtime": 1778488140.6498127,
+    "hash": "f8f8c3a6d43d42be69b697b6d2d62a2c"
+  },
+  "/Users/ijeong/projects/2026-1/backend/design/SystemArchitecture.png": {
+    "mtime": 1778488279.8670876,
+    "hash": "90b4260818cd512ad2274a7c3113f4bc"
+  }
+}
