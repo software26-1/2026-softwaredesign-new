@@ -35,5 +35,10 @@ public class Curriculum extends BaseEntity {
         return curriculum;
     }
 
+    public void updateCurriculum(String curriculumName, SchoolType schoolType) {
+        if (curriculumName != null) this.curriculumName = curriculumName;
+        if (schoolType != null) this.schoolType = schoolType;
+    }
+
     public void softDelete() { this.isDeleted = true; }
 }
