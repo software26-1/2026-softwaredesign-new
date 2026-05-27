@@ -59,4 +59,8 @@ public class Counseling extends BaseEntity {
     public void toggleShared() {
         this.isShared = !this.isShared;
     }
+
+    public void setShared(boolean shared) {
+        this.isShared = shared;
+    }
 }
