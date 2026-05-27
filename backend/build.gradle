@@ -67,6 +67,9 @@ dependencies {
 	implementation 'software.amazon.awssdk:sesv2:2.28.16'   // AWS SES v2 (email)
 	implementation 'com.google.firebase:firebase-admin:9.4.1'   // FCM (push)
 
+	// Report storage (S3 upload, lazy/guarded by config flag)
+	implementation 'software.amazon.awssdk:s3:2.28.16'
+
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
