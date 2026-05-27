@@ -1,5 +1,6 @@
 package com.softwaredesign.schoolsystem.domain.grade.service;
 
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.academic.entity.Enrollment;
 import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
 import com.softwaredesign.schoolsystem.domain.grade.dto.GradeCreateRequest;
@@ -10,6 +11,8 @@ import com.softwaredesign.schoolsystem.domain.grade.repository.GradeRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.event.GradeChangedEvent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
+import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
+import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,6 +31,8 @@ public class GradeService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private final ParentRepository parentRepository;
+    private final ParentStudentRepository parentStudentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -46,7 +51,19 @@ public class GradeService {
         return GradeResponse.from(grade);
     }
 
-    public List<GradeResponse> getGradesByStudent(Long studentId) {
+    public List<GradeResponse> getGradesByStudent(Long studentId, AuthUser authUser) {
+        String role = authUser.role();
+        if ("STUDENT".equals(role)) {
+            Student student = studentRepository.findByUserIdAndIsDeletedFalse(authUser.id())
+                    .orElseThrow(() -> new AccessDeniedException("학생 정보를 찾을 수 없습니다."));
+            studentId = student.getId();
+        } else if ("PARENT".equals(role)) {
+            Long targetStudentId = studentId;
+            parentRepository.findByUserIdAndIsDeletedFalse(authUser.id())
+                    .map(parent -> parentStudentRepository.findAllByParentIdAndIsDeletedFalse(parent.getId()))
+                    .filter(list -> list.stream().anyMatch(ps -> ps.getStudent().getId().equals(targetStudentId)))
+                    .orElseThrow(() -> new AccessDeniedException("자녀의 성적만 조회할 수 있습니다."));
+        }
         return gradeRepository.findByStudentId(studentId).stream()
                 .map(GradeResponse::from)
                 .toList();

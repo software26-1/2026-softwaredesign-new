@@ -72,4 +72,13 @@ public class User extends BaseEntity {
         if (name != null) this.name = name;
         if (phone != null) this.phone = phone;
     }
+
+    public void updateProfile(String name, String phone) {
+        if (name != null && !name.isBlank()) this.name = name;
+        if (phone != null && !phone.isBlank()) this.phone = phone;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }
