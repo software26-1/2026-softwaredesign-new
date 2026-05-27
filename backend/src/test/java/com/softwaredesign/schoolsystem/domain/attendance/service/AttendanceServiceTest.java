@@ -1,5 +1,6 @@
 package com.softwaredesign.schoolsystem.domain.attendance.service;
 
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.attendance.dto.AttendanceCreateRequest;
 import com.softwaredesign.schoolsystem.domain.attendance.dto.AttendanceResponse;
 import com.softwaredesign.schoolsystem.domain.attendance.dto.AttendanceSummaryResponse;
@@ -120,7 +121,8 @@ class AttendanceServiceTest {
         given(attendanceRepository.findByStudentIdAndDateBetween(STUDENT_ID, DATE, DATE))
                 .willReturn(List.of(buildAttendance(AttendanceStatus.PRESENT)));
 
-        List<AttendanceResponse> result = attendanceService.getByStudent(STUDENT_ID, DATE, DATE);
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        List<AttendanceResponse> result = attendanceService.getByStudent(STUDENT_ID, DATE, DATE, teacher);
 
         assertThat(result).hasSize(1);
         verify(attendanceRepository).findByStudentIdAndDateBetween(STUDENT_ID, DATE, DATE);
@@ -132,7 +134,8 @@ class AttendanceServiceTest {
         given(attendanceRepository.findByStudentId(STUDENT_ID))
                 .willReturn(List.of(buildAttendance(AttendanceStatus.PRESENT)));
 
-        List<AttendanceResponse> result = attendanceService.getByStudent(STUDENT_ID, null, null);
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        List<AttendanceResponse> result = attendanceService.getByStudent(STUDENT_ID, null, null, teacher);
 
         assertThat(result).hasSize(1);
         verify(attendanceRepository).findByStudentId(STUDENT_ID);
@@ -160,7 +163,8 @@ class AttendanceServiceTest {
                 buildAttendance(AttendanceStatus.PRESENT)));
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
 
-        AttendanceSummaryResponse summary = attendanceService.getSummary(STUDENT_ID, DATE, DATE);
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        AttendanceSummaryResponse summary = attendanceService.getSummary(STUDENT_ID, DATE, DATE, teacher);
 
         assertThat(summary.getPresent()).isEqualTo(2);
         assertThat(summary.getAbsent()).isEqualTo(1);
@@ -175,7 +179,8 @@ class AttendanceServiceTest {
         given(attendanceRepository.findByStudentIdAndDateBetween(STUDENT_ID, DATE, DATE)).willReturn(List.of());
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> attendanceService.getSummary(STUDENT_ID, DATE, DATE))
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        assertThatThrownBy(() -> attendanceService.getSummary(STUDENT_ID, DATE, DATE, teacher))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("학생");
     }

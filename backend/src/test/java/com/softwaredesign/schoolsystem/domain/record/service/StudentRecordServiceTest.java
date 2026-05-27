@@ -1,5 +1,6 @@
 package com.softwaredesign.schoolsystem.domain.record.service;
 
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordCreateOrUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordResponse;
 import com.softwaredesign.schoolsystem.domain.record.entity.StudentRecord;
@@ -73,7 +74,8 @@ class StudentRecordServiceTest {
         StudentRecord record = StudentRecord.createStudentRecord(student);
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
 
-        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID);
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, teacher);
 
         assertThat(response.getStudentId()).isEqualTo(STUDENT_ID);
         assertThat(response.getStudentName()).isEqualTo("이학생");
@@ -84,7 +86,8 @@ class StudentRecordServiceTest {
     void getByStudent_notFound() {
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> studentRecordService.getByStudent(STUDENT_ID))
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        assertThatThrownBy(() -> studentRecordService.getByStudent(STUDENT_ID, teacher))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("학생부");
     }

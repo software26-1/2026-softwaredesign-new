@@ -1,5 +1,6 @@
 package com.softwaredesign.schoolsystem.domain.grade.service;
 
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.academic.entity.Course;
 import com.softwaredesign.schoolsystem.domain.academic.entity.Enrollment;
 import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
@@ -146,7 +147,8 @@ class GradeServiceTest {
     void getGradesByStudent_success() {
         given(gradeRepository.findByStudentId(STUDENT_ID)).willReturn(List.of(buildGrade()));
 
-        List<GradeResponse> result = gradeService.getGradesByStudent(STUDENT_ID);
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        List<GradeResponse> result = gradeService.getGradesByStudent(STUDENT_ID, teacher);
 
         assertThat(result).hasSize(1);
     }
