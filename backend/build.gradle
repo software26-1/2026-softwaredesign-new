@@ -58,6 +58,10 @@ dependencies {
 	implementation 'com.github.librepdf:openpdf:2.0.3'
 	implementation 'org.apache.poi:poi-ooxml:5.3.0'
 
+	// External notification delivery channels (lazy/guarded by config flags)
+	implementation 'software.amazon.awssdk:sesv2:2.28.16'   // AWS SES v2 (email)
+	implementation 'com.google.firebase:firebase-admin:9.4.1'   // FCM (push)
+
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
