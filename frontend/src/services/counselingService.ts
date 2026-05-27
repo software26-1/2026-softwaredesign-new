@@ -1,15 +1,17 @@
 import client from '../api/client';
-import type { Counseling, CounselingCreateRequest, CounselingSearchParams } from '../types/counseling';
-import type { ApiResponse, PageResponse } from '../types/common';
+import type { Counseling, CounselingCreateRequest } from '../types/counseling';
+import type { ApiResponse } from '../types/common';
 
 export const counselingService = {
-  async search(params: CounselingSearchParams): Promise<PageResponse<Counseling>> {
-    const res = await client.get<ApiResponse<PageResponse<Counseling>>>('/counselings/search', { params });
+  async getByStudent(studentId: number): Promise<Counseling[]> {
+    const res = await client.get<ApiResponse<Counseling[]>>('/counselings', {
+      params: { student_id: studentId },
+    });
     return res.data.data;
   },
 
-  async getMyCounselings(): Promise<Counseling[]> {
-    const res = await client.get<ApiResponse<Counseling[]>>('/counselings');
+  async getShared(params?: { studentName?: string; teacherId?: number; startDate?: string; endDate?: string }): Promise<Counseling[]> {
+    const res = await client.get<ApiResponse<Counseling[]>>('/counselings/shared', { params });
     return res.data.data;
   },
 
@@ -19,7 +21,11 @@ export const counselingService = {
   },
 
   async update(id: number, data: Partial<CounselingCreateRequest>): Promise<Counseling> {
-    const res = await client.put<ApiResponse<Counseling>>(`/counselings/${id}`, data);
+    const res = await client.patch<ApiResponse<Counseling>>(`/counselings/${id}`, data);
     return res.data.data;
+  },
+
+  async delete(id: number): Promise<void> {
+    await client.delete(`/counselings/${id}`);
   },
 };
