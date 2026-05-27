@@ -23,10 +23,7 @@ export function FeedbackPage() {
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
   useEffect(() => {
-    studentService.search({}).then(res => {
-      const list = Array.isArray(res) ? res : (res as { data?: Student[] }).data ?? [];
-      setStudents(list as Student[]);
-    }).catch(() => setStudents([]));
+    studentService.search({}).then(res => setStudents(res.content as Student[])).catch(() => setStudents([]));
   }, []);
 
   useEffect(() => {
@@ -43,8 +40,7 @@ export function FeedbackPage() {
     if (!form.studentId) return;
     setSubmitting(true); setError('');
     try {
-      const created = await feedbackService.create({
-        studentId: Number(form.studentId),
+      const created = await feedbackService.create(Number(form.studentId), {
         category: form.category,
         content: form.content,
         isPublicToStudent: form.isPublicToStudent,
