@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
 import { gradeService } from '../services/gradeService';
-import type { Course } from '../types/grade';
+import type { Course, GradeSummary } from '../types/grade';
 
 type ExamType = 'MIDTERM' | 'FINAL' | 'TASK';
 const EXAM_LABELS: Record<ExamType, string> = { MIDTERM: '중간고사', FINAL: '기말고사', TASK: '수행평가' };
@@ -22,8 +22,6 @@ function calcAchievement(score: number, avg: number, std: number): string {
   return 'C';
 }
 
-interface Enrollment { id: number; studentId: number; studentName: string; studentNumber: number; }
-
 export function GradeManagementPage() {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
@@ -31,7 +29,7 @@ export function GradeManagementPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseId, setCourseId] = useState('');
   const [examType, setExamType] = useState<ExamType>('MIDTERM');
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [enrollments, setEnrollments] = useState<GradeSummary[]>([]);
   const [scores, setScores] = useState<Record<number, number | ''>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -39,7 +37,7 @@ export function GradeManagementPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    gradeService.getCourses(year, semester)
+    gradeService.getCourses()
       .then(setCourses)
       .catch(() => setCourses([]));
   }, [year, semester]);
@@ -69,7 +67,7 @@ export function GradeManagementPage() {
     try {
       const entries = enrollments.filter(e => scores[e.studentId] !== '');
       await Promise.all(entries.map(e =>
-        gradeService.createGrade({ enrollmentId: e.id, examType, score: scores[e.studentId] as number, maxScore: 100 })
+        gradeService.saveGrade(e.studentId, { examType, score: scores[e.studentId] as number, maxScore: 100 })
       ));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
