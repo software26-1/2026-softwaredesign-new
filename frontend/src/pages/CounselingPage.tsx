@@ -22,10 +22,7 @@ export function CounselingPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    studentService.search({}).then(res => {
-      const arr = Array.isArray(res) ? res : (res as { data?: Student[] }).data ?? [];
-      setStudents(arr as Student[]);
-    }).catch(() => setStudents([]));
+    studentService.search({}).then(res => setStudents(res.content as Student[])).catch(() => setStudents([]));
     loadShared();
   }, []);
 
