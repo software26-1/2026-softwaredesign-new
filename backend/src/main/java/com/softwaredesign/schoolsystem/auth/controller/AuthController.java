@@ -2,6 +2,8 @@ package com.softwaredesign.schoolsystem.auth.controller;
 
 import com.softwaredesign.schoolsystem.auth.dto.AdminLoginRequest;
 import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
+import com.softwaredesign.schoolsystem.auth.dto.PasswordChangeRequest;
+import com.softwaredesign.schoolsystem.auth.dto.PasswordResetRequest;
 import com.softwaredesign.schoolsystem.auth.dto.ProfileSetupRequest;
 import com.softwaredesign.schoolsystem.auth.dto.RefreshRequest;
 import com.softwaredesign.schoolsystem.auth.dto.TokenResponse;
@@ -10,6 +12,7 @@ import com.softwaredesign.schoolsystem.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +55,26 @@ public class AuthController {
             @AuthenticationPrincipal AuthUser authUser
     ) {
         authService.logout(authUser.id());
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    // 본인 비밀번호 변경 (현재 비밀번호 확인 후 변경)
+    @PostMapping("/password/change")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody PasswordChangeRequest request
+    ) {
+        authService.changePassword(authUser.id(), request);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    // 관리자용 비밀번호 초기화 (이메일로 대상 지정)
+    @PostMapping("/password/reset")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        authService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

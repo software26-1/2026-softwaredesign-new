@@ -1,6 +1,8 @@
 package com.softwaredesign.schoolsystem.auth.service;
 
 import com.softwaredesign.schoolsystem.auth.dto.AdminLoginRequest;
+import com.softwaredesign.schoolsystem.auth.dto.PasswordChangeRequest;
+import com.softwaredesign.schoolsystem.auth.dto.PasswordResetRequest;
 import com.softwaredesign.schoolsystem.auth.dto.ProfileSetupRequest;
 import com.softwaredesign.schoolsystem.auth.dto.TokenResponse;
 import com.softwaredesign.schoolsystem.auth.jwt.JwtProvider;
@@ -100,6 +102,24 @@ public class AuthService {
             redisTemplate.delete("RT:" + hashedToken);
             redisTemplate.delete("RTU:" + userId);
         }
+    }
+
+    public void changePassword(Long userId, PasswordChangeRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (user.getPassword() == null || !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
+    }
+
+    public void resetPassword(PasswordResetRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자를 찾을 수 없습니다."));
+
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     private TokenResponse issueTokens(User user) {
