@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import type { User } from '../../types/user';
+import { analyticsService } from '../../services/analyticsService';
 
 const stats = [
   { label: '전체 교사', value: '48명', color: '#1e5a99' },
@@ -20,13 +22,46 @@ const roleColor: Record<string, string> = { 교사: '#1e5a99', 학생: '#2e7d32'
 interface Props { user: User }
 
 export function AdminDashboard({ user }: Props) {
+  const [etlRunning, setEtlRunning] = useState(false);
+
+  const handleEtl = async () => {
+    setEtlRunning(true);
+    try {
+      await analyticsService.runEtl();
+      alert('분석 데이터 갱신(ETL)을 완료했습니다.');
+    } catch {
+      alert('ETL 실행에 실패했습니다.');
+    } finally {
+      setEtlRunning(false);
+    }
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>DASHBOARD</p>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', letterSpacing: '-0.02em' }}>
-          안녕하세요, {user.name} 관리자님
-        </h1>
+      <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>DASHBOARD</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', letterSpacing: '-0.02em' }}>
+            안녕하세요, {user.name} 관리자님
+          </h1>
+        </div>
+        <button
+          onClick={handleEtl}
+          disabled={etlRunning}
+          style={{
+            padding: '10px 18px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 600,
+            background: etlRunning ? '#94a3b8' : '#1e5a99',
+            color: '#fff',
+            border: 'none',
+            cursor: etlRunning ? 'default' : 'pointer',
+            fontFamily: "'Noto Sans KR', sans-serif",
+          }}
+        >
+          {etlRunning ? '실행 중...' : '분석 데이터 갱신(ETL 실행)'}
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>

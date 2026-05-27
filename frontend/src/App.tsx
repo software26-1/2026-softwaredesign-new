@@ -12,6 +12,7 @@ import { StudentRecordPage } from './pages/StudentRecordPage';
 import { ReportPage } from './pages/ReportPage';
 import { AttendancePage } from './pages/AttendancePage';
 import { NotificationPage } from './pages/NotificationPage';
+import { AnalyticsDashboardPage } from './pages/AnalyticsDashboardPage';
 import { MyGradesPage } from './pages/student/MyGradesPage';
 import { MyFeedbackPage } from './pages/student/MyFeedbackPage';
 import { MyRecordsPage } from './pages/student/MyRecordsPage';
@@ -35,6 +36,7 @@ function App() {
         <Route path="/waiting-approval" element={<WaitingApprovalPage />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/analytics" element={<AnalyticsDashboardPage />} />
           <Route path="/notifications" element={<NotificationPage />} />
           {/* 교사 */}
           <Route path="/students/search" element={<StudentSearchPage />} />
