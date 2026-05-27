@@ -1,0 +1,11 @@
+# HTTPS(TLS) 오버라이드.
+# 사용: docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
+# 전제: EC2에 Let's Encrypt 인증서가 /etc/letsencrypt/live/54-180-98-245.nip.io/ 에 발급돼 있어야 함.
+services:
+  nginx:
+    volumes:
+      - ./nginx/nginx-tls.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
