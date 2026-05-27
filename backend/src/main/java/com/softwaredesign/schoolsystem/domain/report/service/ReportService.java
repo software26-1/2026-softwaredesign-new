@@ -25,6 +25,7 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final ReportGenerator reportGenerator;
+    private final ReportStorageService reportStorage;
 
     @Transactional
     public ReportResponse create(ReportCreateRequest req, Long userId) {
@@ -34,9 +35,10 @@ public class ReportService {
         Report report = Report.create(requestedBy, req.getReportType(), req.getFileFormat());
         reportRepository.save(report);
 
-        // 동기 생성 (단순화를 위해 @Async 미사용)
-        String path = reportGenerator.generate(report);
-        report.complete(path);
+        // 동기 생성 (단순화를 위해 @Async 미사용) 후 저장소(S3 또는 로컬)에 보관
+        String localPath = reportGenerator.generate(report);
+        String storedPath = reportStorage.persist(report, localPath);
+        report.complete(storedPath);
 
         return ReportResponse.from(report);
     }
@@ -58,14 +60,6 @@ public class ReportService {
     }
 
     public byte[] readBytes(Report report) {
-        try {
-            Path path = Paths.get(report.getFilePath());
-            if (!Files.exists(path)) {
-                throw new IllegalStateException("리포트 파일이 존재하지 않습니다.");
-            }
-            return Files.readAllBytes(path);
-        } catch (IOException e) {
-            throw new IllegalStateException("리포트 파일을 읽을 수 없습니다.", e);
-        }
+        return reportStorage.read(report.getFilePath());
     }
 }

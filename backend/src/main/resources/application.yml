@@ -84,6 +84,12 @@ app:
     push:
       enabled: ${NOTIF_PUSH_ENABLED:false}
       credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
+  report:
+    s3:
+      # true 이면 보고서 파일을 S3에 업로드(경로 s3://bucket/key), false면 로컬 저장
+      enabled: ${REPORT_S3_ENABLED:false}
+      bucket: ${REPORT_S3_BUCKET:}
+      region: ${AWS_REGION:ap-northeast-2}
 
 logging:
   level:
