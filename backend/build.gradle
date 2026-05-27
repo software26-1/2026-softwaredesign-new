@@ -36,6 +36,9 @@ dependencies {
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// Kafka (optional transport for incremental analytics)
+	implementation 'org.springframework.kafka:spring-kafka'
+
 	// PostgreSQL
 	runtimeOnly 'org.postgresql:postgresql'
 

@@ -1,6 +1,7 @@
 package com.softwaredesign.schoolsystem.domain.feedback.service;
 
 import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
+import com.softwaredesign.schoolsystem.domain.analytics.event.FeedbackChangedEvent;
 import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackCreateRequest;
 import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackResponse;
 import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackUpdateRequest;
@@ -14,6 +15,7 @@ import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRe
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ public class FeedbackService {
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final ParentStudentRepository parentStudentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public FeedbackResponse createFeedback(FeedbackCreateRequest request, Long userId) {
@@ -43,6 +46,7 @@ public class FeedbackService {
         Feedback feedback = Feedback.createFeedback(
                 teacher, student, request.getContent(), request.getType(), visibleToStudent, visibleToParent);
         feedbackRepository.save(feedback);
+        eventPublisher.publishEvent(new FeedbackChangedEvent(student.getId()));
         return FeedbackResponse.from(feedback);
     }
 
@@ -83,6 +87,7 @@ public class FeedbackService {
         validateOwner(feedback, userId);
         feedback.updateFeedback(request.getContent(), request.getType(),
                 request.getVisibleToStudent(), request.getVisibleToParent());
+        eventPublisher.publishEvent(new FeedbackChangedEvent(feedback.getStudent().getId()));
         return FeedbackResponse.from(feedback);
     }
 
@@ -91,7 +96,9 @@ public class FeedbackService {
         Feedback feedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> new IllegalArgumentException("피드백을 찾을 수 없습니다."));
         validateOwner(feedback, userId);
+        Long studentId = feedback.getStudent().getId();
         feedbackRepository.delete(feedback);
+        eventPublisher.publishEvent(new FeedbackChangedEvent(studentId));
     }
 
     private void validateOwner(Feedback feedback, Long userId) {

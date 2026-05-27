@@ -8,9 +8,11 @@ import com.softwaredesign.schoolsystem.domain.grade.dto.GradeUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.grade.entity.Grade;
 import com.softwaredesign.schoolsystem.domain.grade.repository.GradeRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
+import com.softwaredesign.schoolsystem.domain.analytics.event.GradeChangedEvent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class GradeService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public GradeResponse createGrade(GradeCreateRequest request, Long userId) {
@@ -39,6 +42,7 @@ public class GradeService {
 
         Grade grade = Grade.createGrade(student, enrollment, request.getScore(), request.getGradeType());
         gradeRepository.save(grade);
+        eventPublisher.publishEvent(new GradeChangedEvent(grade.getStudent().getId()));
         return GradeResponse.from(grade);
     }
 
@@ -62,6 +66,7 @@ public class GradeService {
         validateTeacherPermission(grade.getEnrollment(), userId);
 
         grade.updateGrade(request.getScore(), request.getGradeType());
+        eventPublisher.publishEvent(new GradeChangedEvent(grade.getStudent().getId()));
         return GradeResponse.from(grade);
     }
 
@@ -72,7 +77,9 @@ public class GradeService {
 
         validateTeacherPermission(grade.getEnrollment(), userId);
 
+        Long studentId = grade.getStudent().getId();
         gradeRepository.delete(grade);
+        eventPublisher.publishEvent(new GradeChangedEvent(studentId));
     }
 
     // 해당 수강의 담당 교사인지 검증
