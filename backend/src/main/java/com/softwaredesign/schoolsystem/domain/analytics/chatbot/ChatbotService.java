@@ -41,7 +41,8 @@ public class ChatbotService {
 
     private final FactStudentLearningSummaryRepository learningSummaryRepository;
     private final FactStudentCourseTermRepository courseTermRepository;
-    private final RestClient.Builder restClientBuilder;
+    // 내부에서 직접 생성 (RestClient.Builder 빈에 의존하지 않음 → 빈 부재로 인한 기동 실패 방지)
+    private final RestClient restClient = RestClient.create();
 
     @Transactional(readOnly = true)
     public String chat(Long studentId, String question) {
@@ -52,7 +53,7 @@ public class ChatbotService {
         String systemPrompt = buildSystemPrompt(studentId);
 
         try {
-            JsonNode body = restClientBuilder.build()
+            JsonNode body = restClient
                     .post()
                     .uri(ANTHROPIC_URL)
                     .header("x-api-key", apiKey)
