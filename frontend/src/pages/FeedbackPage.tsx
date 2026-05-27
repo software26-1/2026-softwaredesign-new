@@ -41,6 +41,7 @@ export function FeedbackPage() {
     setSubmitting(true); setError('');
     try {
       const created = await feedbackService.create(Number(form.studentId), {
+        studentId: Number(form.studentId),
         category: form.category,
         content: form.content,
         isPublicToStudent: form.isPublicToStudent,
