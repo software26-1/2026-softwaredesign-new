@@ -61,6 +61,14 @@ app:
     enabled: ${KAFKA_ENABLED:false}
   chatbot:
     enabled: ${CHATBOT_ENABLED:false}
+  notification:
+    email:
+      enabled: ${NOTIF_EMAIL_ENABLED:false}
+      from: ${SES_FROM_EMAIL:no-reply@example.com}
+      region: ${AWS_REGION:ap-northeast-2}
+    push:
+      enabled: ${NOTIF_PUSH_ENABLED:false}
+      credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
 
 logging:
   level:

@@ -4,9 +4,12 @@ import com.softwaredesign.schoolsystem.domain.notification.dto.NotificationRespo
 import com.softwaredesign.schoolsystem.domain.notification.entity.Notification;
 import com.softwaredesign.schoolsystem.domain.notification.entity.NotificationEventType;
 import com.softwaredesign.schoolsystem.domain.notification.repository.NotificationRepository;
+import com.softwaredesign.schoolsystem.domain.notification.sender.NotificationDispatcher;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
 import com.softwaredesign.schoolsystem.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +21,11 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final NotificationDispatcher dispatcher;
 
     @Transactional
     public NotificationResponse create(Long recipientUserId, NotificationEventType eventType,
@@ -28,6 +34,13 @@ public class NotificationService {
                 .orElseThrow(() -> new IllegalArgumentException("수신자를 찾을 수 없습니다."));
         Notification notification = Notification.create(recipient, eventType, title, message);
         notificationRepository.save(notification);
+        // Persistence is the source of truth; external delivery is best-effort.
+        try {
+            dispatcher.dispatch(recipient, title, message);
+        } catch (Exception e) {
+            log.error("[notification] external dispatch failed for user={}: {}",
+                    recipientUserId, e.getMessage());
+        }
         return NotificationResponse.from(notification);
     }
 
