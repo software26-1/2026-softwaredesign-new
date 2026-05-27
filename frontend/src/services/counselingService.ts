@@ -22,4 +22,9 @@ export const counselingService = {
     const res = await client.put<ApiResponse<Counseling>>(`/counselings/${id}`, data);
     return res.data.data;
   },
+
+  async getShared(params?: { studentName?: string }): Promise<Counseling[]> {
+    const res = await client.get<Counseling[]>('/counselings/shared', { params: { student_name: params?.studentName } });
+    return res.data;
+  },
 };

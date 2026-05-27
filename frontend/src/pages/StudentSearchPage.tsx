@@ -38,7 +38,7 @@ export function StudentSearchPage() {
 
   useEffect(() => {
     studentService.search({})
-      .then(setResults)
+      .then(res => setResults(res.content))
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
   }, []);
@@ -46,7 +46,7 @@ export function StudentSearchPage() {
   const fetchStudents = (params: { grade?: number; classNumber?: number; name?: string }) => {
     setLoading(true);
     studentService.search(params)
-      .then(setResults)
+      .then(res => setResults(res.content))
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
   };
@@ -83,7 +83,7 @@ export function StudentSearchPage() {
         .finally(() => setDetailLoading(false));
     } else if (tab === 'counseling') {
       setDetailLoading(true);
-      counselingService.getByStudent(selected.id)
+      counselingService.getShared({ studentName: selected.name })
         .then(setModalCounselings)
         .catch(() => setModalCounselings([]))
         .finally(() => setDetailLoading(false));
