@@ -39,6 +39,14 @@ spring:
               - email
               - profile
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: analytics-consumer
+      auto-offset-reset: latest
+      properties:
+        spring.json.trusted.packages: "com.softwaredesign.schoolsystem.*"
+
 server:
   port: 8080
 
@@ -49,6 +57,10 @@ jwt:
 
 app:
   frontend-url: http://localhost:5173
+  kafka:
+    enabled: ${KAFKA_ENABLED:false}
+  chatbot:
+    enabled: ${CHATBOT_ENABLED:false}
 
 logging:
   level:
