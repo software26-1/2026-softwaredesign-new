@@ -27,7 +27,7 @@ export function TeacherDashboard({ user }: Props) {
 
   useEffect(() => {
     studentService.search({})
-      .then(students => setStudentCount(students.length))
+      .then(students => setStudentCount(students.totalElements))
       .catch(() => setStudentCount(null));
 
     if (teacher.classGroupId) {
