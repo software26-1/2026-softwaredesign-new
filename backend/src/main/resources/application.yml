@@ -49,6 +49,8 @@ spring:
 
 server:
   port: 8080
+  # nginx(TLS) 프록시 뒤에서 X-Forwarded-* 를 신뢰 → OAuth redirect_uri를 https로 생성
+  forward-headers-strategy: framework
 
 management:
   endpoints:
