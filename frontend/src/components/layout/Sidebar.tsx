@@ -36,7 +36,7 @@ const adminNav = [
   { path: '/dashboard', label: '대시보드' },
   { path: '/analytics', label: '학습 분석' },
   { path: '/admin/users', label: '사용자 관리' },
-  { path: '/admin/schools', label: '학교 관리' },
+  { path: '/admin/schools', label: '내 학교 정보' },
   { path: '/notifications', label: '알림' },
 ];
 
