@@ -3,7 +3,12 @@ package com.softwaredesign.schoolsystem.domain.notification.listener;
 import com.softwaredesign.schoolsystem.domain.analytics.event.FeedbackChangedEvent;
 import com.softwaredesign.schoolsystem.domain.analytics.event.GradeChangedEvent;
 import com.softwaredesign.schoolsystem.domain.notification.entity.NotificationEventType;
+import com.softwaredesign.schoolsystem.domain.notification.event.ProfileSetupEvent;
 import com.softwaredesign.schoolsystem.domain.notification.service.NotificationService;
+import com.softwaredesign.schoolsystem.domain.school.entity.Admin;
+import com.softwaredesign.schoolsystem.domain.school.entity.School;
+import com.softwaredesign.schoolsystem.domain.school.repository.AdminRepository;
+import com.softwaredesign.schoolsystem.domain.school.repository.SchoolRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.ParentStudent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
@@ -14,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.util.List;
 
 import java.util.List;
 
@@ -43,6 +50,29 @@ public class NotificationDomainEventListener {
     private final NotificationService notificationService;
     private final StudentRepository studentRepository;
     private final ParentStudentRepository parentStudentRepository;
+    private final AdminRepository adminRepository;
+    private final SchoolRepository schoolRepository;
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onProfileSetup(ProfileSetupEvent event) {
+        if (event.schoolName() == null) return;
+        try {
+            schoolRepository.findBySchoolName(event.schoolName()).ifPresent(school -> {
+                List<Admin> admins = adminRepository.findAllBySchoolIdAndIsDeletedFalse(school.getId());
+                for (Admin admin : admins) {
+                    if (admin.getUser() != null) {
+                        notificationService.notify(
+                                admin.getUser().getId(),
+                                NotificationEventType.APPROVAL,
+                                "교사 가입 승인 요청",
+                                event.userName() + " 선생님이 가입 신청을 완료했습니다. 승인이 필요합니다.");
+                    }
+                }
+            });
+        } catch (Exception e) {
+            log.error("[notify-event] profile setup notification failed: {}", e.getMessage());
+        }
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onGradeChanged(GradeChangedEvent event) {

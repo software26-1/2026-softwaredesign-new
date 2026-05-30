@@ -4,6 +4,7 @@ import com.softwaredesign.schoolsystem.auth.dto.AdminLoginRequest;
 import com.softwaredesign.schoolsystem.auth.dto.ProfileSetupRequest;
 import com.softwaredesign.schoolsystem.auth.dto.TokenResponse;
 import com.softwaredesign.schoolsystem.auth.jwt.JwtProvider;
+import com.softwaredesign.schoolsystem.domain.notification.event.ProfileSetupEvent;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Parent;
@@ -16,6 +17,7 @@ import com.softwaredesign.schoolsystem.domain.user.entity.UserRole;
 import com.softwaredesign.schoolsystem.domain.user.entity.UserStatus;
 import com.softwaredesign.schoolsystem.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final StringRedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 신규 유저: 프로필 설정 완료 → WAITING_APPROVAL 상태로 변경 (승인 후 ACTIVE)
     public void setupProfile(Long userId, ProfileSetupRequest request) {
@@ -56,6 +59,10 @@ public class AuthService {
                     Parent.createParent(user));
             default -> {} // ADMIN은 별도 생성 플로우
         }
+
+        eventPublisher.publishEvent(new ProfileSetupEvent(
+                user.getId(), user.getName(), user.getSchoolName(),
+                request.getRole().name()));
     }
 
     // Admin ID/Password 로그인

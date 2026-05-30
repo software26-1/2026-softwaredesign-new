@@ -9,4 +9,5 @@ import java.util.List;
 public interface SchoolRepository extends JpaRepository<School, Long> {
     List<School> findAllByIsDeletedIsFalse();
     List<School> findAllBySchoolTypeAndIsDeletedFalse(SchoolType schoolType);
+    java.util.Optional<School> findBySchoolName(String schoolName);
 }
