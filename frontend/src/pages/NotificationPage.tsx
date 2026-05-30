@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
 import { notificationService, type Notification } from '../services/notificationService';
 
-type NotiType = 'GRADE' | 'FEEDBACK' | 'COUNSELING' | 'SYSTEM';
-const TYPE_LABELS: Record<string, string> = { GRADE: '성적', FEEDBACK: '피드백', COUNSELING: '상담', SYSTEM: '시스템' };
-const typeBg: Record<string, string> = { GRADE: '#ebf4ff', FEEDBACK: '#e8f5e9', COUNSELING: '#fff3e0', SYSTEM: '#f3e5f5' };
-const typeColor: Record<string, string> = { GRADE: '#1e5a99', FEEDBACK: '#2e7d32', COUNSELING: '#e65100', SYSTEM: '#6a1b9a' };
+type NotiType = 'GRADE_UPDATE' | 'FEEDBACK' | 'COUNSELING' | 'APPROVAL';
+const TYPE_LABELS: Record<string, string> = { GRADE_UPDATE: '성적', FEEDBACK: '피드백', COUNSELING: '상담', APPROVAL: '승인 요청' };
+const typeBg: Record<string, string> = { GRADE_UPDATE: '#ebf4ff', FEEDBACK: '#e8f5e9', COUNSELING: '#fff3e0', APPROVAL: '#f3e5f5' };
+const typeColor: Record<string, string> = { GRADE_UPDATE: '#1e5a99', FEEDBACK: '#2e7d32', COUNSELING: '#e65100', APPROVAL: '#6a1b9a' };
 
 export function NotificationPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'ALL' | NotiType>('ALL');
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export function NotificationPage() {
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-        {(['ALL', 'GRADE', 'FEEDBACK', 'COUNSELING', 'SYSTEM'] as const).map(f => (
+        {(['ALL', 'GRADE_UPDATE', 'FEEDBACK', 'COUNSELING', 'APPROVAL'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             style={{
               padding: '7px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif",
