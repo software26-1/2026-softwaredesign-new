@@ -19,9 +19,7 @@ interface FormState {
   homeroomClassNum: string;
 }
 
-const GRADES = [1, 2, 3, 4, 5, 6];
-const CLASSES = Array.from({ length: 20 }, (_, i) => i + 1);
-const STUDENT_NUMS = Array.from({ length: 50 }, (_, i) => i + 1);
+const GRADES = [1, 2, 3];
 
 function SchoolSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -258,16 +256,14 @@ export function ProfileSetupPage() {
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>학년 / 반 / 번호</label>
               <div style={{ display: 'flex', gap: '10px' }}>
-                {([
-                  { field: 'grade', items: GRADES, suffix: '학년' },
-                  { field: 'classNum', items: CLASSES, suffix: '반' },
-                  { field: 'studentNum', items: STUDENT_NUMS, suffix: '번' },
-                ] as const).map(({ field, items, suffix }) => (
-                  <select key={field} style={{ ...inputStyle, flex: 1 }} required value={form[field]} onChange={set(field)}>
-                    <option value="">-</option>
-                    {items.map(n => <option key={n} value={n}>{n}{suffix}</option>)}
-                  </select>
-                ))}
+                <select style={{ ...inputStyle, flex: 1 }} required value={form.grade} onChange={set('grade')}>
+                  <option value="">학년</option>
+                  {GRADES.map(g => <option key={g} value={g}>{g}학년</option>)}
+                </select>
+                <input style={{ ...inputStyle, flex: 1 }} type="number" min={1} max={99} placeholder="반" required
+                  value={form.classNum} onChange={set('classNum')} />
+                <input style={{ ...inputStyle, flex: 1 }} type="number" min={1} max={99} placeholder="번호" required
+                  value={form.studentNum} onChange={set('studentNum')} />
               </div>
             </div>
           )}
@@ -277,16 +273,14 @@ export function ProfileSetupPage() {
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>자녀 학년 / 반 / 번호</label>
               <div style={{ display: 'flex', gap: '10px' }}>
-                {([
-                  { field: 'grade', items: GRADES, suffix: '학년' },
-                  { field: 'classNum', items: CLASSES, suffix: '반' },
-                  { field: 'studentNum', items: STUDENT_NUMS, suffix: '번' },
-                ] as const).map(({ field, items, suffix }) => (
-                  <select key={field} style={{ ...inputStyle, flex: 1 }} required value={form[field]} onChange={set(field)}>
-                    <option value="">-</option>
-                    {items.map(n => <option key={n} value={n}>{n}{suffix}</option>)}
-                  </select>
-                ))}
+                <select style={{ ...inputStyle, flex: 1 }} required value={form.grade} onChange={set('grade')}>
+                  <option value="">학년</option>
+                  {GRADES.map(g => <option key={g} value={g}>{g}학년</option>)}
+                </select>
+                <input style={{ ...inputStyle, flex: 1 }} type="number" min={1} max={99} placeholder="반" required
+                  value={form.classNum} onChange={set('classNum')} />
+                <input style={{ ...inputStyle, flex: 1 }} type="number" min={1} max={99} placeholder="번호" required
+                  value={form.studentNum} onChange={set('studentNum')} />
               </div>
             </div>
           )}
@@ -329,10 +323,8 @@ export function ProfileSetupPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={labelStyle}>담당 반</label>
-                    <select style={inputStyle} required value={form.homeroomClassNum} onChange={set('homeroomClassNum')}>
-                      <option value="">-</option>
-                      {CLASSES.map(c => <option key={c} value={c}>{c}반</option>)}
-                    </select>
+                    <input style={inputStyle} type="number" min={1} max={99} placeholder="반 입력" required
+                      value={form.homeroomClassNum} onChange={set('homeroomClassNum')} />
                   </div>
                 </div>
               )}
