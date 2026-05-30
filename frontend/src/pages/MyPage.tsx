@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { authService } from '../services/authService';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 
@@ -15,17 +16,28 @@ export function MyPage() {
   const { user } = useAuth();
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
   const [notiSettings, setNotiSettings] = useState({ grade: true, feedback: true, counseling: false, system: true });
 
   if (!user) return null;
 
-  const handlePwChange = (e: React.FormEvent) => {
+  const handlePwChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (pwForm.next !== pwForm.confirm) { setPwMsg('새 비밀번호가 일치하지 않습니다.'); return; }
     if (pwForm.next.length < 8) { setPwMsg('비밀번호는 8자 이상이어야 합니다.'); return; }
-    setPwMsg('비밀번호가 변경되었습니다.');
-    setPwForm({ current: '', next: '', confirm: '' });
-    setTimeout(() => setPwMsg(''), 3000);
+
+    setPwLoading(true);
+    setPwMsg('');
+    try {
+      await authService.changePassword(pwForm.current, pwForm.next);
+      setPwMsg('비밀번호가 변경되었습니다.');
+      setPwForm({ current: '', next: '', confirm: '' });
+      setTimeout(() => setPwMsg(''), 3000);
+    } catch {
+      setPwMsg('비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해 주세요.');
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   return (
@@ -71,7 +83,7 @@ export function MyPage() {
               </div>
             )}
             <div style={{ marginTop: '16px' }}>
-              <Button type="submit" size="sm">변경하기</Button>
+              <Button type="submit" size="sm" disabled={pwLoading}>{pwLoading ? '변경 중...' : '변경하기'}</Button>
             </div>
           </form>
         </Card>
