@@ -18,10 +18,11 @@ public class StudentRecordController {
     private final StudentRecordService studentRecordService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'STUDENT', 'PARENT')")
     public ResponseEntity<StudentRecordResponse> getStudentRecord(
-            @RequestParam(name = "student_id") Long studentId) {
-        return ResponseEntity.ok(studentRecordService.getByStudent(studentId));
+            @RequestParam(name = "student_id", required = false) Long studentId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(studentRecordService.getByStudent(studentId, authUser));
     }
 
     @PostMapping

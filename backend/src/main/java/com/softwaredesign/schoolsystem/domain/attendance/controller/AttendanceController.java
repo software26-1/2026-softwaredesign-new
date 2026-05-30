@@ -1,5 +1,6 @@
 package com.softwaredesign.schoolsystem.domain.attendance.controller;
 
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.attendance.dto.AttendanceCreateRequest;
 import com.softwaredesign.schoolsystem.domain.attendance.dto.AttendanceResponse;
 import com.softwaredesign.schoolsystem.domain.attendance.dto.AttendanceSummaryResponse;
@@ -11,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -33,26 +35,28 @@ public class AttendanceController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'PARENT')")
     public ResponseEntity<List<AttendanceResponse>> getAttendances(
             @RequestParam(name = "student_id", required = false) Long studentId,
             @RequestParam(name = "class_group_id", required = false) Long classGroupId,
             @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @AuthenticationPrincipal AuthUser authUser) {
         if (classGroupId != null && date != null) {
             return ResponseEntity.ok(attendanceService.getByClassGroupAndDate(classGroupId, date));
         }
-        return ResponseEntity.ok(attendanceService.getByStudent(studentId, from, to));
+        return ResponseEntity.ok(attendanceService.getByStudent(studentId, from, to, authUser));
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'PARENT')")
     public ResponseEntity<AttendanceSummaryResponse> getSummary(
-            @RequestParam(name = "student_id") Long studentId,
+            @RequestParam(name = "student_id", required = false) Long studentId,
             @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(attendanceService.getSummary(studentId, from, to));
+            @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(attendanceService.getSummary(studentId, from, to, authUser));
     }
 
     @PatchMapping("/{attendanceId}")
