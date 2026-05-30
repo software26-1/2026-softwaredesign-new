@@ -36,11 +36,11 @@ const POS_STYLE: Record<string, { bg: string; color: string }> = {
   NON_SUBJECT: { bg: '#f3e5f5', color: '#6a1b9a' },
 };
 
-type TabType = 'all' | 'pending' | 'HOMEROOM' | 'SUBJECT' | 'NON_SUBJECT';
+type MainTab = 'all' | 'pending';
+type PosFilter = 'ALL' | 'HOMEROOM' | 'SUBJECT' | 'NON_SUBJECT';
 
-const TABS: { key: TabType; label: string }[] = [
-  { key: 'all',         label: '전체' },
-  { key: 'pending',     label: '승인 대기' },
+const POS_FILTERS: { key: PosFilter; label: string }[] = [
+  { key: 'ALL',         label: '전체' },
   { key: 'HOMEROOM',    label: '담임' },
   { key: 'SUBJECT',     label: '교과담당' },
   { key: 'NON_SUBJECT', label: '비교과' },
@@ -50,7 +50,8 @@ export function UserManagementPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<TabType>('all');
+  const [mainTab, setMainTab] = useState<MainTab>('all');
+  const [posFilter, setPosFilter] = useState<PosFilter>('ALL');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<UserRow | null>(null);
@@ -58,7 +59,7 @@ export function UserManagementPage() {
   const load = async () => {
     setLoading(true); setError('');
     try {
-      const url = tab === 'pending' ? '/admin/users/pending' : '/admin/users';
+      const url = mainTab === 'pending' ? '/admin/users/pending' : '/admin/users';
       const res = await client.get<ApiResponse<UserRow[]>>(url);
       setUsers(res.data.data ?? []);
     } catch {
@@ -68,7 +69,7 @@ export function UserManagementPage() {
     }
   };
 
-  useEffect(() => { load(); }, [tab]);
+  useEffect(() => { load(); }, [mainTab]);
 
   const handleApprove = async (id: number) => {
     setActionLoading(id);
@@ -88,15 +89,14 @@ export function UserManagementPage() {
     finally { setActionLoading(null); }
   };
 
-  const positionFilter = (tab: TabType) =>
-    ['HOMEROOM', 'SUBJECT', 'NON_SUBJECT'].includes(tab) ? tab : null;
-
   const filtered = users.filter(u => {
     const matchSearch = !search || u.name?.includes(search) || u.email?.includes(search);
-    const pos = positionFilter(tab);
-    const matchPos = !pos || u.position === pos;
+    const matchPos = mainTab === 'pending' || posFilter === 'ALL' || u.position === posFilter;
     return matchSearch && matchPos;
   });
+
+  const posCount = (pos: PosFilter) =>
+    pos === 'ALL' ? users.length : users.filter(u => u.position === pos).length;
 
   return (
     <div>
@@ -105,40 +105,58 @@ export function UserManagementPage() {
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>사용자 관리</h1>
       </div>
 
-      {/* 탭 */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); }}
+      {/* 메인 탭 */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
+        {([['all', '전체'], ['pending', '승인 대기']] as const).map(([key, label]) => (
+          <button key={key} onClick={() => { setMainTab(key); setSearch(''); setPosFilter('ALL'); }}
             style={{
-              padding: '8px 18px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+              padding: '8px 20px', borderRadius: '20px', border: 'none', cursor: 'pointer',
               fontSize: '13px', fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif",
-              background: tab === t.key ? '#1e5a99' : '#f1f5f9',
-              color: tab === t.key ? '#fff' : '#64748b',
+              background: mainTab === key ? '#1e5a99' : '#f1f5f9',
+              color: mainTab === key ? '#fff' : '#64748b',
               transition: 'all 0.15s',
             }}>
-            {t.label}
-            {t.key !== 'pending' && (
-              <span style={{ marginLeft: '6px', fontSize: '11px', opacity: 0.8 }}>
-                {t.key === 'all'
-                  ? `${users.length}`
-                  : `${users.filter(u => u.position === t.key).length}`}
-              </span>
-            )}
+            {label}
           </button>
         ))}
       </div>
 
+      {/* 직책 서브 필터 (전체 탭일 때만) */}
+      {mainTab === 'all' && (
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', paddingLeft: '4px' }}>
+          {POS_FILTERS.map(f => (
+            <button key={f.key} onClick={() => setPosFilter(f.key)}
+              style={{
+                padding: '6px 14px', borderRadius: '6px', cursor: 'pointer',
+                fontSize: '12px', fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif",
+                border: posFilter === f.key ? '2px solid #1e5a99' : '1px solid #e2e8f0',
+                background: posFilter === f.key ? '#ebf4ff' : '#fff',
+                color: posFilter === f.key ? '#1e5a99' : '#64748b',
+                transition: 'all 0.12s',
+              }}>
+              {f.label}
+              <span style={{ marginLeft: '5px', fontSize: '11px', opacity: 0.75 }}>
+                {posCount(f.key)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 검색 */}
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', marginBottom: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: '10px' }}>
+      <div style={{ background: '#fff', borderRadius: '10px', padding: '14px 18px', marginBottom: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2} style={{ flexShrink: 0 }}>
+          <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="M21 21l-4.35-4.35"/>
+        </svg>
         <input
           type="text" placeholder="이름 또는 이메일 검색"
           value={search} onChange={e => setSearch(e.target.value)}
-          style={{ padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', flex: 1 }}
+          style={{ border: 'none', outline: 'none', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", flex: 1, color: '#1e293b' }}
         />
         {search && (
           <button onClick={() => setSearch('')}
-            style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: '13px', color: '#64748b', fontFamily: "'Noto Sans KR', sans-serif" }}>
-            초기화
+            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', fontFamily: "'Noto Sans KR', sans-serif" }}>
+            ✕ 초기화
           </button>
         )}
       </div>
@@ -147,6 +165,13 @@ export function UserManagementPage() {
 
       {/* 목록 */}
       <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a2332' }}>
+            {mainTab === 'pending' ? '승인 대기 교사' : posFilter === 'ALL' ? '전체 교사' : `${POSITION_MAP[posFilter]} 교사`}
+          </span>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>총 {filtered.length}명</span>
+        </div>
+
         {loading ? (
           <p style={{ padding: '50px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
         ) : filtered.length === 0 ? (
@@ -158,18 +183,16 @@ export function UserManagementPage() {
             <thead>
               <tr style={{ background: '#f8fafc' }}>
                 {['이름', '이메일', '직책', '상태', ''].map(h => (
-                  <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                  <th key={h} style={{ padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map(u => (
-                <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc' }}
+                <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.1s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#fafcff')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
-                  <td style={{ padding: '14px 20px' }}>
-                    <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '14px' }}>{u.name || '—'}</div>
-                  </td>
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                  <td style={{ padding: '14px 20px', fontWeight: 700, color: '#1e293b', fontSize: '14px' }}>{u.name || '—'}</td>
                   <td style={{ padding: '14px 20px', color: '#64748b', fontSize: '13px' }}>{u.email}</td>
                   <td style={{ padding: '14px 20px' }}>
                     {u.position ? (
