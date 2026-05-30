@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { Modal } from '../../components/common/Modal';
 import client from '../../api/client';
 import type { ApiResponse } from '../../types/common';
 
@@ -8,9 +9,11 @@ interface UserRow {
   id: number;
   name: string;
   email: string;
+  phone?: string;
   role: string;
   schoolName: string;
   status: string;
+  createdAt?: string;
 }
 
 const ROLE_MAP: Record<string, string> = { TEACHER: '교사', STUDENT: '학생', PARENT: '학부모', ADMIN: '관리자' };
@@ -28,6 +31,7 @@ export function UserManagementPage() {
   const [tab, setTab] = useState<'all' | 'pending'>('all');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [selected, setSelected] = useState<UserRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -108,7 +112,7 @@ export function UserManagementPage() {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>{['이름', '이메일', '역할', '학교', '상태', '관리'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+              <tr>{['이름', '이메일', '역할', '학교', '상태', '', '관리'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {filtered.map(u => (
@@ -125,6 +129,9 @@ export function UserManagementPage() {
                     <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: u.status === 'ACTIVE' ? '#e8f5e9' : u.status === 'WAITING_APPROVAL' ? '#fff3e0' : '#f5f5f5', color: u.status === 'ACTIVE' ? '#2e7d32' : u.status === 'WAITING_APPROVAL' ? '#e65100' : '#9e9e9e' }}>
                       {STATUS_MAP[u.status] ?? u.status}
                     </span>
+                  </td>
+                  <td style={tdStyle}>
+                    <Button size="sm" variant="secondary" onClick={() => setSelected(u)}>상세</Button>
                   </td>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', gap: '6px' }}>
@@ -149,6 +156,33 @@ export function UserManagementPage() {
           </table>
         )}
       </Card>
+
+      <Modal isOpen={!!selected} title="사용자 상세 정보" onClose={() => setSelected(null)}>
+        {selected && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[
+              ['이름', selected.name || '—'],
+              ['이메일', selected.email],
+              ['전화번호', selected.phone || '—'],
+              ['역할', ROLE_MAP[selected.role] ?? selected.role],
+              ['학교', selected.schoolName || '—'],
+              ['상태', STATUS_MAP[selected.status] ?? selected.status],
+              ['신청일', selected.createdAt ? selected.createdAt.slice(0, 10) : '—'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
+                <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>{k}</p>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', wordBreak: 'break-all' }}>{v}</p>
+              </div>
+            ))}
+            {selected.status === 'WAITING_APPROVAL' && (
+              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <Button onClick={() => { handleApprove(selected.id); setSelected(null); }}>승인</Button>
+                <Button variant="danger" onClick={() => { handleToggleActive(selected); setSelected(null); }}>거절</Button>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
