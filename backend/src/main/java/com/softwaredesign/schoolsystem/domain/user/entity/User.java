@@ -1,6 +1,7 @@
 package com.softwaredesign.schoolsystem.domain.user.entity;
 
 import com.softwaredesign.schoolsystem.auth.dto.ProfileSetupRequest;
+import com.softwaredesign.schoolsystem.common.encryption.AesEncryptionConverter;
 import com.softwaredesign.schoolsystem.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -35,6 +36,7 @@ public class User extends BaseEntity {
 
     private String schoolName;
 
+    @Convert(converter = AesEncryptionConverter.class)
     private String residentNumber;
     private String password;
 

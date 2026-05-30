@@ -101,6 +101,8 @@ export function ProfileSetupPage() {
     grade: '', classNum: '', studentNum: '',
     position: '', homeroomGrade: '', homeroomClassNum: '',
   });
+  const [ssnFront, setSsnFront] = useState('');
+  const [ssnBack, setSsnBack] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -122,6 +124,7 @@ export function ProfileSetupPage() {
     try {
       const payload: Record<string, unknown> = {
         name: form.name, phone: form.phone, role: form.role, schoolName: form.schoolName,
+        residentNumber: ssnFront && ssnBack ? `${ssnFront}-${ssnBack}` : undefined,
       };
       if (form.role === 'STUDENT' || form.role === 'PARENT') {
         payload.grade = Number(form.grade);
@@ -227,11 +230,21 @@ export function ProfileSetupPage() {
           {/* 주민등록번호 */}
           <div style={{ marginBottom: '16px' }}>
             <label style={labelStyle}>주민등록번호</label>
-            <input
-              style={inputStyle} type="text" placeholder="000000-0000000"
-              value={form.residentNumber} onChange={set('residentNumber')}
-              maxLength={14}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                style={{ ...inputStyle, width: '120px' }}
+                type="text" placeholder="000000" maxLength={6}
+                value={ssnFront}
+                onChange={e => setSsnFront(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+              <span style={{ color: '#94a3b8', fontWeight: 600 }}>-</span>
+              <input
+                style={{ ...inputStyle, width: '140px', letterSpacing: '4px' }}
+                type="password" placeholder="●●●●●●●" maxLength={7}
+                value={ssnBack}
+                onChange={e => setSsnBack(e.target.value.replace(/\D/g, '').slice(0, 7))}
+              />
+            </div>
           </div>
 
           {/* 학교 검색 */}
