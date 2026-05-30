@@ -23,15 +23,12 @@ public class UserAdminService {
     public List<UserSummaryResponse> getUsers(String status, String role, String schoolName) {
         List<User> users;
         if (schoolName != null) {
-            if (status != null && role != null) {
+            // 학교 관리자 뷰: 교사만 표시 (role 파라미터 무시, ADMIN 제외)
+            if (status != null) {
                 users = userRepository.findBySchoolNameAndStatusAndRole(
-                        schoolName, UserStatus.valueOf(status), UserRole.valueOf(role));
-            } else if (status != null) {
-                users = userRepository.findBySchoolNameAndStatus(schoolName, UserStatus.valueOf(status));
-            } else if (role != null) {
-                users = userRepository.findBySchoolNameAndRole(schoolName, UserRole.valueOf(role));
+                        schoolName, UserStatus.valueOf(status), UserRole.TEACHER);
             } else {
-                users = userRepository.findBySchoolName(schoolName);
+                users = userRepository.findBySchoolNameAndRole(schoolName, UserRole.TEACHER);
             }
         } else {
             if (status != null && role != null) {
@@ -44,6 +41,8 @@ public class UserAdminService {
             } else {
                 users = userRepository.findAll();
             }
+            // 항상 ADMIN 계정 제외
+            users = users.stream().filter(u -> u.getRole() != UserRole.ADMIN).toList();
         }
         return users.stream().map(UserSummaryResponse::new).toList();
     }
@@ -51,8 +50,11 @@ public class UserAdminService {
     @Transactional(readOnly = true)
     public List<UserSummaryResponse> getPendingUsers(String schoolName) {
         List<User> users = schoolName != null
-                ? userRepository.findBySchoolNameAndStatus(schoolName, UserStatus.WAITING_APPROVAL)
-                : userRepository.findByStatus(UserStatus.WAITING_APPROVAL);
+                // 학교 관리자: 승인 대기 교사만
+                ? userRepository.findBySchoolNameAndStatusAndRole(
+                        schoolName, UserStatus.WAITING_APPROVAL, UserRole.TEACHER)
+                : userRepository.findByStatus(UserStatus.WAITING_APPROVAL).stream()
+                        .filter(u -> u.getRole() != UserRole.ADMIN).toList();
         return users.stream().map(UserSummaryResponse::new).toList();
     }
 
