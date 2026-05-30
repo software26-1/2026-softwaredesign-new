@@ -20,25 +20,40 @@ public class UserAdminService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<UserSummaryResponse> getUsers(String status, String role) {
+    public List<UserSummaryResponse> getUsers(String status, String role, String schoolName) {
         List<User> users;
-        if (status != null && role != null) {
-            users = userRepository.findByStatusAndRole(
-                    UserStatus.valueOf(status), UserRole.valueOf(role));
-        } else if (status != null) {
-            users = userRepository.findByStatus(UserStatus.valueOf(status));
-        } else if (role != null) {
-            users = userRepository.findByRole(UserRole.valueOf(role));
+        if (schoolName != null) {
+            if (status != null && role != null) {
+                users = userRepository.findBySchoolNameAndStatusAndRole(
+                        schoolName, UserStatus.valueOf(status), UserRole.valueOf(role));
+            } else if (status != null) {
+                users = userRepository.findBySchoolNameAndStatus(schoolName, UserStatus.valueOf(status));
+            } else if (role != null) {
+                users = userRepository.findBySchoolNameAndRole(schoolName, UserRole.valueOf(role));
+            } else {
+                users = userRepository.findBySchoolName(schoolName);
+            }
         } else {
-            users = userRepository.findAll();
+            if (status != null && role != null) {
+                users = userRepository.findByStatusAndRole(
+                        UserStatus.valueOf(status), UserRole.valueOf(role));
+            } else if (status != null) {
+                users = userRepository.findByStatus(UserStatus.valueOf(status));
+            } else if (role != null) {
+                users = userRepository.findByRole(UserRole.valueOf(role));
+            } else {
+                users = userRepository.findAll();
+            }
         }
         return users.stream().map(UserSummaryResponse::new).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<UserSummaryResponse> getPendingUsers() {
-        return userRepository.findByStatus(UserStatus.WAITING_APPROVAL)
-                .stream().map(UserSummaryResponse::new).toList();
+    public List<UserSummaryResponse> getPendingUsers(String schoolName) {
+        List<User> users = schoolName != null
+                ? userRepository.findBySchoolNameAndStatus(schoolName, UserStatus.WAITING_APPROVAL)
+                : userRepository.findByStatus(UserStatus.WAITING_APPROVAL);
+        return users.stream().map(UserSummaryResponse::new).toList();
     }
 
     public UserSummaryResponse approveUser(Long userId) {

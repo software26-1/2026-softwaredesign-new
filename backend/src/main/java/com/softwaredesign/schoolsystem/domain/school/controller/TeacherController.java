@@ -1,5 +1,7 @@
 package com.softwaredesign.schoolsystem.domain.school.controller;
 
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
+import com.softwaredesign.schoolsystem.common.util.AdminSchoolResolver;
 import com.softwaredesign.schoolsystem.domain.school.dto.TeacherResponse;
 import com.softwaredesign.schoolsystem.domain.school.dto.TeacherUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
@@ -7,6 +9,7 @@ import com.softwaredesign.schoolsystem.domain.school.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,10 +22,12 @@ import java.util.Map;
 public class TeacherController {
 
     private final TeacherService teacherService;
+    private final AdminSchoolResolver adminSchoolResolver;
 
     @GetMapping
     public ResponseEntity<List<TeacherResponse>> getTeachers(
-            @RequestParam(value = "school_id", required = false) Long schoolId) {
+            @AuthenticationPrincipal AuthUser authUser) {
+        Long schoolId = adminSchoolResolver.resolveSchoolId(authUser.id());
         List<Teacher> teachers = teacherService.getTeachers(schoolId);
         List<TeacherResponse> response = teachers.stream()
                 .map(TeacherResponse::from)
