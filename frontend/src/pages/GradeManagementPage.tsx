@@ -67,7 +67,7 @@ export function GradeManagementPage() {
     try {
       const entries = enrollments.filter(e => scores[e.studentId] !== '');
       await Promise.all(entries.map(e =>
-        gradeService.saveGrade(e.studentId, { examType, score: scores[e.studentId] as number, maxScore: 100 })
+        gradeService.saveGrade({ studentId: e.studentId, enrollmentId: e.id, score: scores[e.studentId] as number, gradeType: examType })
       ));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
