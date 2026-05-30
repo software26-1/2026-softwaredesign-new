@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card } from '../../components/common/Card';
-import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
+import { Button } from '../../components/common/Button';
 import client from '../../api/client';
 import type { ApiResponse } from '../../types/common';
 
@@ -16,27 +15,48 @@ interface UserRow {
   createdAt?: string;
   updatedAt?: string;
   residentNumber?: string;
+  position?: string;
 }
 
-const ROLE_MAP: Record<string, string> = { TEACHER: '교사', STUDENT: '학생', PARENT: '학부모', ADMIN: '관리자' };
-const STATUS_MAP: Record<string, string> = { ACTIVE: '활성', INACTIVE: '비활성', WAITING_APPROVAL: '승인대기', PENDING: '미완료' };
-const roleBg: Record<string, string> = { TEACHER: '#ebf4ff', STUDENT: '#e8f5e9', PARENT: '#fff3e0', ADMIN: '#f3e5f5' };
-const roleColor: Record<string, string> = { TEACHER: '#1e5a99', STUDENT: '#2e7d32', PARENT: '#e65100', ADMIN: '#6a1b9a' };
+const STATUS_MAP: Record<string, string> = {
+  ACTIVE: '활성', INACTIVE: '비활성', WAITING_APPROVAL: '승인대기', PENDING: '미완료',
+};
+const POSITION_MAP: Record<string, string> = {
+  HOMEROOM: '담임', SUBJECT: '교과담당', NON_SUBJECT: '비교과',
+};
+const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
+  ACTIVE:           { bg: '#e8f5e9', color: '#2e7d32' },
+  INACTIVE:         { bg: '#f5f5f5', color: '#9e9e9e' },
+  WAITING_APPROVAL: { bg: '#fff3e0', color: '#e65100' },
+  PENDING:          { bg: '#f5f5f5', color: '#9e9e9e' },
+};
+const POS_STYLE: Record<string, { bg: string; color: string }> = {
+  HOMEROOM:    { bg: '#ebf4ff', color: '#1e5a99' },
+  SUBJECT:     { bg: '#e8f5e9', color: '#2e7d32' },
+  NON_SUBJECT: { bg: '#f3e5f5', color: '#6a1b9a' },
+};
 
-const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' };
-const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
+type TabType = 'all' | 'pending' | 'HOMEROOM' | 'SUBJECT' | 'NON_SUBJECT';
+
+const TABS: { key: TabType; label: string }[] = [
+  { key: 'all',         label: '전체' },
+  { key: 'pending',     label: '승인 대기' },
+  { key: 'HOMEROOM',    label: '담임' },
+  { key: 'SUBJECT',     label: '교과담당' },
+  { key: 'NON_SUBJECT', label: '비교과' },
+];
 
 export function UserManagementPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'all' | 'pending'>('all');
+  const [tab, setTab] = useState<TabType>('all');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<UserRow | null>(null);
 
   const load = async () => {
-    setLoading(true);
+    setLoading(true); setError('');
     try {
       const url = tab === 'pending' ? '/admin/users/pending' : '/admin/users';
       const res = await client.get<ApiResponse<UserRow[]>>(url);
@@ -52,104 +72,133 @@ export function UserManagementPage() {
 
   const handleApprove = async (id: number) => {
     setActionLoading(id);
-    try {
-      await client.put(`/admin/users/${id}/approve`);
-      await load();
-    } catch { setError('승인 처리 실패'); }
+    try { await client.put(`/admin/users/${id}/approve`); await load(); }
+    catch { setError('승인 처리 실패'); }
     finally { setActionLoading(null); }
   };
 
   const handleToggleActive = async (user: UserRow) => {
     setActionLoading(user.id);
     try {
-      if (user.status === 'ACTIVE') {
-        await client.put(`/admin/users/${user.id}/reject`);
-      } else {
-        await client.put(`/admin/users/${user.id}/approve`);
-      }
+      user.status === 'ACTIVE'
+        ? await client.put(`/admin/users/${user.id}/reject`)
+        : await client.put(`/admin/users/${user.id}/approve`);
       await load();
     } catch { setError('상태 변경 실패'); }
     finally { setActionLoading(null); }
   };
 
-  const filtered = users.filter(u =>
-    u.name?.includes(search) || u.email?.includes(search)
-  );
+  const positionFilter = (tab: TabType) =>
+    ['HOMEROOM', 'SUBJECT', 'NON_SUBJECT'].includes(tab) ? tab : null;
+
+  const filtered = users.filter(u => {
+    const matchSearch = !search || u.name?.includes(search) || u.email?.includes(search);
+    const pos = positionFilter(tab);
+    const matchPos = !pos || u.position === pos;
+    return matchSearch && matchPos;
+  });
 
   return (
     <div>
-      <div style={{ marginBottom: '28px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>USER MANAGEMENT</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>사용자 관리</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        {(['all', 'pending'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            padding: '7px 18px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-            fontSize: '13px', fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif",
-            background: tab === t ? '#1e5a99' : '#f1f5f9',
-            color: tab === t ? '#fff' : '#64748b',
-          }}>
-            {t === 'all' ? '전체' : '승인 대기'}
+      {/* 탭 */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        {TABS.map(t => (
+          <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); }}
+            style={{
+              padding: '8px 18px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+              fontSize: '13px', fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif",
+              background: tab === t.key ? '#1e5a99' : '#f1f5f9',
+              color: tab === t.key ? '#fff' : '#64748b',
+              transition: 'all 0.15s',
+            }}>
+            {t.label}
+            {t.key !== 'pending' && (
+              <span style={{ marginLeft: '6px', fontSize: '11px', opacity: 0.8 }}>
+                {t.key === 'all'
+                  ? `${users.length}`
+                  : `${users.filter(u => u.position === t.key).length}`}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      <Card>
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-          <input
-            type="text" placeholder="이름 또는 이메일 검색"
-            value={search} onChange={e => setSearch(e.target.value)}
-            style={{ padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', flex: 1 }}
-          />
-        </div>
+      {/* 검색 */}
+      <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', marginBottom: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: '10px' }}>
+        <input
+          type="text" placeholder="이름 또는 이메일 검색"
+          value={search} onChange={e => setSearch(e.target.value)}
+          style={{ padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', flex: 1 }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')}
+            style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: '13px', color: '#64748b', fontFamily: "'Noto Sans KR', sans-serif" }}>
+            초기화
+          </button>
+        )}
+      </div>
 
-        {error && <p style={{ color: '#c62828', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
+      {error && <p style={{ color: '#c62828', fontSize: '13px', marginBottom: '10px' }}>{error}</p>}
 
+      {/* 목록 */}
+      <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         {loading ? (
-          <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
+          <p style={{ padding: '50px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
         ) : filtered.length === 0 ? (
-          <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>사용자가 없습니다.</p>
+          <p style={{ padding: '50px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+            {search ? `"${search}" 검색 결과가 없습니다.` : '교사가 없습니다.'}
+          </p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>{['이름', '이메일', '역할', '학교', '상태', '', '관리'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+              <tr style={{ background: '#f8fafc' }}>
+                {['이름', '이메일', '직책', '상태', ''].map(h => (
+                  <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {filtered.map(u => (
-                <tr key={u.id}>
-                  <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{u.name || '—'}</td>
-                  <td style={{ ...tdStyle, color: '#64748b', fontSize: '12px' }}>{u.email}</td>
-                  <td style={tdStyle}>
-                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: roleBg[u.role] ?? '#f1f5f9', color: roleColor[u.role] ?? '#64748b' }}>
-                      {ROLE_MAP[u.role] ?? u.role}
-                    </span>
+                <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#fafcff')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
+                  <td style={{ padding: '14px 20px' }}>
+                    <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '14px' }}>{u.name || '—'}</div>
                   </td>
-                  <td style={{ ...tdStyle, color: '#475569' }}>{u.schoolName || '—'}</td>
-                  <td style={tdStyle}>
-                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: u.status === 'ACTIVE' ? '#e8f5e9' : u.status === 'WAITING_APPROVAL' ? '#fff3e0' : '#f5f5f5', color: u.status === 'ACTIVE' ? '#2e7d32' : u.status === 'WAITING_APPROVAL' ? '#e65100' : '#9e9e9e' }}>
+                  <td style={{ padding: '14px 20px', color: '#64748b', fontSize: '13px' }}>{u.email}</td>
+                  <td style={{ padding: '14px 20px' }}>
+                    {u.position ? (
+                      <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: POS_STYLE[u.position]?.bg ?? '#f1f5f9', color: POS_STYLE[u.position]?.color ?? '#64748b' }}>
+                        {POSITION_MAP[u.position] ?? u.position}
+                      </span>
+                    ) : <span style={{ color: '#cbd5e1', fontSize: '12px' }}>—</span>}
+                  </td>
+                  <td style={{ padding: '14px 20px' }}>
+                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: STATUS_STYLE[u.status]?.bg ?? '#f1f5f9', color: STATUS_STYLE[u.status]?.color ?? '#64748b' }}>
                       {STATUS_MAP[u.status] ?? u.status}
                     </span>
                   </td>
-                  <td style={tdStyle}>
-                    <Button size="sm" variant="secondary" onClick={() => setSelected(u)}>상세</Button>
-                  </td>
-                  <td style={tdStyle}>
+                  <td style={{ padding: '14px 20px' }}>
                     <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => setSelected(u)}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '12px', color: '#475569', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
+                        상세
+                      </button>
                       {u.status === 'WAITING_APPROVAL' && (
-                        <Button size="sm" onClick={() => handleApprove(u.id)} disabled={actionLoading === u.id}>
+                        <button onClick={() => handleApprove(u.id)} disabled={actionLoading === u.id}
+                          style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#1e5a99', cursor: 'pointer', fontSize: '12px', color: '#fff', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
                           승인
-                        </Button>
+                        </button>
                       )}
-                      <Button
-                        size="sm"
-                        variant={u.status === 'ACTIVE' ? 'danger' : 'success'}
-                        onClick={() => handleToggleActive(u)}
-                        disabled={actionLoading === u.id}
-                      >
+                      <button onClick={() => handleToggleActive(u)} disabled={actionLoading === u.id}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: u.status === 'ACTIVE' ? '#fdecea' : '#e8f5e9', cursor: 'pointer', fontSize: '12px', color: u.status === 'ACTIVE' ? '#c62828' : '#2e7d32', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
                         {u.status === 'ACTIVE' ? '비활성화' : '활성화'}
-                      </Button>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -157,9 +206,9 @@ export function UserManagementPage() {
             </tbody>
           </table>
         )}
-      </Card>
+      </div>
 
-      <Modal isOpen={!!selected} title="사용자 상세 정보" onClose={() => setSelected(null)}>
+      <Modal isOpen={!!selected} title="교사 상세 정보" onClose={() => setSelected(null)}>
         {selected && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {[
@@ -167,10 +216,10 @@ export function UserManagementPage() {
               ['이메일', selected.email],
               ['전화번호', selected.phone || '—'],
               ['주민등록번호', selected.residentNumber || '—'],
-              ['역할', ROLE_MAP[selected.role] ?? selected.role],
+              ['직책', selected.position ? POSITION_MAP[selected.position] ?? selected.position : '—'],
               ['학교', selected.schoolName || '—'],
               ['상태', STATUS_MAP[selected.status] ?? selected.status],
-              ['신청일', selected.updatedAt ? selected.updatedAt.slice(0, 10) : (selected.createdAt ? selected.createdAt.slice(0, 10) : '—')],
+              ['신청일', selected.updatedAt ? selected.updatedAt.slice(0, 10) : (selected.createdAt?.slice(0, 10) ?? '—')],
             ].map(([k, v]) => (
               <div key={k} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
                 <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>{k}</p>
