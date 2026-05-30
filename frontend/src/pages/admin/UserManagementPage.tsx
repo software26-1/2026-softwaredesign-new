@@ -14,6 +14,8 @@ interface UserRow {
   schoolName: string;
   status: string;
   createdAt?: string;
+  updatedAt?: string;
+  residentNumber?: string;
 }
 
 const ROLE_MAP: Record<string, string> = { TEACHER: '교사', STUDENT: '학생', PARENT: '학부모', ADMIN: '관리자' };
@@ -164,10 +166,11 @@ export function UserManagementPage() {
               ['이름', selected.name || '—'],
               ['이메일', selected.email],
               ['전화번호', selected.phone || '—'],
+              ['주민등록번호', selected.residentNumber || '—'],
               ['역할', ROLE_MAP[selected.role] ?? selected.role],
               ['학교', selected.schoolName || '—'],
               ['상태', STATUS_MAP[selected.status] ?? selected.status],
-              ['신청일', selected.createdAt ? selected.createdAt.slice(0, 10) : '—'],
+              ['신청일', selected.updatedAt ? selected.updatedAt.slice(0, 10) : (selected.createdAt ? selected.createdAt.slice(0, 10) : '—')],
             ].map(([k, v]) => (
               <div key={k} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
                 <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>{k}</p>

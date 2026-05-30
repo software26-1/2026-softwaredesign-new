@@ -16,6 +16,8 @@ public class UserSummaryResponse {
     private final String status;
     private final String schoolName;
     private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
+    private final String residentNumber;
 
     public UserSummaryResponse(User user) {
         this.id = user.getId();
@@ -26,5 +28,18 @@ public class UserSummaryResponse {
         this.status = user.getStatus().name();
         this.schoolName = user.getSchoolName();
         this.createdAt = user.getCreatedAt();
+        this.updatedAt = user.getUpdatedAt();
+        this.residentNumber = maskResidentNumber(user.getResidentNumber());
+    }
+
+    private static String maskResidentNumber(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        // raw is decrypted plain text: "YYMMDD-NNNNNNN"
+        int dash = raw.indexOf('-');
+        if (dash < 0 || raw.length() <= dash + 1) return raw;
+        String front = raw.substring(0, dash);
+        String back = raw.substring(dash + 1);
+        String masked = back.isEmpty() ? "" : back.charAt(0) + "******";
+        return front + "-" + masked;
     }
 }
