@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
+import { Pagination } from '../components/common/Pagination';
 import { Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS, RadialLinearScale, PointElement,
@@ -14,7 +14,7 @@ import { counselingService } from '../services/counselingService';
 import { analyticsService } from '../services/analyticsService';
 import { studentRecordService } from '../services/studentRecordService';
 import type { StudentDetail } from '../types/student';
-import type { Feedback } from '../types/feedback';
+import type { Feedback, FeedbackCategory } from '../types/feedback';
 import type { Counseling } from '../types/counseling';
 import type { StudentCourseTerm } from '../types/analytics';
 
@@ -22,13 +22,18 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 
 const YEAR = new Date().getFullYear();
 const SEMESTER = new Date().getMonth() < 7 ? 1 : 2;
+const MODAL_PAGE = 5;
+
+const CAT_LABELS: Record<string, string> = { GRADE: '성적', BEHAVIOR: '행동', ATTENDANCE: '출결', ATTITUDE: '태도' };
+const catBg: Record<string, string> = { GRADE: '#ebf4ff', BEHAVIOR: '#e8f5e9', ATTENDANCE: '#fff3e0', ATTITUDE: '#f3e5f5' };
+const catColor: Record<string, string> = { GRADE: '#1e5a99', BEHAVIOR: '#2e7d32', ATTENDANCE: '#e65100', ATTITUDE: '#6a1b9a' };
 
 const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' };
 const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
 const inputStyle: React.CSSProperties = { padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff' };
 
 export function StudentSearchPage() {
-  const [filters, setFilters] = useState({ grade: '', classNumber: '', name: '', contentType: 'all' });
+  const [filters, setFilters] = useState({ grade: '', classNumber: '', name: '' });
   const [allClassGroups, setAllClassGroups] = useState<{ id: number; grade: number; classNumber: number }[]>([]);
   const [results, setResults] = useState<StudentDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +44,17 @@ export function StudentSearchPage() {
   const [modalCourses, setModalCourses] = useState<StudentCourseTerm[]>([]);
   const [modalRecord, setModalRecord] = useState<any | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [courseMap, setCourseMap] = useState<Record<number, string>>({});
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [fbPage, setFbPage] = useState(1);
+  const [coPage, setCoPage] = useState(1);
+
+  const toggleExpand = (key: string) => setExpanded(prev => {
+    const next = new Set(prev);
+    next.has(key) ? next.delete(key) : next.add(key);
+    return next;
+  });
+  const courseName = (key: number, fallback?: string) => courseMap[key] ?? fallback ?? `과목 ${key}`;
 
   useEffect(() => {
     client.get<any>('/users/me').then(r => {
@@ -51,6 +67,12 @@ export function StudentSearchPage() {
           }).catch(() => {});
       }
     }).catch(() => {});
+    // 과목명 매핑(레이더/성적표에서 '과목16' 대신 실제 이름 표시)
+    client.get<any>('/courses/for-class', { params: { academic_year: YEAR, semester: SEMESTER } })
+      .then((r: any) => {
+        const list: any[] = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
+        setCourseMap(Object.fromEntries(list.map((c: any) => [c.id, c.courseName])));
+      }).catch(() => {});
     studentService.search({})
       .then(res => setResults(res))
       .catch(() => setResults([]))
@@ -78,7 +100,7 @@ export function StudentSearchPage() {
   };
 
   const handleReset = () => {
-    setFilters({ grade: '', classNumber: '', name: '', contentType: 'all' });
+    setFilters({ grade: '', classNumber: '', name: '' });
     fetchStudents({});
   };
 
@@ -88,13 +110,13 @@ export function StudentSearchPage() {
     setModalCounselings([]);
     setModalCourses([]);
     setModalRecord(null);
-    // '조회 내용' 필터에 맞춰 상세 모달의 초기 탭 결정
-    const initial = filters.contentType === 'feedback' ? 'feedback'
-      : filters.contentType === 'counseling' ? 'counseling'
-      : filters.contentType === 'record' ? 'record'
-      : 'grade';
-    handleTabChange(initial, s);
+    setExpanded(new Set());
+    setFbPage(1);
+    setCoPage(1);
+    handleTabChange('grade', s);
   };
+
+  const byNewest = (a: string | undefined, b: string | undefined) => (b ?? '').localeCompare(a ?? '');
 
   const handleTabChange = (tab: 'grade' | 'feedback' | 'counseling' | 'record', student?: StudentDetail) => {
     setActiveTab(tab);
@@ -109,13 +131,13 @@ export function StudentSearchPage() {
     } else if (tab === 'feedback') {
       setDetailLoading(true);
       feedbackService.getByStudent(target.id)
-        .then(setModalFeedbacks)
+        .then(list => setModalFeedbacks([...list].sort((a, b) => byNewest(a.createdAt, b.createdAt))))
         .catch(() => setModalFeedbacks([]))
         .finally(() => setDetailLoading(false));
     } else if (tab === 'counseling') {
       setDetailLoading(true);
       counselingService.getShared({ studentName: target.name })
-        .then(setModalCounselings)
+        .then(list => setModalCounselings([...list].sort((a, b) => byNewest(a.counseledAt, b.counseledAt))))
         .catch(() => setModalCounselings([]))
         .finally(() => setDetailLoading(false));
     } else if (tab === 'grade') {
@@ -128,16 +150,19 @@ export function StudentSearchPage() {
   };
 
   const radarData = modalCourses.length > 0 ? {
-    labels: modalCourses.slice(0, 5).map(c => c.courseName ?? `과목${c.courseKey}`),
+    labels: modalCourses.slice(0, 6).map(c => courseName(c.courseKey, c.courseName)),
     datasets: [{
       label: '성적',
-      data: modalCourses.slice(0, 5).map(c => c.avgScore ?? 0),
+      data: modalCourses.slice(0, 6).map(c => c.avgScore ?? 0),
       backgroundColor: 'rgba(30,90,153,0.15)',
       borderColor: '#1e5a99',
       borderWidth: 2,
       pointBackgroundColor: '#1e5a99',
     }],
   } : null;
+
+  const pagedFeedbacks = modalFeedbacks.slice((fbPage - 1) * MODAL_PAGE, fbPage * MODAL_PAGE);
+  const pagedCounselings = modalCounselings.slice((coPage - 1) * MODAL_PAGE, coPage * MODAL_PAGE);
 
   return (
     <div>
@@ -147,7 +172,7 @@ export function StudentSearchPage() {
       </div>
 
       <div style={{ background: '#fff', borderRadius: '10px', padding: '20px 24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
           {[
             { label: '학년', key: 'grade', options: ['1','2','3'].map(v => ({ value: v, label: `${v}학년` })) },
             { label: '반', key: 'classNumber', options: allClassGroups
@@ -171,13 +196,7 @@ export function StudentSearchPage() {
           ))}
           <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생명</label>
-            <input type="text" placeholder="이름 입력" style={{ ...inputStyle, width: '100%' }} value={filters.name} onChange={(e) => setFilters({ ...filters, name: e.target.value })} />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>조회 내용</label>
-            <select style={{ ...inputStyle, width: '100%' }} value={filters.contentType} onChange={(e) => setFilters({ ...filters, contentType: e.target.value })}>
-              {[['all','전체'],['grade','성적'],['feedback','피드백'],['counseling','상담'],['record','학생부']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
+            <input type="text" placeholder="이름 입력" style={{ ...inputStyle, width: '100%' }} value={filters.name} onChange={(e) => setFilters({ ...filters, name: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -196,24 +215,16 @@ export function StudentSearchPage() {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>{['학년/반/번호','이름','최근 성적','피드백','상담 건수',''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+              <tr>{['학년/반/번호','이름','피드백','상담 건수',''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {results.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 결과가 없습니다.</td></tr>
+                <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 결과가 없습니다.</td></tr>
               )}
               {results.map((s) => (
                 <tr key={s.id}>
                   <td style={{ ...tdStyle, color: '#64748b' }}>{s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2,'0')}</td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
-                  <td style={tdStyle}>
-                    {s.recentGradeScore != null ? (
-                      <>
-                        <span style={{ fontWeight: 600, color: '#1e5a99' }}>{s.recentGradeScore}점</span>
-                        {s.recentGradeLevel && <span style={{ marginLeft: '6px' }}><Badge variant="primary">{s.recentGradeLevel}</Badge></span>}
-                      </>
-                    ) : <span style={{ color: '#94a3b8' }}>—</span>}
-                  </td>
                   <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
                   <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
                   <td style={tdStyle}>
@@ -267,10 +278,41 @@ export function StudentSearchPage() {
               <div>
                 {radarData ? (
                   <>
-                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>과목별 성적 분포</p>
-                    <div style={{ maxWidth: '320px', margin: '0 auto' }}>
+                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>과목별 성적 분포</p>
+                    <div style={{ maxWidth: '300px', margin: '0 auto 16px' }}>
                       <Radar data={radarData} options={{ scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }, plugins: { legend: { display: false } } }} />
                     </div>
+                    {/* 과목별 성적 상세표 (작게) */}
+                    <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>과목별 성적 ({YEAR} {SEMESTER}학기)</p>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc' }}>
+                          {['과목', '원점수', '반 평균', '석차', '등급'].map(h => (
+                            <th key={h} style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '11px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...modalCourses].sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0)).map(c => {
+                          const isLetter = c.gradeLevel && isNaN(Number(c.gradeLevel));
+                          return (
+                            <tr key={c.courseKey} style={{ borderBottom: '1px solid #f8fafc' }}>
+                              <td style={{ padding: '7px 10px', fontWeight: 600 }}>{courseName(c.courseKey, c.courseName)}</td>
+                              <td style={{ padding: '7px 10px', fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '-'}</td>
+                              <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classAvgScore?.toFixed(1) ?? '-'}</td>
+                              <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classRank != null ? `${c.classRank}위` : '-'}</td>
+                              <td style={{ padding: '7px 10px' }}>
+                                {c.gradeLevel ? (
+                                  <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: isLetter ? '#e8f5e9' : '#ebf4ff', color: isLetter ? '#2e7d32' : '#1e5a99' }}>
+                                    {isLetter ? c.gradeLevel : `${c.gradeLevel}등급`}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </>
                 ) : (
                   <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>성적 데이터가 없습니다. ETL 실행 후 확인하세요.</p>
@@ -282,15 +324,31 @@ export function StudentSearchPage() {
               <div>
                 {modalFeedbacks.length === 0 ? (
                   <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>작성된 피드백이 없습니다.</p>
-                ) : modalFeedbacks.map((f) => (
-                  <div key={f.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)} · {f.teacherName} 선생님</span>
-                      <span style={{ fontSize: '11px', fontWeight: 600, background: '#ebf4ff', color: '#1e5a99', padding: '2px 8px', borderRadius: '4px' }}>{f.category}</span>
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#334155' }}>{f.content}</p>
-                  </div>
-                ))}
+                ) : (
+                  <>
+                    {pagedFeedbacks.map((f) => {
+                      const key = `fb-${f.id}`;
+                      const long = (f.content?.length ?? 0) > 60;
+                      const open = expanded.has(key);
+                      const cat = f.category as FeedbackCategory;
+                      return (
+                        <div key={f.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)} · {f.teacherName} 선생님</span>
+                            <span style={{ fontSize: '11px', fontWeight: 600, background: catBg[cat] ?? '#ebf4ff', color: catColor[cat] ?? '#1e5a99', padding: '2px 8px', borderRadius: '4px' }}>{CAT_LABELS[cat] ?? cat}</span>
+                          </div>
+                          <p style={{ fontSize: '13px', color: '#334155', whiteSpace: 'pre-wrap', ...(long && !open ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties : {}) }}>{f.content}</p>
+                          {long && (
+                            <button onClick={() => toggleExpand(key)} style={{ marginTop: '4px', background: 'none', border: 'none', color: '#1e5a99', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: "'Noto Sans KR', sans-serif" }}>
+                              {open ? '접기' : '더보기'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <Pagination page={fbPage} totalItems={modalFeedbacks.length} pageSize={MODAL_PAGE} onChange={setFbPage} />
+                  </>
+                )}
               </div>
             )}
 
@@ -298,15 +356,30 @@ export function StudentSearchPage() {
               <div>
                 {modalCounselings.length === 0 ? (
                   <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>상담 내역이 없습니다.</p>
-                ) : modalCounselings.map((c) => (
-                  <div key={c.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', gap: '12px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>{c.counseledAt?.slice(0, 10)}</span>
-                      <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{c.teacherName} 선생님</span>
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#334155', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px' }}>{c.content}</p>
-                  </div>
-                ))}
+                ) : (
+                  <>
+                    {pagedCounselings.map((c) => {
+                      const key = `co-${c.id}`;
+                      const long = (c.content?.length ?? 0) > 60;
+                      const open = expanded.has(key);
+                      return (
+                        <div key={c.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', gap: '12px', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{c.counseledAt?.slice(0, 10)}</span>
+                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{c.teacherName} 선생님</span>
+                          </div>
+                          <p style={{ fontSize: '13px', color: '#334155', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', whiteSpace: 'pre-wrap', ...(long && !open ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties : {}) }}>{c.content}</p>
+                          {long && (
+                            <button onClick={() => toggleExpand(key)} style={{ marginTop: '4px', background: 'none', border: 'none', color: '#1e5a99', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: "'Noto Sans KR', sans-serif" }}>
+                              {open ? '접기' : '더보기'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <Pagination page={coPage} totalItems={modalCounselings.length} pageSize={MODAL_PAGE} onChange={setCoPage} />
+                  </>
+                )}
               </div>
             )}
 
