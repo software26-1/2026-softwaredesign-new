@@ -68,8 +68,14 @@ export function StudentRecordPage() {
       setRecord(updated as RecordData);
       setMsg('학생부가 저장되었습니다.');
       setTimeout(() => setMsg(''), 3000);
-    } catch {
-      setError('저장에 실패했습니다.');
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const serverMsg = e?.response?.data?.message || e?.response?.data?.error;
+      setError(serverMsg
+        ? `저장 실패 (${status ?? ''}): ${serverMsg}`
+        : status === 403
+          ? '저장 실패 (403): 담임 또는 해당 학생을 가르치는 교과 교사만 작성할 수 있습니다. (백엔드 재시작 필요할 수 있음)'
+          : `저장에 실패했습니다. ${status ? `(HTTP ${status})` : ''}`);
     } finally {
       setSubmitting(false);
     }
@@ -136,11 +142,17 @@ export function StudentRecordPage() {
         </form>
       </div>
 
-      {selectedId && record && (
-        <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>{selectedStudent?.name} 학생부 현황</h2>
-          </div>
+      <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>
+            {selectedStudent ? `${selectedStudent.name} 학생부 조회` : '학생부 조회 (학생 선택 시 표시)'}
+          </h2>
+        </div>
+        {!selectedId ? (
+          <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>학생을 선택하면 학생부 기록이 표시됩니다.</p>
+        ) : !record ? (
+          <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>작성된 학생부 기록이 없습니다.</p>
+        ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['특기사항', '비교과 활동', '봉사 시간', '진로 희망'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
             <tbody>
@@ -152,8 +164,8 @@ export function StudentRecordPage() {
               </tr>
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
