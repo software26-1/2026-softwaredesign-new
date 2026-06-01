@@ -14,11 +14,12 @@ export function MyRecordsPage() {
   const [record, setRecord] = useState<RecordItem | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 학생부 GET은 단일 객체를 반환하며, 학생 본인은 토큰으로 식별돼 student_id가 필요 없다.
   useEffect(() => {
     client.get<any>('/student-records')
       .then(r => {
-        const data = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
-        setRecord(data[0] ?? null);
+        const body = r.data?.data ?? r.data;
+        setRecord(body && body.id ? body : null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

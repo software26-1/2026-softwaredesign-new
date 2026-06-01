@@ -21,11 +21,12 @@ public class MyProfileResponse {
     private final String classGroupName;
     private final Integer grade;
     private final Integer classNumber;
+    private final Integer studentNumber;
     private final Long studentId;
     private final Long curriculumId;
     private final String position;
 
-    private MyProfileResponse(User user, Long schoolId, Long classGroupId, String classGroupName, Integer grade, Integer classNumber, Long studentId, Long curriculumId, String position) {
+    private MyProfileResponse(User user, Long schoolId, Long classGroupId, String classGroupName, Integer grade, Integer classNumber, Integer studentNumber, Long studentId, Long curriculumId, String position) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
@@ -39,25 +40,32 @@ public class MyProfileResponse {
         this.classGroupName = classGroupName;
         this.grade = grade;
         this.classNumber = classNumber;
+        this.studentNumber = studentNumber;
         this.studentId = studentId;
         this.curriculumId = curriculumId;
         this.position = position;
     }
 
     public static MyProfileResponse from(User user) {
-        return new MyProfileResponse(user, null, null, null, null, null, null, null, null);
+        return new MyProfileResponse(user, null, null, null, null, null, null, null, null, null);
     }
 
     public static MyProfileResponse from(User user, Long schoolId, Long classGroupId, Integer grade, Integer classNumber, Long curriculumId, String position) {
         String name = grade != null && classNumber != null ? grade + "학년 " + classNumber + "반" : null;
-        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber, null, curriculumId, position);
+        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber, null, null, curriculumId, position);
     }
 
     public static MyProfileResponse fromTeacher(User user, Long curriculumId, String position) {
-        return new MyProfileResponse(user, null, null, null, null, null, null, curriculumId, position);
+        return new MyProfileResponse(user, null, null, null, null, null, null, null, curriculumId, position);
     }
 
     public static MyProfileResponse fromStudent(User user, Long studentId) {
-        return new MyProfileResponse(user, null, null, null, null, null, studentId, null, null);
+        return new MyProfileResponse(user, null, null, null, null, null, null, studentId, null, null);
+    }
+
+    public static MyProfileResponse fromStudent(User user, Long studentId, Long schoolId, Long classGroupId,
+                                                Integer grade, Integer classNumber, Integer studentNumber) {
+        String name = grade != null && classNumber != null ? grade + "학년 " + classNumber + "반" : null;
+        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber, studentNumber, studentId, null, null);
     }
 }

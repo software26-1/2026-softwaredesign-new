@@ -1,28 +1,24 @@
 import { useState, useEffect } from 'react';
 import client from '../../api/client';
-
-interface FeedbackItem {
-  id: number;
-  content: string;
-  type: string;
-  createdAt: string;
-  teacherName?: string;
-  visibleToStudent?: boolean;
-}
+import { feedbackService } from '../../services/feedbackService';
+import type { Feedback } from '../../types/feedback';
 
 const TYPE_LABELS: Record<string, string> = { GRADE: '성적', BEHAVIOR: '행동', ATTENDANCE: '출결', ATTITUDE: '태도' };
 const typeBg: Record<string, string> = { GRADE: '#ebf4ff', BEHAVIOR: '#e8f5e9', ATTENDANCE: '#fff3e0', ATTITUDE: '#f3e5f5' };
 const typeColor: Record<string, string> = { GRADE: '#1e5a99', BEHAVIOR: '#2e7d32', ATTENDANCE: '#e65100', ATTITUDE: '#6a1b9a' };
 
 export function MyFeedbackPage() {
-  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 학생 데이터는 student PK 기준이라 /users/me의 studentId로 조회해야 한다.
   useEffect(() => {
-    client.get<any>('/feedbacks')
+    client.get<any>('/users/me')
       .then(r => {
-        const data = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
-        setFeedbacks(data.filter((f: any) => f.visibleToStudent !== false));
+        const studentId = (r.data?.data ?? r.data)?.studentId;
+        if (!studentId) { setLoading(false); return; }
+        return feedbackService.getByStudent(studentId)
+          .then(list => setFeedbacks(list.filter(f => f.isPublicToStudent)));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -47,8 +43,8 @@ export function MyFeedbackPage() {
             <div key={f.id} style={{ padding: '20px 24px', borderBottom: i < feedbacks.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: typeBg[f.type] ?? '#f5f5f5', color: typeColor[f.type] ?? '#666' }}>
-                    {TYPE_LABELS[f.type] ?? f.type}
+                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: typeBg[f.category] ?? '#f5f5f5', color: typeColor[f.category] ?? '#666' }}>
+                    {TYPE_LABELS[f.category] ?? f.category}
                   </span>
                   {f.teacherName && <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>{f.teacherName} 선생님</span>}
                 </div>

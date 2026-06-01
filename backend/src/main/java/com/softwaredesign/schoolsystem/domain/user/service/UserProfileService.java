@@ -39,7 +39,15 @@ public class UserProfileService {
         }
         if (user.getRole() == UserRole.STUDENT) {
             return studentRepository.findByUserIdAndIsDeletedFalse(userId)
-                    .map(s -> MyProfileResponse.fromStudent(user, s.getId()))
+                    .map(s -> {
+                        ClassGroup cg = s.getClassGroup();
+                        if (cg == null) {
+                            return MyProfileResponse.fromStudent(user, s.getId());
+                        }
+                        return MyProfileResponse.fromStudent(user, s.getId(),
+                                cg.getSchool() != null ? cg.getSchool().getId() : null,
+                                cg.getId(), cg.getGrade(), cg.getClassNumber(), s.getStudentNumber());
+                    })
                     .orElse(MyProfileResponse.from(user));
         }
         return MyProfileResponse.from(user);

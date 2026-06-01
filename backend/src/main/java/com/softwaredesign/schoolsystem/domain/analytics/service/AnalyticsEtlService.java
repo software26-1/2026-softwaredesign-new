@@ -139,6 +139,7 @@ public class AnalyticsEtlService {
                     JOIN public.enrollment e ON e.id = g.enrollment_id AND e.is_deleted = false
                     JOIN public.course c     ON c.id = e.course_id AND c.is_deleted = false
                     JOIN public.student s    ON s.id = e.student_id AND s.is_deleted = false
+                    WHERE g.is_deleted = false
                     GROUP BY e.student_id, c.id, c.evaluation_type, c.academic_year, c.semester, s.class_group_id
                 ),
                 ranked AS (

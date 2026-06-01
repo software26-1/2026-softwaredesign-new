@@ -11,18 +11,25 @@ const tdStyle: React.CSSProperties = { padding: '11px 16px', borderBottom: '1px 
 const filterBtn = (active: boolean): React.CSSProperties => ({ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: active ? '1px solid #1e5a99' : '1px solid #d1d5db', fontFamily: "'Noto Sans KR', sans-serif", background: active ? '#1e5a99' : '#fff', color: active ? '#fff' : '#64748b' });
 
 export function MyGradesPage() {
-  const [year, setYear] = useState<number>(YEAR);
-  const [semester, setSemester] = useState<1 | 2>(1);
   const [studentId, setStudentId] = useState<number | null>(null);
+  const [curGrade, setCurGrade] = useState<number>(1); // 학생의 현재 학년 (재학 학년도 = 올해)
+  const [selGrade, setSelGrade] = useState<number>(1); // 선택한 학년
+  const [semester, setSemester] = useState<1 | 2>(1);
   const [summary, setSummary] = useState<LearningSummary | null>(null);
   const [courses, setCourses] = useState<StudentCourseTerm[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 선택 학년 → 실제 학년도(연도). 현재 학년 = 올해 기준으로 역산.
+  const year = YEAR - (curGrade - selGrade);
 
   useEffect(() => {
     client.get<any>('/users/me').then(r => {
       const profile = r.data?.data ?? r.data;
       if (profile?.studentId) setStudentId(profile.studentId);
       else setLoading(false);
+      const g = profile?.grade ?? 1;
+      setCurGrade(g);
+      setSelGrade(g);
     }).catch(() => setLoading(false));
   }, []);
 
@@ -53,9 +60,8 @@ export function MyGradesPage() {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>내 성적 조회</h1>
         </div>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>학년도</span>
-          {[YEAR, YEAR - 1, YEAR - 2].map(y => (
-            <button key={y} onClick={() => setYear(y)} style={filterBtn(year === y)}>{y}</button>
+          {Array.from({ length: curGrade }, (_, i) => i + 1).map(g => (
+            <button key={g} onClick={() => setSelGrade(g)} style={filterBtn(selGrade === g)}>{g}학년</button>
           ))}
           <span style={{ width: '1px', height: '20px', background: '#e2e8f0', margin: '0 4px' }} />
           {([1, 2] as const).map(s => (
@@ -68,7 +74,7 @@ export function MyGradesPage() {
         <p style={{ color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
       ) : courses.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: '10px', padding: '60px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>{year}학년도 {semester}학기 성적 데이터가 없습니다.</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>{selGrade}학년 {semester}학기 성적 데이터가 없습니다.</p>
         </div>
       ) : (
         <>

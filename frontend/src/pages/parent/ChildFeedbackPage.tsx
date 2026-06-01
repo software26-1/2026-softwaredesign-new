@@ -9,9 +9,10 @@ interface FeedbackItem {
   teacherName?: string;
 }
 
-const TYPE_LABELS: Record<string, string> = { GRADE: '성적', BEHAVIOR: '행동', ATTENDANCE: '출결', ATTITUDE: '태도' };
-const typeBg: Record<string, string> = { GRADE: '#ebf4ff', BEHAVIOR: '#e8f5e9', ATTENDANCE: '#fff3e0', ATTITUDE: '#f3e5f5' };
-const typeColor: Record<string, string> = { GRADE: '#1e5a99', BEHAVIOR: '#2e7d32', ATTENDANCE: '#e65100', ATTITUDE: '#6a1b9a' };
+// 백엔드 FeedbackType은 ACADEMIC(=성적)/BEHAVIOR/ATTENDANCE/ATTITUDE. GRADE는 프론트 별칭.
+const TYPE_LABELS: Record<string, string> = { ACADEMIC: '성적', GRADE: '성적', BEHAVIOR: '행동', ATTENDANCE: '출결', ATTITUDE: '태도' };
+const typeBg: Record<string, string> = { ACADEMIC: '#ebf4ff', GRADE: '#ebf4ff', BEHAVIOR: '#e8f5e9', ATTENDANCE: '#fff3e0', ATTITUDE: '#f3e5f5' };
+const typeColor: Record<string, string> = { ACADEMIC: '#1e5a99', GRADE: '#1e5a99', BEHAVIOR: '#2e7d32', ATTENDANCE: '#e65100', ATTITUDE: '#6a1b9a' };
 
 export function ChildFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);

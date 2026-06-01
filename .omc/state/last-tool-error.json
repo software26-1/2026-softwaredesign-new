@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"git add -A && git commit -m \\\"$(cat <<'EOF'\\n[Feat] 교사 기능 집중 구현: 대시보드·학급관리·성적·출결·학급분석 완료\\n\\n## 구현 완료 (5개 기능)\\n- 대시보드: 담당 학급/학생 수/위험군 표시\\n- 학급 관리: 학생 명단·과목 배정·가입 승인·전학 관리 (4탭)\\n- 성적 관리: 과목/...",
-  "error": "Exit code 1\n[main 440fcec] [Feat] 교사 기능 집중 구현: 대시보드·학급관리·성적·출결·학급분석 완료\n Committer: 강민서 <gangminseo@gangminseoui-MacBookPro.local>\nYour name and email address were configured automatically based\non your username and hostname. Please check that they are accurate.\nYou can suppress this message by setting them explicitly:\n\n    git config --global user.name \"Your Name\"\n    git config --global user.email you@example.com\n\nAfter doing this, you may fix the identity used for this commit with:\n\n    git co...",
-  "timestamp": "2026-06-01T06:10:13.629Z",
-  "retry_count": 1
+  "tool_input_preview": "{\"command\":\"echo \\\"===student 75===\\\"; docker exec school_postgres psql -U postgres -d school_mgmt -tAqc \\\"SELECT id,name,student_number,class_group_id,school_id FROM student WHERE id=75;\\\"\\necho \\\"==...",
+  "error": "Exit code 1\n===student 75===\nERROR:  column \"name\" does not exist\nLINE 1: SELECT id,name,student_number,class_group_id,school_id FROM ...\n                  ^\n===courses school1===\nERROR:  column t.name does not exist\nLINE 1: SELECT c.id, c.course_name, c.teacher_id, t.name FROM course...\n                                                  ^\n===enrollments stu75===\n559|13|미적분\n===teacher user1===\nERROR:  column \"name\" does not exist\nLINE 1: SELECT id, name, user_id FROM teacher WHERE user_id=1;\n    ...",
+  "timestamp": "2026-06-01T12:20:37.590Z",
+  "retry_count": 2
 }

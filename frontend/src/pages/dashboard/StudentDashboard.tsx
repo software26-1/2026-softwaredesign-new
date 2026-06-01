@@ -8,6 +8,7 @@ import type { Feedback } from '../../types/feedback';
 
 const YEAR = new Date().getFullYear();
 const SEMESTER = new Date().getMonth() < 7 ? 1 : 2;
+const FEEDBACK_CAT_LABELS: Record<string, string> = { GRADE: '성적', ACADEMIC: '성적', BEHAVIOR: '행동', ATTENDANCE: '출결', ATTITUDE: '태도' };
 
 const inputStyle: React.CSSProperties = {
   padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px',
@@ -32,6 +33,8 @@ export function StudentDashboard({ user }: Props) {
   });
   const [showNotiModal, setShowNotiModal] = useState(false);
   const [studentId, setStudentId] = useState<number | null>(null);
+  const [grade, setGrade] = useState<number | null>(null);
+  const [classNumber, setClassNumber] = useState<number | null>(null);
 
   // user.id는 user PK이고 학생 데이터는 student PK 기준이라 /users/me의 studentId를 써야 한다.
   useEffect(() => {
@@ -39,9 +42,15 @@ export function StudentDashboard({ user }: Props) {
       .then(r => {
         const profile = r.data?.data ?? r.data;
         setStudentId(profile?.studentId ?? null);
+        setGrade(profile?.grade ?? null);
+        setClassNumber(profile?.classNumber ?? null);
       })
       .catch(() => setStudentId(null));
   }, [user.id]);
+
+  const termLabel = grade != null
+    ? `${grade}학년${classNumber != null ? ` ${classNumber}반` : ''} · ${SEMESTER}학기`
+    : `${SEMESTER}학기`;
 
   useEffect(() => {
     if (!studentId) return;
@@ -82,7 +91,7 @@ export function StudentDashboard({ user }: Props) {
             <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#1a2332' }}>{user.name}</h1>
             <span style={{ background: '#1e5a99', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>학생</span>
           </div>
-          <p style={{ fontSize: '13px', color: '#94a3b8' }}>아이디: {user.loginId} &nbsp;·&nbsp; {YEAR}학년도 {SEMESTER}학기</p>
+          <p style={{ fontSize: '13px', color: '#94a3b8' }}>아이디: {user.loginId} &nbsp;·&nbsp; {termLabel}</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {([['알림 설정', () => setShowNotiModal(true)]] as const).map(([label, handler]) => (
@@ -112,7 +121,7 @@ export function StudentDashboard({ user }: Props) {
         <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
           <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>과목별 성적</h2>
-            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{YEAR}년 {SEMESTER}학기</span>
+            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{grade != null ? `${grade}학년 ` : ''}{SEMESTER}학기</span>
           </div>
           {courses.length === 0 ? (
             <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>성적 데이터가 없습니다.</p>
@@ -151,7 +160,7 @@ export function StudentDashboard({ user }: Props) {
               <div key={f.id} style={{ padding: '14px 24px', borderBottom: '1px solid #f8fafc' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)} · {f.teacherName} 선생님</span>
-                  <span style={{ fontSize: '11px', fontWeight: 600, background: '#f0f5fb', color: '#1e5a99', padding: '2px 8px', borderRadius: '4px' }}>{f.category}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, background: '#f0f5fb', color: '#1e5a99', padding: '2px 8px', borderRadius: '4px' }}>{FEEDBACK_CAT_LABELS[f.category] ?? f.category}</span>
                 </div>
                 <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6' }}>{f.content}</p>
               </div>

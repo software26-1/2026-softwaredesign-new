@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -27,7 +28,10 @@ public class AnalyticsIncrementalService {
      * Recomputes the analytics facts for a single student from the operational
      * tables. Idempotent (upserts via ON CONFLICT).
      */
-    @Transactional
+    // AFTER_COMMIT 리스너(AnalyticsEventBridge)에서 호출되므로 활성 트랜잭션이 없다.
+    // REQUIRES_NEW 없이는 네이티브 upsert 실행 시 TransactionRequiredException이 나서
+    // 성적/출결/피드백 변경이 분석 테이블에 반영되지 않는다(수동 ETL 전까지 stale).
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void refreshStudent(Long studentId) {
         if (studentId == null) {
             return;
@@ -62,7 +66,7 @@ public class AnalyticsIncrementalService {
                     JOIN public.enrollment e ON e.id = g.enrollment_id AND e.is_deleted = false
                     JOIN public.course c     ON c.id = e.course_id AND c.is_deleted = false
                     JOIN public.student s    ON s.id = e.student_id AND s.is_deleted = false
-                    WHERE e.student_id = :studentId
+                    WHERE e.student_id = :studentId AND g.is_deleted = false
                     GROUP BY e.student_id, c.id, c.academic_year, c.semester, s.class_group_id
                 )
                 SELECT ps.student_key,
