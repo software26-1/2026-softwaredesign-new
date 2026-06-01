@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import client from '../../api/client';
-import type { ApiResponse } from '../../types/common';
 
 interface SchoolInfo { id: number; schoolName: string; schoolType: string; }
 interface ClassGroupInfo { id: number; grade: number; classNumber: number; academicYear: number; teacherName?: string; homeroomTeacherId?: number; }
@@ -49,9 +48,6 @@ export function SchoolManagementPage() {
   const [classForm, setClassForm] = useState({ grade: '', classNumber: '' });
   const [classSaving, setClassSaving] = useState(false);
 
-  // 학급 수정
-  const [editingClassId, setEditingClassId] = useState<number | null>(null);
-  const [editClassForm, setEditClassForm] = useState({ grade: '', classNumber: '', academicYear: '' });
 
   const loadData = async () => {
     setLoading(true);
@@ -106,18 +102,6 @@ export function SchoolManagementPage() {
       await loadData();
     } catch { setError('학급 추가 실패'); }
     finally { setClassSaving(false); }
-  };
-
-  const saveClass = async (id: number) => {
-    try {
-      await client.patch(`/class-groups/${id}`, {
-        grade: Number(editClassForm.grade),
-        classNumber: Number(editClassForm.classNumber),
-        academicYear: Number(editClassForm.academicYear),
-      });
-      setEditingClassId(null);
-      await loadData();
-    } catch { setError('학급 수정 실패'); }
   };
 
   const deleteClass = async (id: number) => {

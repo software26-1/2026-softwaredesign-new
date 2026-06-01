@@ -42,7 +42,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npm run build 2>&1 | grep \"error TS\" | wc -l",
+    "buildCommand": "npm run build 2>&1 | tail -5",
     "testCommand": null,
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
@@ -175,6 +175,12 @@
   },
   "hotPaths": [
     {
+      "path": "src/pages/admin/CourseManagementPage.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1780295311829,
+      "type": "file"
+    },
+    {
       "path": "src/pages/ProfileSetupPage.tsx",
       "accessCount": 7,
       "lastAccessed": 1780140361617,
@@ -196,12 +202,6 @@
       "path": "src/pages/AttendancePage.tsx",
       "accessCount": 4,
       "lastAccessed": 1780295113563,
-      "type": "file"
-    },
-    {
-      "path": "src/pages/admin/CourseManagementPage.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1780295183869,
       "type": "file"
     },
     {

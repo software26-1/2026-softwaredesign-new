@@ -9,7 +9,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": null,
+    "buildCommand": "npm run build 2>&1 | tail -10",
     "testCommand": null,
     "lintCommand": null,
     "devCommand": null,

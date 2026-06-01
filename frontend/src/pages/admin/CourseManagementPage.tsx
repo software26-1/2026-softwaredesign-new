@@ -51,9 +51,7 @@ export function CourseManagementPage() {
         const t = teachers.find(t => t.id === teacherId);
         return { ...c, teacherId: teacherId || null, teacherName: t?.name ?? null };
       }));
-      setAssignMsg('배정 완료');
-      setTimeout(() => setAssignMsg(''), 2000);
-    } catch { setAssignMsg('배정 실패'); }
+    } catch { }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -91,12 +89,6 @@ export function CourseManagementPage() {
 
   const curriculumName = (id: number) => CURRICULA.find(c => c.id === id)?.name ?? '-';
   const total = form.midtermRatio + form.finalRatio + form.taskRatio;
-
-  // 학년별 그룹화
-  const gradeGroups = [1, 2, 3].map(g => ({
-    grade: g,
-    items: courses.filter(c => c.grade === g || (!c.grade && g === 1)),
-  })).filter(g => g.items.length > 0 || true);
 
   return (
     <div>
@@ -223,9 +215,7 @@ export function CourseManagementPage() {
                                   evaluationType: c.evaluationType,
                                 });
                                 loadCourses();
-                                setAssignMsg(`${c.courseName} 분반이 추가되었습니다.`);
-                                setTimeout(() => setAssignMsg(''), 3000);
-                              } catch { setAssignMsg('분반 추가에 실패했습니다.'); }
+                              } catch { }
                             }}>+ 분반</Button>
                             <Button size="sm" variant="secondary" onClick={() => handleDelete(c.id)}>삭제</Button>
                           </td>

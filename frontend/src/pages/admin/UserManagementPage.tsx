@@ -100,7 +100,7 @@ export function UserManagementPage() {
 
   const filtered = users.filter(u => {
     const matchSearch = !search || u.name?.includes(search) || u.email?.includes(search);
-    const matchPos = mainTab === 'pending' || posFilter === 'ALL' ||
+    const matchPos = posFilter === 'ALL' ||
       (posFilter === 'HOMEROOM' ? u.position?.startsWith('HOMEROOM') : u.position === posFilter);
     return matchSearch && matchPos;
   });
