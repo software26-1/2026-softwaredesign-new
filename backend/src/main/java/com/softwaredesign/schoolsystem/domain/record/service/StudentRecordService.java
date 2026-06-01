@@ -57,8 +57,15 @@ public class StudentRecordService {
             throw new AccessDeniedException("담임 또는 해당 학생을 가르치는 교과 교사만 학생부를 작성할 수 있습니다.");
         }
 
+        int year = request.getAcademicYear() != null ? request.getAcademicYear() : java.time.Year.now().getValue();
+        int sem = request.getSemester() != null ? request.getSemester() : 1;
+
+        final int fYear = year;
+        final int fSem = sem;
         StudentRecord record = studentRecordRepository.findByStudentId(studentId)
-                .orElseGet(() -> studentRecordRepository.save(StudentRecord.createStudentRecord(targetStudent)));
+                .orElseGet(() -> studentRecordRepository.save(
+                        StudentRecord.createStudentRecord(targetStudent, fYear, fSem)));
+        record.updateTerm(year, sem);
 
         record.updateStudentRecord(request.getAchievements(), request.getExtracurricular(),
                 request.getVolunteerHours(), request.getCareerAspirations());

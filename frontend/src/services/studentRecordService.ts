@@ -11,6 +11,8 @@ export interface StudentRecord {
 }
 
 export interface StudentRecordUpsertBody {
+  academicYear?: number;
+  semester?: number;
   achievements?: string;
   extracurricular?: string;
   volunteerHours?: number;

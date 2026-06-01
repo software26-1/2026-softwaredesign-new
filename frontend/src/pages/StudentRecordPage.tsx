@@ -60,6 +60,8 @@ export function StudentRecordPage() {
     setSubmitting(true); setError('');
     try {
       const updated = await studentRecordService.upsert(Number(selectedId), {
+        academicYear: year,
+        semester,
         achievements: form.achievements,
         extracurricular: form.extracurricular,
         volunteerHours: form.volunteerHours,

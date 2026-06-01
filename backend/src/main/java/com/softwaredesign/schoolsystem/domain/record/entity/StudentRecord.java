@@ -20,6 +20,12 @@ public class StudentRecord extends BaseEntity {
     @JoinColumn(name = "student_id", nullable = false, unique = true)
     private Student student;
 
+    @Column(name = "academic_year", nullable = false)
+    private int academicYear;
+
+    @Column(nullable = false)
+    private int semester;
+
     @Column(columnDefinition = "TEXT")
     private String achievements;
 
@@ -32,10 +38,17 @@ public class StudentRecord extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String careerAspirations;
 
-    public static StudentRecord createStudentRecord(Student student) {
+    public static StudentRecord createStudentRecord(Student student, int academicYear, int semester) {
         StudentRecord record = new StudentRecord();
         record.student = student;
+        record.academicYear = academicYear;
+        record.semester = semester;
         return record;
+    }
+
+    public void updateTerm(int academicYear, int semester) {
+        this.academicYear = academicYear;
+        this.semester = semester;
     }
 
     public void updateStudentRecord(String achievements, String extracurricular,
