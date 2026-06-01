@@ -29,13 +29,13 @@ export function ReportPage() {
 
   useEffect(() => {
     reportService.getReports()
-      .then(setReports)
+      .then(r => setReports(Array.isArray(r) ? r : []))
       .catch(() => setReports([]))
       .finally(() => setLoading(false));
     studentService.search({}).then(setStudents).catch(() => setStudents([]));
   }, []);
 
-  const grades = [...new Set(students.map(s => s.grade))].filter(Boolean).sort((a, b) => a - b);
+  const grades = [1, 2, 3];
   const classNumbers = scope.grade
     ? [...new Set(students.filter(s => s.grade === Number(scope.grade)).map(s => s.classNumber))].filter(Boolean).sort((a, b) => a - b)
     : [];

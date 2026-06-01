@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
+import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { feedbackService } from '../services/feedbackService';
-import client from '../api/client';
+import { studentService } from '../services/studentService';
 import type { Feedback, FeedbackCategory } from '../types/feedback';
 import type { Student } from '../types/student';
 
@@ -13,61 +14,36 @@ const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', 
 const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
 const selectStyle: React.CSSProperties = { padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', width: '100%' };
 
-interface ClassGroup { id: number; name: string; grade: number; }
-
 export function FeedbackPage() {
-  const [grade, setGrade] = useState<number | null>(null);
-  const [classGroups, setClassGroups] = useState<ClassGroup[]>([]);
-  const [classGroupId, setClassGroupId] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [pick, setPick] = useState({ grade: '', classNumber: '', studentId: '' });
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [form, setForm] = useState({ studentId: '', category: 'GRADE' as FeedbackCategory, content: '', isPublicToStudent: true, isPublicToParent: true });
+  const [form, setForm] = useState({ category: 'GRADE' as FeedbackCategory, content: '', isPublicToStudent: true, isPublicToParent: true });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
-  const year = new Date().getFullYear();
-
   useEffect(() => {
-    client.get('/class-groups', { params: { academic_year: year } })
-      .then((r: any) => setClassGroups(Array.isArray(r.data) ? r.data : r.data?.data ?? []))
-      .catch(() => {});
+    studentService.search({}).then(res => setStudents(res as Student[])).catch(() => setStudents([]));
   }, []);
 
   useEffect(() => {
-    if (!grade) { setClassGroupId(null); setStudents([]); return; }
-    const filtered = classGroups.filter(cg => cg.grade === grade);
-    if (filtered.length === 1) setClassGroupId(filtered[0].id);
-    else setClassGroupId(null);
-  }, [grade, classGroups]);
-
-  useEffect(() => {
-    if (!classGroupId) { setStudents([]); return; }
-    client.get(`/students`, { params: { class_group_id: classGroupId } })
-      .then((r: any) => {
-        const list = Array.isArray(r.data) ? r.data : r.data?.data ?? [];
-        setStudents(list.sort((a: any, b: any) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)));
-      })
-      .catch(() => {});
-  }, [classGroupId]);
-
-  useEffect(() => {
-    if (!form.studentId) { setFeedbacks([]); return; }
+    if (!pick.studentId) { setFeedbacks([]); return; }
     setLoadingFeedbacks(true);
-    feedbackService.getByStudent(Number(form.studentId))
+    feedbackService.getByStudent(Number(pick.studentId))
       .then(setFeedbacks)
       .catch(() => setFeedbacks([]))
       .finally(() => setLoadingFeedbacks(false));
-  }, [form.studentId]);
+  }, [pick.studentId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.studentId) return;
+    if (!pick.studentId) return;
     setSubmitting(true); setError('');
     try {
       const created = await feedbackService.create({
-        studentId: Number(form.studentId),
+        studentId: Number(pick.studentId),
         category: form.category,
         content: form.content,
         isPublicToStudent: form.isPublicToStudent,
@@ -103,30 +79,8 @@ export function FeedbackPage() {
       <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>피드백 작성</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년</label>
-              <select style={selectStyle} value={grade ?? ''} onChange={e => setGrade(e.target.value ? parseInt(e.target.value) : null)}>
-                <option value="">선택</option>
-                {[1, 2, 3].map(g => <option key={g} value={g}>{g}학년</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>반</label>
-              <select style={selectStyle} value={classGroupId ?? ''} onChange={e => setClassGroupId(e.target.value ? parseInt(e.target.value) : null)} disabled={!grade}>
-                <option value="">선택</option>
-                {grade && classGroups.filter(cg => cg.grade === grade).map(cg => <option key={cg.id} value={cg.id}>{cg.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생</label>
-              <select required style={selectStyle} value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })} disabled={!classGroupId}>
-                <option value="">선택</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>{s.studentNumber} {s.name}</option>
-                ))}
-              </select>
-            </div>
+          <div style={{ marginBottom: '16px' }}>
+            <StudentFilterSelect students={students} value={pick} onChange={setPick} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -163,7 +117,7 @@ export function FeedbackPage() {
           {error && <div style={{ padding: '10px 14px', background: '#fdecea', color: '#c62828', borderRadius: '6px', fontSize: '13px', marginBottom: '14px', borderLeft: '3px solid #e57373' }}>{error}</div>}
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            <Button type="submit" size="sm" disabled={submitting}>{submitting ? '저장 중...' : '저장'}</Button>
+            <Button type="submit" size="sm" disabled={submitting || !pick.studentId}>{submitting ? '저장 중...' : '저장'}</Button>
             <Button type="button" size="sm" variant="secondary" onClick={() => setForm(f => ({ ...f, content: '', category: 'GRADE', isPublicToStudent: true, isPublicToParent: true }))}>초기화</Button>
           </div>
         </form>
@@ -172,14 +126,14 @@ export function FeedbackPage() {
       <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>
-            {form.studentId ? `${students.find(s => String(s.id) === form.studentId)?.name ?? ''} 피드백 목록` : '피드백 목록 (학생 선택 시 표시)'}
+            {pick.studentId ? `${students.find(s => String(s.id) === pick.studentId)?.name ?? ''} 피드백 목록` : '피드백 목록 (학생 선택 시 표시)'}
           </h2>
         </div>
         {loadingFeedbacks ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
         ) : feedbacks.length === 0 ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-            {form.studentId ? '작성된 피드백이 없습니다.' : '학생을 선택하면 피드백 목록이 표시됩니다.'}
+            {pick.studentId ? '작성된 피드백이 없습니다.' : '학생을 선택하면 피드백 목록이 표시됩니다.'}
           </p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

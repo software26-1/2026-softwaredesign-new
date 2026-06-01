@@ -58,7 +58,7 @@ export function CounselingPage() {
     try {
       const created = await counselingService.create({
         studentId: Number(pick.studentId),
-        counseledAt: form.counseledAt,
+        counseledAt: `${form.counseledAt}T00:00:00`,
         content: form.content,
         nextPlan: form.nextPlan,
         isShared: form.isShared,
@@ -133,7 +133,7 @@ export function CounselingPage() {
               <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>학년</label>
               <select style={inputStyle} value={search.grade} onChange={e => setSearch({ ...search, grade: e.target.value, classNumber: '' })}>
                 <option value="">전체</option>
-                {[...new Set(students.map(s => s.grade))].filter(Boolean).sort((a, b) => a - b).map(g => <option key={g} value={g}>{g}학년</option>)}
+                {[1, 2, 3].map(g => <option key={g} value={g}>{g}학년</option>)}
               </select>
             </div>
             <div>

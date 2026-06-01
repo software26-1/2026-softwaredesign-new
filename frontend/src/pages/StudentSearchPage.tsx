@@ -12,6 +12,7 @@ import client from '../api/client';
 import { feedbackService } from '../services/feedbackService';
 import { counselingService } from '../services/counselingService';
 import { analyticsService } from '../services/analyticsService';
+import { studentRecordService } from '../services/studentRecordService';
 import type { StudentDetail } from '../types/student';
 import type { Feedback } from '../types/feedback';
 import type { Counseling } from '../types/counseling';
@@ -32,10 +33,11 @@ export function StudentSearchPage() {
   const [results, setResults] = useState<StudentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<StudentDetail | null>(null);
-  const [activeTab, setActiveTab] = useState<'grade' | 'feedback' | 'counseling'>('grade');
+  const [activeTab, setActiveTab] = useState<'grade' | 'feedback' | 'counseling' | 'record'>('grade');
   const [modalFeedbacks, setModalFeedbacks] = useState<Feedback[]>([]);
   const [modalCounselings, setModalCounselings] = useState<Counseling[]>([]);
   const [modalCourses, setModalCourses] = useState<StudentCourseTerm[]>([]);
+  const [modalRecord, setModalRecord] = useState<any | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
@@ -85,18 +87,26 @@ export function StudentSearchPage() {
     setModalFeedbacks([]);
     setModalCounselings([]);
     setModalCourses([]);
+    setModalRecord(null);
     // '조회 내용' 필터에 맞춰 상세 모달의 초기 탭 결정
     const initial = filters.contentType === 'feedback' ? 'feedback'
       : filters.contentType === 'counseling' ? 'counseling'
+      : filters.contentType === 'record' ? 'record'
       : 'grade';
     handleTabChange(initial, s);
   };
 
-  const handleTabChange = (tab: 'grade' | 'feedback' | 'counseling', student?: StudentDetail) => {
+  const handleTabChange = (tab: 'grade' | 'feedback' | 'counseling' | 'record', student?: StudentDetail) => {
     setActiveTab(tab);
     const target = student ?? selected;
     if (!target) return;
-    if (tab === 'feedback') {
+    if (tab === 'record') {
+      setDetailLoading(true);
+      studentRecordService.get(target.id)
+        .then(d => setModalRecord(Array.isArray(d) ? d[0] ?? null : d))
+        .catch(() => setModalRecord(null))
+        .finally(() => setDetailLoading(false));
+    } else if (tab === 'feedback') {
       setDetailLoading(true);
       feedbackService.getByStudent(target.id)
         .then(setModalFeedbacks)
@@ -243,7 +253,7 @@ export function StudentSearchPage() {
             </div>
 
             <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #f1f5f9' }}>
-              {([['grade','성적'],['feedback','피드백'],['counseling','상담']] as const).map(([tab, label]) => (
+              {([['grade','성적'],['feedback','피드백'],['counseling','상담'],['record','학생부']] as const).map(([tab, label]) => (
                 <button key={tab} onClick={() => handleTabChange(tab)}
                   style={{ padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#1e5a99' : '#94a3b8', borderBottom: activeTab === tab ? '2px solid #1e5a99' : '2px solid transparent', marginBottom: '-2px', fontFamily: "'Noto Sans KR', sans-serif" }}>
                   {label}
@@ -297,6 +307,23 @@ export function StudentSearchPage() {
                     <p style={{ fontSize: '13px', color: '#334155', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px' }}>{c.content}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {!detailLoading && activeTab === 'record' && (
+              <div>
+                {!modalRecord ? (
+                  <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>작성된 학생부 기록이 없습니다.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {([['특기사항 / 성취', modalRecord.achievements], ['비교과 활동', modalRecord.extracurricular], ['진로 희망', modalRecord.careerAspirations], ['봉사 시간', modalRecord.volunteerHours != null ? `${modalRecord.volunteerHours}h` : null]] as const).map(([label, val]) => (
+                      <div key={label}>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '6px' }}>{label}</p>
+                        <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.7', padding: '12px 14px', background: '#f8fafc', borderRadius: '6px' }}>{val || '—'}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

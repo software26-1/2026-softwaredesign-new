@@ -26,10 +26,8 @@ interface Props {
  * 학년 변경 시 반/학생 초기화, 반 변경 시 학생 초기화.
  */
 export function StudentFilterSelect({ students, value, onChange, showStudent = true }: Props) {
-  const grades = useMemo(
-    () => [...new Set(students.map(s => s.grade))].filter(Boolean).sort((a, b) => a - b),
-    [students],
-  );
+  // 학생이 없는 학년도 선택 가능해야 하므로 학년은 고정(1~3)
+  const grades = [1, 2, 3];
 
   const classNumbers = useMemo(() => {
     if (!value.grade) return [];

@@ -14,8 +14,11 @@ export interface Report {
 
 export const reportService = {
   async getReports(): Promise<Report[]> {
-    const res = await client.get<ApiResponse<Report[]>>('/reports');
-    return res.data.data;
+    const res = await client.get<any>('/reports');
+    const body = res.data;
+    if (Array.isArray(body)) return body;
+    if (Array.isArray(body?.data)) return body.data;
+    return [];
   },
 
   async create(reportType: ReportType, format: ReportFormat, scope?: { grade?: number; classNumber?: number }): Promise<Report> {
