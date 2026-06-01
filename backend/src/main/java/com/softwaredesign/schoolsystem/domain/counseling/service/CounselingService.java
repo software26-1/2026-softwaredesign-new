@@ -60,6 +60,18 @@ public class CounselingService {
                 .toList();
     }
 
+    /** 공유된 상담 + 요청 교사 본인 상담(비공개 포함)을 함께 조회. */
+    public List<CounselingResponse> searchVisible(Long userId, String studentName, Long teacherId,
+                                                  LocalDateTime start, LocalDateTime end) {
+        Long requesterTeacherId = teacherRepository.findByUserId(userId)
+                .map(Teacher::getId).orElse(null);
+        LocalDateTime from = (start != null) ? start : MIN_DATE;
+        LocalDateTime to = (end != null) ? end : MAX_DATE;
+        return counselingRepository.searchVisible(requesterTeacherId, studentName, teacherId, from, to).stream()
+                .map(CounselingResponse::from)
+                .toList();
+    }
+
     @Transactional
     public CounselingResponse update(Long counselingId, CounselingUpdateRequest request, Long userId) {
         Counseling counseling = counselingRepository.findById(counselingId)

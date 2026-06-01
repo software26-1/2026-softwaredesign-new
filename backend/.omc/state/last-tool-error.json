@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"docker exec school_postgres psql -U postgres -d school_mgmt -c \\\"\\n\\\\d counseling\\n\\\\d attendance  \\n\\\\d feedback\\n\\\\d student_record\\n\\\" 2>&1\",\"description\":\"Check actual columns in affec...",
-  "error": "Exit code 1\nERROR:  syntax error at or near \"\\\"\nLINE 2: \\d counseling\n        ^",
-  "timestamp": "2026-05-31T17:19:05.835Z",
-  "retry_count": 1
-}

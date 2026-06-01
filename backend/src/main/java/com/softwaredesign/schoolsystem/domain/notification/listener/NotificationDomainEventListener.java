@@ -77,17 +77,22 @@ public class NotificationDomainEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onGradeChanged(GradeChangedEvent event) {
         notifyStudentAndParents(event.studentId(), NotificationEventType.GRADE_UPDATE,
-                GRADE_TITLE, GRADE_MESSAGE);
+                GRADE_TITLE, GRADE_MESSAGE, true, true);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onFeedbackChanged(FeedbackChangedEvent event) {
+        // 공개 설정에 따라 대상이 정해진다. 둘 다 비공개(수정/삭제 포함)면 알림 없음.
+        if (!event.notifyStudent() && !event.notifyParent()) {
+            return;
+        }
         notifyStudentAndParents(event.studentId(), NotificationEventType.FEEDBACK,
-                FEEDBACK_TITLE, FEEDBACK_MESSAGE);
+                FEEDBACK_TITLE, FEEDBACK_MESSAGE, event.notifyStudent(), event.notifyParent());
     }
 
     private void notifyStudentAndParents(Long studentId, NotificationEventType eventType,
-                                         String title, String message) {
+                                         String title, String message,
+                                         boolean toStudent, boolean toParent) {
         if (studentId == null) {
             return;
         }
@@ -98,15 +103,19 @@ public class NotificationDomainEventListener {
                 return;
             }
 
-            // Notify the student.
-            notificationService.notify(student.getUser().getId(), eventType, title, message);
+            // Notify the student only when visible to student.
+            if (toStudent) {
+                notificationService.notify(student.getUser().getId(), eventType, title, message);
+            }
 
-            // Notify each linked parent.
-            List<ParentStudent> links = parentStudentRepository.findAllByStudentIdAndIsDeletedFalse(studentId);
-            for (ParentStudent link : links) {
-                if (link.getParent() != null && link.getParent().getUser() != null) {
-                    notificationService.notify(link.getParent().getUser().getId(),
-                            eventType, title, message);
+            // Notify each linked parent only when visible to parent.
+            if (toParent) {
+                List<ParentStudent> links = parentStudentRepository.findAllByStudentIdAndIsDeletedFalse(studentId);
+                for (ParentStudent link : links) {
+                    if (link.getParent() != null && link.getParent().getUser() != null) {
+                        notificationService.notify(link.getParent().getUser().getId(),
+                                eventType, title, message);
+                    }
                 }
             }
         } catch (Exception e) {

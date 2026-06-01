@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '../components/common/Button';
 import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
+import { Pagination } from '../components/common/Pagination';
 import { feedbackService } from '../services/feedbackService';
 import { studentService } from '../services/studentService';
 import type { Feedback, FeedbackCategory } from '../types/feedback';
 import type { Student } from '../types/student';
+
+const PAGE_SIZE = 10;
 
 const CATEGORY_LABELS: Record<FeedbackCategory, string> = { GRADE: '성적', BEHAVIOR: '행동', ATTENDANCE: '출결', ATTITUDE: '태도' };
 const catBg: Record<FeedbackCategory, string> = { GRADE: '#ebf4ff', BEHAVIOR: '#e8f5e9', ATTENDANCE: '#fff3e0', ATTITUDE: '#f3e5f5' };
@@ -24,9 +27,24 @@ export function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
+  // 목록 필터(유형/날짜) + 페이지네이션
+  const [listFilter, setListFilter] = useState({ category: '', startDate: '', endDate: '' });
+  const [listPage, setListPage] = useState(1);
+
   useEffect(() => {
     studentService.search({}).then(res => setStudents(res as Student[])).catch(() => setStudents([]));
   }, []);
+
+  const filteredFeedbacks = useMemo(() => feedbacks.filter(fb => {
+    const d = fb.createdAt?.slice(0, 10) ?? '';
+    return (!listFilter.category || fb.category === listFilter.category)
+      && (!listFilter.startDate || d >= listFilter.startDate)
+      && (!listFilter.endDate || d <= listFilter.endDate);
+  }), [feedbacks, listFilter]);
+
+  const pagedFeedbacks = filteredFeedbacks.slice((listPage - 1) * PAGE_SIZE, listPage * PAGE_SIZE);
+
+  useEffect(() => { setListPage(1); }, [listFilter, pick.studentId]);
 
   useEffect(() => {
     if (!pick.studentId) { setFeedbacks([]); return; }
@@ -125,21 +143,41 @@ export function FeedbackPage() {
 
       <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: pick.studentId ? '14px' : 0 }}>
             {pick.studentId ? `${students.find(s => String(s.id) === pick.studentId)?.name ?? ''} 피드백 목록` : '피드백 목록 (학생 선택 시 표시)'}
           </h2>
+          {pick.studentId && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>유형</label>
+                <select style={selectStyle} value={listFilter.category} onChange={e => setListFilter({ ...listFilter, category: e.target.value })}>
+                  <option value="">전체</option>
+                  {Object.entries(CATEGORY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>시작일</label>
+                <input type="date" style={selectStyle} value={listFilter.startDate} onChange={e => setListFilter({ ...listFilter, startDate: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>종료일</label>
+                <input type="date" style={selectStyle} value={listFilter.endDate} onChange={e => setListFilter({ ...listFilter, endDate: e.target.value })} />
+              </div>
+            </div>
+          )}
         </div>
         {loadingFeedbacks ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
-        ) : feedbacks.length === 0 ? (
+        ) : filteredFeedbacks.length === 0 ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-            {pick.studentId ? '작성된 피드백이 없습니다.' : '학생을 선택하면 피드백 목록이 표시됩니다.'}
+            {pick.studentId ? '조건에 맞는 피드백이 없습니다.' : '학생을 선택하면 피드백 목록이 표시됩니다.'}
           </p>
         ) : (
+          <>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['작성일', '학생', '유형', '내용', '공개 대상', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
             <tbody>
-              {feedbacks.map(fb => (
+              {pagedFeedbacks.map(fb => (
                 <tr key={fb.id}>
                   <td style={{ ...tdStyle, color: '#94a3b8' }}>{fb.createdAt?.slice(0, 10)}</td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{fb.studentName}</td>
@@ -157,6 +195,8 @@ export function FeedbackPage() {
               ))}
             </tbody>
           </table>
+          <Pagination page={listPage} totalItems={filteredFeedbacks.length} pageSize={PAGE_SIZE} onChange={setListPage} />
+          </>
         )}
       </div>
     </div>

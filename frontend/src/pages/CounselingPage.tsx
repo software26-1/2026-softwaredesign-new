@@ -2,21 +2,27 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
+import { Pagination } from '../components/common/Pagination';
+import { useAuth } from '../hooks/useAuth';
 import { counselingService } from '../services/counselingService';
 import { studentService } from '../services/studentService';
 import type { Counseling } from '../types/counseling';
 import type { Student } from '../types/student';
+
+const PAGE_SIZE = 10;
 
 const inputStyle: React.CSSProperties = { padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', width: '100%' };
 const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' };
 const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
 
 export function CounselingPage() {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [list, setList] = useState<Counseling[]>([]);
   const [selected, setSelected] = useState<Counseling | null>(null);
   const [search, setSearch] = useState({ grade: '', classNumber: '', studentName: '', startDate: '', endDate: '' });
   const [pick, setPick] = useState({ grade: '', classNumber: '', studentId: '' });
+  const [listPage, setListPage] = useState(1);
   const [form, setForm] = useState({ counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -87,6 +93,20 @@ export function CounselingPage() {
   const searchClassNumbers = search.grade
     ? [...new Set(students.filter(s => s.grade === Number(search.grade)).map(s => s.classNumber))].filter(Boolean).sort((a, b) => a - b)
     : [];
+
+  const paged = filtered.slice((listPage - 1) * PAGE_SIZE, listPage * PAGE_SIZE);
+  useEffect(() => { setListPage(1); }, [search.grade, search.classNumber, search.studentName, search.startDate, search.endDate, list]);
+
+  const isOwn = (c: Counseling) => !!user && c.teacherName === user.name;
+
+  const handleToggleShare = async (c: Counseling) => {
+    try {
+      const updated = await counselingService.update(c.id, { isShared: !c.shared });
+      setList(prev => prev.map(x => (x.id === c.id ? { ...x, shared: updated.shared ?? !c.shared } : x)));
+    } catch {
+      setError('공유 설정 변경에 실패했습니다.');
+    }
+  };
 
   return (
     <div>
@@ -161,10 +181,11 @@ export function CounselingPage() {
         {loading ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
         ) : (
+          <>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['상담일', '학생', '상담교사', '주요내용', '공유', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
             <tbody>
-              {filtered.map(c => (
+              {paged.map(c => (
                 <tr key={c.id}>
                   <td style={{ ...tdStyle, color: '#94a3b8' }}>{c.counseledAt?.slice(0, 10)}</td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{c.studentName}</td>
@@ -175,8 +196,13 @@ export function CounselingPage() {
                       {c.shared ? '공유' : '비공개'}
                     </span>
                   </td>
-                  <td style={tdStyle}>
+                  <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
                     <Button size="sm" onClick={() => setSelected(c)}>상세</Button>
+                    {isOwn(c) && (
+                      <Button size="sm" variant="secondary" onClick={() => handleToggleShare(c)}>
+                        {c.shared ? '공유 해제' : '공유'}
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -185,6 +211,8 @@ export function CounselingPage() {
               )}
             </tbody>
           </table>
+          <Pagination page={listPage} totalItems={filtered.length} pageSize={PAGE_SIZE} onChange={setListPage} />
+          </>
         )}
       </div>
 

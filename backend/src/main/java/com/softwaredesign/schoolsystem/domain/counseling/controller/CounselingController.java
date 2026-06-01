@@ -49,8 +49,11 @@ public class CounselingController {
             @RequestParam(name = "start_date", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(name = "end_date", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return ResponseEntity.ok(counselingService.searchShared(studentName, teacherId, startDate, endDate));
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @AuthenticationPrincipal AuthUser authUser) {
+        // 공유된 상담 + 본인 작성 상담(비공개 포함)을 함께 반환
+        return ResponseEntity.ok(
+                counselingService.searchVisible(authUser.id(), studentName, teacherId, startDate, endDate));
     }
 
     @PatchMapping("/{counselingId}")

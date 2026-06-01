@@ -53,7 +53,8 @@ public class FeedbackService {
         Feedback feedback = Feedback.createFeedback(
                 teacher, student, request.getContent(), request.getType(), visibleToStudent, visibleToParent);
         feedbackRepository.save(feedback);
-        eventPublisher.publishEvent(new FeedbackChangedEvent(student.getId()));
+        // 공개 설정에 맞춰 학생/학부모에게만 알림 발송
+        eventPublisher.publishEvent(new FeedbackChangedEvent(student.getId(), visibleToStudent, visibleToParent));
         return FeedbackResponse.from(feedback);
     }
 
