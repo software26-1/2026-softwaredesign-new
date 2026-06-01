@@ -137,8 +137,9 @@ export function ProfileSetupPage() {
       }
       await client.post('/auth/profile', payload);
       navigate('/waiting-approval');
-    } catch {
-      setError('정보 저장에 실패했습니다. 다시 시도해주세요.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.response?.data?.error;
+      setError(msg || '정보 저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
