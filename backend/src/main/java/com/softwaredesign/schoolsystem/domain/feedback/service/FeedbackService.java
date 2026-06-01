@@ -13,6 +13,7 @@ import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
+import com.softwaredesign.schoolsystem.domain.school.service.StudentAccessGuard;
 import com.softwaredesign.schoolsystem.domain.student.entity.ParentStudent;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
@@ -36,6 +37,7 @@ public class FeedbackService {
     private final StudentRepository studentRepository;
     private final ParentStudentRepository parentStudentRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final StudentAccessGuard studentAccessGuard;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -45,6 +47,8 @@ public class FeedbackService {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
 
+        // 학교 격리: 같은 학교 학생에게만 작성 가능 (행동/출결/태도 포함 모든 유형)
+        requireSameSchool(teacher, student);
         if (FeedbackType.ACADEMIC.equals(request.getType())) {
             validateGradeFeedbackPermission(teacher, student);
         }
@@ -66,7 +70,12 @@ public class FeedbackService {
                 : feedbackRepository.findByStudentId(studentId);
 
         String role = authUser.role();
-        if ("TEACHER".equals(role) || "ADMIN".equals(role)) {
+        if ("ADMIN".equals(role)) {
+            return feedbacks.stream().map(FeedbackResponse::from).toList();
+        }
+        if ("TEACHER".equals(role)) {
+            // 학교 격리: 타 학교 학생 피드백 조회 차단
+            studentAccessGuard.requireCanAccessStudent(authUser, studentId);
             return feedbacks.stream().map(FeedbackResponse::from).toList();
         }
         if ("STUDENT".equals(role)) {
@@ -129,6 +138,14 @@ public class FeedbackService {
                 .existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(student.getId(), teacher.getId());
         if (!isHomeroom && !isSubjectTeacher) {
             throw new AccessDeniedException("성적 피드백은 담임 또는 해당 학생을 가르치는 교과 교사만 작성할 수 있습니다.");
+        }
+    }
+
+    private void requireSameSchool(Teacher teacher, Student student) {
+        Long teacherSchoolId = teacher.getSchool() != null ? teacher.getSchool().getId() : null;
+        Long studentSchoolId = student.getSchool() != null ? student.getSchool().getId() : null;
+        if (teacherSchoolId == null || studentSchoolId == null || !teacherSchoolId.equals(studentSchoolId)) {
+            throw new AccessDeniedException("같은 학교 학생에게만 피드백을 작성할 수 있습니다.");
         }
     }
 

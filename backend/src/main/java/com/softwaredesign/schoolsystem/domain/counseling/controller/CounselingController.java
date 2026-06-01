@@ -37,8 +37,9 @@ public class CounselingController {
     @GetMapping
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<List<CounselingResponse>> getCounselings(
-            @RequestParam(name = "student_id") Long studentId) {
-        return ResponseEntity.ok(counselingService.getByStudent(studentId));
+            @RequestParam(name = "student_id") Long studentId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(counselingService.getByStudent(studentId, authUser));
     }
 
     @GetMapping("/shared")
