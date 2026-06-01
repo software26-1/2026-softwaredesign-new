@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '../components/common/Button';
+import { Modal } from '../components/common/Modal';
 import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { Pagination } from '../components/common/Pagination';
 import { feedbackService } from '../services/feedbackService';
@@ -30,6 +31,7 @@ export function FeedbackPage() {
   // 목록 필터(유형/날짜) + 페이지네이션
   const [listFilter, setListFilter] = useState({ category: '', startDate: '', endDate: '' });
   const [listPage, setListPage] = useState(1);
+  const [detail, setDetail] = useState<Feedback | null>(null);
 
   useEffect(() => {
     studentService.search({}).then(res => setStudents(res as Student[])).catch(() => setStudents([]));
@@ -186,11 +188,19 @@ export function FeedbackPage() {
                       {CATEGORY_LABELS[fb.category]}
                     </span>
                   </td>
-                  <td style={{ ...tdStyle, maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{fb.content}</td>
+                  <td style={{ ...tdStyle, maxWidth: '260px', color: '#475569' }}
+                    title="클릭하여 전체 내용 보기" onClick={() => setDetail(fb)}>
+                    <span style={{ display: 'inline-block', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom', cursor: 'pointer', color: fb.content && fb.content.length > 30 ? '#1e5a99' : '#475569', textDecoration: fb.content && fb.content.length > 30 ? 'underline' : 'none' }}>
+                      {fb.content}
+                    </span>
+                  </td>
                   <td style={{ ...tdStyle, fontSize: '12px', color: '#64748b' }}>
                     {[fb.isPublicToStudent && '학생', fb.isPublicToParent && '학부모'].filter(Boolean).join(' · ') || '비공개'}
                   </td>
-                  <td style={tdStyle}><Button size="sm" variant="danger" onClick={() => handleDelete(fb.id)}>삭제</Button></td>
+                  <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
+                    <Button size="sm" onClick={() => setDetail(fb)}>상세</Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(fb.id)}>삭제</Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -199,6 +209,34 @@ export function FeedbackPage() {
           </>
         )}
       </div>
+
+      <Modal isOpen={!!detail} title="피드백 상세" onClose={() => setDetail(null)}>
+        {detail && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {[['학생', detail.studentName], ['작성일', detail.createdAt?.slice(0, 10)], ['작성 교사', detail.teacherName]].map(([k, v]) => (
+                <div key={k} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>{k}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a2332' }}>{v ?? '—'}</p>
+                </div>
+              ))}
+              <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
+                <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>유형 / 공개</p>
+                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: catBg[detail.category], color: catColor[detail.category], marginRight: '6px' }}>
+                  {CATEGORY_LABELS[detail.category]}
+                </span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  {[detail.isPublicToStudent && '학생', detail.isPublicToParent && '학부모'].filter(Boolean).join(' · ') || '비공개'}
+                </span>
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px' }}>내용</p>
+              <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.8', padding: '14px', background: '#f8fafc', borderRadius: '8px', whiteSpace: 'pre-wrap' }}>{detail.content}</p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
