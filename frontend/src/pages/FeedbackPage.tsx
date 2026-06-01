@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
 import { feedbackService } from '../services/feedbackService';
 import { studentService } from '../services/studentService';
+import client from '../api/client';
 import type { Feedback, FeedbackCategory } from '../types/feedback';
 import type { Student } from '../types/student';
 
@@ -13,7 +14,12 @@ const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', 
 const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
 const selectStyle: React.CSSProperties = { padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', width: '100%' };
 
+interface ClassGroup { id: number; name: string; grade: number; }
+
 export function FeedbackPage() {
+  const [grade, setGrade] = useState<number | null>(null);
+  const [classGroups, setClassGroups] = useState<ClassGroup[]>([]);
+  const [classGroupId, setClassGroupId] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [form, setForm] = useState({ studentId: '', category: 'GRADE' as FeedbackCategory, content: '', isPublicToStudent: true, isPublicToParent: true });
@@ -22,9 +28,30 @@ export function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
+  const year = new Date().getFullYear();
+
   useEffect(() => {
-    studentService.search({}).then(res => setStudents(res as Student[])).catch(() => setStudents([]));
+    client.get<any[]>('/class-groups', { params: { academic_year: year } })
+      .then(r => setClassGroups(Array.isArray(r.data) ? r.data : r.data?.data ?? []))
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!grade) { setClassGroupId(null); setStudents([]); return; }
+    const filtered = classGroups.filter(cg => cg.grade === grade);
+    if (filtered.length === 1) setClassGroupId(filtered[0].id);
+    else setClassGroupId(null);
+  }, [grade, classGroups]);
+
+  useEffect(() => {
+    if (!classGroupId) { setStudents([]); return; }
+    client.get<any[]>(`/students`, { params: { class_group_id: classGroupId } })
+      .then(r => {
+        const list = Array.isArray(r.data) ? r.data : r.data?.data ?? [];
+        setStudents(list.sort((a, b) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)));
+      })
+      .catch(() => {});
+  }, [classGroupId]);
 
   useEffect(() => {
     if (!form.studentId) { setFeedbacks([]); return; }
@@ -77,16 +104,33 @@ export function FeedbackPage() {
       <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>피드백 작성</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생 선택</label>
-              <select required style={selectStyle} value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })}>
-                <option value="">학생을 선택하세요</option>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년</label>
+              <select style={selectStyle} value={grade ?? ''} onChange={e => setGrade(e.target.value ? parseInt(e.target.value) : null)}>
+                <option value="">선택</option>
+                {[1, 2, 3].map(g => <option key={g} value={g}>{g}학년</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>반</label>
+              <select style={selectStyle} value={classGroupId ?? ''} onChange={e => setClassGroupId(e.target.value ? parseInt(e.target.value) : null)} disabled={!grade}>
+                <option value="">선택</option>
+                {grade && classGroups.filter(cg => cg.grade === grade).map(cg => <option key={cg.id} value={cg.id}>{cg.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생</label>
+              <select required style={selectStyle} value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })} disabled={!classGroupId}>
+                <option value="">선택</option>
                 {students.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2, '0')})</option>
+                  <option key={s.id} value={s.id}>{s.studentNumber} {s.name}</option>
                 ))}
               </select>
             </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>피드백 유형</label>
               <select style={selectStyle} value={form.category} onChange={e => setForm({ ...form, category: e.target.value as FeedbackCategory })}>
