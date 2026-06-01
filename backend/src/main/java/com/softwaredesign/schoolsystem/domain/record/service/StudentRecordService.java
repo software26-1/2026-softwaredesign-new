@@ -14,7 +14,9 @@ import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
+import com.softwaredesign.schoolsystem.domain.analytics.event.StudentRecordChangedEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,7 @@ public class StudentRecordService {
     private final ParentRepository parentRepository;
     private final ParentStudentRepository parentStudentRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public StudentRecordResponse getByStudent(Long studentId, AuthUser authUser) {
         studentId = resolveStudentId(studentId, authUser);
@@ -69,6 +72,7 @@ public class StudentRecordService {
 
         record.updateStudentRecord(request.getAchievements(), request.getExtracurricular(),
                 request.getVolunteerHours(), request.getCareerAspirations());
+        eventPublisher.publishEvent(new StudentRecordChangedEvent(targetStudent.getId()));
         return StudentRecordResponse.from(record);
     }
 
@@ -91,6 +95,7 @@ public class StudentRecordService {
 
         studentRecordRepository.findByStudentId(studentId)
                 .ifPresent(studentRecordRepository::delete);
+        eventPublisher.publishEvent(new StudentRecordChangedEvent(studentId));
     }
 
     private Long resolveStudentId(Long requestedStudentId, AuthUser authUser) {

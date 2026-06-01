@@ -1,7 +1,9 @@
 package com.softwaredesign.schoolsystem.domain.notification.listener;
 
+import com.softwaredesign.schoolsystem.domain.analytics.event.AttendanceChangedEvent;
 import com.softwaredesign.schoolsystem.domain.analytics.event.FeedbackChangedEvent;
 import com.softwaredesign.schoolsystem.domain.analytics.event.GradeChangedEvent;
+import com.softwaredesign.schoolsystem.domain.analytics.event.StudentRecordChangedEvent;
 import com.softwaredesign.schoolsystem.domain.notification.entity.NotificationEventType;
 import com.softwaredesign.schoolsystem.domain.notification.event.ProfileSetupEvent;
 import com.softwaredesign.schoolsystem.domain.notification.service.NotificationService;
@@ -46,6 +48,10 @@ public class NotificationDomainEventListener {
     private static final String GRADE_MESSAGE = "성적 정보가 변경되었습니다. 확인해 주세요.";
     private static final String FEEDBACK_TITLE = "새로운 피드백이 등록되었습니다";
     private static final String FEEDBACK_MESSAGE = "선생님이 새로운 피드백을 남겼습니다. 확인해 주세요.";
+    private static final String ATTENDANCE_TITLE = "출결 정보가 업데이트되었습니다";
+    private static final String ATTENDANCE_MESSAGE = "출결 정보가 변경되었습니다. 확인해 주세요.";
+    private static final String RECORD_TITLE = "생활기록부가 업데이트되었습니다";
+    private static final String RECORD_MESSAGE = "학생부 기록이 변경되었습니다. 확인해 주세요.";
 
     private final NotificationService notificationService;
     private final StudentRepository studentRepository;
@@ -78,6 +84,18 @@ public class NotificationDomainEventListener {
     public void onGradeChanged(GradeChangedEvent event) {
         notifyStudentAndParents(event.studentId(), NotificationEventType.GRADE_UPDATE,
                 GRADE_TITLE, GRADE_MESSAGE, true, true);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onAttendanceChanged(AttendanceChangedEvent event) {
+        notifyStudentAndParents(event.studentId(), NotificationEventType.ATTENDANCE,
+                ATTENDANCE_TITLE, ATTENDANCE_MESSAGE, true, true);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onStudentRecordChanged(StudentRecordChangedEvent event) {
+        notifyStudentAndParents(event.studentId(), NotificationEventType.RECORD,
+                RECORD_TITLE, RECORD_MESSAGE, true, true);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

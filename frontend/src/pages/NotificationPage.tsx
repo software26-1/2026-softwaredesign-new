@@ -2,21 +2,22 @@ import { useState, useEffect } from 'react';
 import { notificationService, type Notification } from '../services/notificationService';
 import { useAuth } from '../hooks/useAuth';
 
-type NotiType = 'GRADE_UPDATE' | 'FEEDBACK' | 'COUNSELING' | 'APPROVAL';
-const TYPE_LABELS: Record<string, string> = { GRADE_UPDATE: '성적', FEEDBACK: '피드백', COUNSELING: '상담', APPROVAL: '승인 요청' };
-const typeBg: Record<string, string> = { GRADE_UPDATE: '#ebf4ff', FEEDBACK: '#e8f5e9', COUNSELING: '#fff3e0', APPROVAL: '#f3e5f5' };
-const typeColor: Record<string, string> = { GRADE_UPDATE: '#1e5a99', FEEDBACK: '#2e7d32', COUNSELING: '#e65100', APPROVAL: '#6a1b9a' };
+type NotiType = 'GRADE_UPDATE' | 'FEEDBACK' | 'COUNSELING' | 'APPROVAL' | 'ATTENDANCE' | 'RECORD';
+const TYPE_LABELS: Record<string, string> = { GRADE_UPDATE: '성적', FEEDBACK: '피드백', COUNSELING: '상담', APPROVAL: '승인 요청', ATTENDANCE: '출결', RECORD: '학생부' };
+const typeBg: Record<string, string> = { GRADE_UPDATE: '#ebf4ff', FEEDBACK: '#e8f5e9', COUNSELING: '#fff3e0', APPROVAL: '#f3e5f5', ATTENDANCE: '#fff8e1', RECORD: '#ede7f6' };
+const typeColor: Record<string, string> = { GRADE_UPDATE: '#1e5a99', FEEDBACK: '#2e7d32', COUNSELING: '#e65100', APPROVAL: '#6a1b9a', ATTENDANCE: '#b26a00', RECORD: '#4527a0' };
 
 const TYPE_FILTERS_BY_ROLE: Record<string, ('ALL' | NotiType)[]> = {
   ADMIN:   ['ALL', 'APPROVAL'],
   TEACHER: ['ALL', 'APPROVAL'],
-  STUDENT: ['ALL', 'GRADE_UPDATE', 'FEEDBACK'],
-  PARENT:  ['ALL', 'GRADE_UPDATE', 'FEEDBACK'],
+  STUDENT: ['ALL', 'GRADE_UPDATE', 'FEEDBACK', 'ATTENDANCE', 'RECORD'],
+  PARENT:  ['ALL', 'GRADE_UPDATE', 'FEEDBACK', 'ATTENDANCE', 'RECORD'],
 };
 
 // 마이페이지 알림 설정(localStorage)에서 꺼진 유형은 숨긴다.
 const SETTING_KEY_BY_TYPE: Record<string, string> = {
   GRADE_UPDATE: 'grade', FEEDBACK: 'feedback', COUNSELING: 'counseling', APPROVAL: 'system',
+  ATTENDANCE: 'attendance', RECORD: 'record',
 };
 function readMutedTypes(): Set<string> {
   const muted = new Set<string>();

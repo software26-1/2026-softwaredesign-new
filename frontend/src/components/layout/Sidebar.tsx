@@ -17,7 +17,6 @@ const teacherNav = [
 
 const studentNav = [
   { path: '/dashboard', label: '대시보드' },
-  { path: '/analytics', label: '학급 분석' },
   { path: '/my-grades', label: '내 성적' },
   { path: '/my-attendance', label: '출결 내역' },
   { path: '/my-feedback', label: '피드백 확인' },
@@ -27,7 +26,6 @@ const studentNav = [
 
 const parentNav = [
   { path: '/dashboard', label: '대시보드' },
-  { path: '/analytics', label: '학급 분석' },
   { path: '/child-grades', label: '자녀 성적' },
   { path: '/child-feedback', label: '자녀 피드백' },
   { path: '/notifications', label: '알림' },

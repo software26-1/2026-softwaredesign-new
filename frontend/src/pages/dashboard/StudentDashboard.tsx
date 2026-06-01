@@ -23,7 +23,13 @@ export function StudentDashboard({ user }: Props) {
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState('');
-  const [notiSettings, setNotiSettings] = useState({ grade: true, feedback: true, counseling: false, system: true });
+  const [notiSettings, setNotiSettings] = useState<{ grade: boolean; feedback: boolean; counseling: boolean; system: boolean }>(() => {
+    try {
+      const s = localStorage.getItem('noti-settings');
+      if (s) return { grade: true, feedback: true, counseling: false, system: true, ...JSON.parse(s) };
+    } catch { /* ignore */ }
+    return { grade: true, feedback: true, counseling: false, system: true };
+  });
   const [showNotiModal, setShowNotiModal] = useState(false);
   const [studentId, setStudentId] = useState<number | null>(null);
 
@@ -79,7 +85,7 @@ export function StudentDashboard({ user }: Props) {
           <p style={{ fontSize: '13px', color: '#94a3b8' }}>아이디: {user.loginId} &nbsp;·&nbsp; {YEAR}학년도 {SEMESTER}학기</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          {([['알림 설정', () => setShowNotiModal(true)], ['비밀번호 변경', () => setShowPwModal(true)]] as const).map(([label, handler]) => (
+          {([['알림 설정', () => setShowNotiModal(true)]] as const).map(([label, handler]) => (
             <button key={label} onClick={handler}
               style={{ padding: '7px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif" }}>
               {label}
@@ -214,7 +220,11 @@ export function StudentDashboard({ user }: Props) {
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-              <button onClick={() => setShowNotiModal(false)}
+              <button onClick={() => {
+                  localStorage.setItem('noti-settings', JSON.stringify(notiSettings));
+                  window.dispatchEvent(new Event('noti-settings-updated'));
+                  setShowNotiModal(false);
+                }}
                 style={{ padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, background: '#1e5a99', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif" }}>저장</button>
             </div>
           </div>
