@@ -48,6 +48,18 @@ export function StudentSearchPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [fbPage, setFbPage] = useState(1);
   const [coPage, setCoPage] = useState(1);
+  const [term, setTerm] = useState<{ year: number; semester: '' | '1' | '2' }>({ year: YEAR, semester: '' });
+
+  const effSem = term.semester ? Number(term.semester) : SEMESTER;
+  // 학기 날짜 범위: 1학기 3/1~8/31, 2학기 9/1~다음해 2월
+  const termRange = (year: number, sem: number): [string, string] =>
+    sem === 1 ? [`${year}-03-01`, `${year}-09-01`] : [`${year}-09-01`, `${year + 1}-03-01`];
+  const inTerm = (dateStr?: string) => {
+    if (!term.semester) return true;
+    const [start, end] = termRange(term.year, Number(term.semester));
+    const d = (dateStr ?? '').slice(0, 10);
+    return d >= start && d < end;
+  };
 
   const toggleExpand = (key: string) => setExpanded(prev => {
     const next = new Set(prev);
@@ -113,6 +125,7 @@ export function StudentSearchPage() {
     setExpanded(new Set());
     setFbPage(1);
     setCoPage(1);
+    setTerm({ year: YEAR, semester: '' });
     handleTabChange('grade', s);
   };
 
@@ -142,12 +155,27 @@ export function StudentSearchPage() {
         .finally(() => setDetailLoading(false));
     } else if (tab === 'grade') {
       setDetailLoading(true);
-      analyticsService.getStudentCourses(target.id, YEAR, SEMESTER)
+      analyticsService.getStudentCourses(target.id, term.year, effSem)
         .then(setModalCourses)
         .catch(() => setModalCourses([]))
         .finally(() => setDetailLoading(false));
     }
   };
+
+  // 학기 변경 시: 성적은 해당 학기로 재조회, 피드백/상담은 클라이언트 필터(페이지 초기화)
+  useEffect(() => {
+    if (!selected) return;
+    setFbPage(1);
+    setCoPage(1);
+    if (activeTab === 'grade') {
+      setDetailLoading(true);
+      analyticsService.getStudentCourses(selected.id, term.year, effSem)
+        .then(setModalCourses)
+        .catch(() => setModalCourses([]))
+        .finally(() => setDetailLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [term.year, term.semester]);
 
   const radarData = modalCourses.length > 0 ? {
     labels: modalCourses.slice(0, 6).map(c => courseName(c.courseKey, c.courseName)),
@@ -161,8 +189,10 @@ export function StudentSearchPage() {
     }],
   } : null;
 
-  const pagedFeedbacks = modalFeedbacks.slice((fbPage - 1) * MODAL_PAGE, fbPage * MODAL_PAGE);
-  const pagedCounselings = modalCounselings.slice((coPage - 1) * MODAL_PAGE, coPage * MODAL_PAGE);
+  const filteredFeedbacks = modalFeedbacks.filter(f => inTerm(f.createdAt));
+  const filteredCounselings = modalCounselings.filter(c => inTerm(c.counseledAt));
+  const pagedFeedbacks = filteredFeedbacks.slice((fbPage - 1) * MODAL_PAGE, fbPage * MODAL_PAGE);
+  const pagedCounselings = filteredCounselings.slice((coPage - 1) * MODAL_PAGE, coPage * MODAL_PAGE);
 
   return (
     <div>
@@ -272,6 +302,22 @@ export function StudentSearchPage() {
               ))}
             </div>
 
+            {activeTab !== 'record' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>학기</span>
+                <select value={term.year} onChange={(e) => setTerm(t => ({ ...t, year: Number(e.target.value) }))}
+                  style={{ ...inputStyle, padding: '6px 10px', fontSize: '12px' }}>
+                  {[YEAR, YEAR - 1, YEAR - 2].map(y => <option key={y} value={y}>{y}년</option>)}
+                </select>
+                <select value={term.semester} onChange={(e) => setTerm(t => ({ ...t, semester: e.target.value as '' | '1' | '2' }))}
+                  style={{ ...inputStyle, padding: '6px 10px', fontSize: '12px' }}>
+                  <option value="">{activeTab === 'grade' ? `현재 학기 (${effSem}학기)` : '전체 기간'}</option>
+                  <option value="1">1학기</option>
+                  <option value="2">2학기</option>
+                </select>
+              </div>
+            )}
+
             {detailLoading && <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>}
 
             {!detailLoading && activeTab === 'grade' && (
@@ -283,7 +329,7 @@ export function StudentSearchPage() {
                       <Radar data={radarData} options={{ scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }, plugins: { legend: { display: false } } }} />
                     </div>
                     {/* 과목별 성적 상세표 (작게) */}
-                    <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>과목별 성적 ({YEAR} {SEMESTER}학기)</p>
+                    <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>과목별 성적 ({term.year} {effSem}학기)</p>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                       <thead>
                         <tr style={{ background: '#f8fafc' }}>
@@ -322,8 +368,8 @@ export function StudentSearchPage() {
 
             {!detailLoading && activeTab === 'feedback' && (
               <div>
-                {modalFeedbacks.length === 0 ? (
-                  <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>작성된 피드백이 없습니다.</p>
+                {filteredFeedbacks.length === 0 ? (
+                  <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{term.semester ? '해당 학기에 작성된 피드백이 없습니다.' : '작성된 피드백이 없습니다.'}</p>
                 ) : (
                   <>
                     {pagedFeedbacks.map((f) => {
@@ -346,7 +392,7 @@ export function StudentSearchPage() {
                         </div>
                       );
                     })}
-                    <Pagination page={fbPage} totalItems={modalFeedbacks.length} pageSize={MODAL_PAGE} onChange={setFbPage} />
+                    <Pagination page={fbPage} totalItems={filteredFeedbacks.length} pageSize={MODAL_PAGE} onChange={setFbPage} />
                   </>
                 )}
               </div>
@@ -354,8 +400,8 @@ export function StudentSearchPage() {
 
             {!detailLoading && activeTab === 'counseling' && (
               <div>
-                {modalCounselings.length === 0 ? (
-                  <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>상담 내역이 없습니다.</p>
+                {filteredCounselings.length === 0 ? (
+                  <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{term.semester ? '해당 학기 상담 내역이 없습니다.' : '상담 내역이 없습니다.'}</p>
                 ) : (
                   <>
                     {pagedCounselings.map((c) => {
@@ -377,7 +423,7 @@ export function StudentSearchPage() {
                         </div>
                       );
                     })}
-                    <Pagination page={coPage} totalItems={modalCounselings.length} pageSize={MODAL_PAGE} onChange={setCoPage} />
+                    <Pagination page={coPage} totalItems={filteredCounselings.length} pageSize={MODAL_PAGE} onChange={setCoPage} />
                   </>
                 )}
               </div>

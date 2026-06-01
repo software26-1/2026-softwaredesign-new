@@ -7,7 +7,9 @@ import com.softwaredesign.schoolsystem.auth.jwt.JwtProvider;
 import com.softwaredesign.schoolsystem.domain.approval.entity.ApprovalRequest;
 import com.softwaredesign.schoolsystem.domain.approval.entity.RequestType;
 import com.softwaredesign.schoolsystem.domain.approval.repository.ApprovalRequestRepository;
+import com.softwaredesign.schoolsystem.domain.notification.entity.NotificationEventType;
 import com.softwaredesign.schoolsystem.domain.notification.event.ProfileSetupEvent;
+import com.softwaredesign.schoolsystem.domain.notification.service.NotificationService;
 import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
@@ -47,6 +49,7 @@ public class AuthService {
     private final ClassGroupRepository classGroupRepository;
     private final SchoolRepository schoolRepository;
     private final ApprovalRequestRepository approvalRequestRepository;
+    private final NotificationService notificationService;
 
     // 신규 유저: 프로필 설정 완료 → WAITING_APPROVAL 상태로 변경 (승인 후 ACTIVE)
     public void setupProfile(Long userId, ProfileSetupRequest request) {
@@ -124,10 +127,11 @@ public class AuthService {
 
     private void createClassApprovalRequest(User user, ProfileSetupRequest request, RequestType type) {
         if (request.getGrade() == null || request.getClassNum() == null) return;
-        long classGroupId = classGroupRepository
+        ClassGroup classGroup = classGroupRepository
                 .findBySchoolSchoolNameAndGradeAndClassNumberAndIsDeletedFalse(
                         user.getSchoolName(), request.getGrade(), request.getClassNum())
-                .map(cg -> cg.getId()).orElse(0L);
+                .orElse(null);
+        long classGroupId = classGroup != null ? classGroup.getId() : 0L;
         String detail = String.format("학교:%s|학년:%d|반:%d|번호:%d|classGroupId:%d",
                 user.getSchoolName(),
                 request.getGrade(),
@@ -135,6 +139,17 @@ public class AuthService {
                 request.getStudentNum() != null ? request.getStudentNum() : 0,
                 classGroupId);
         approvalRequestRepository.save(ApprovalRequest.create(user, type, detail));
+
+        // 해당 학급 담임 교사에게 가입 승인 요청 알림 발송
+        if (classGroup != null && classGroup.getHomeroomTeacher() != null
+                && classGroup.getHomeroomTeacher().getUser() != null) {
+            boolean isStudent = type == RequestType.STUDENT_REGISTRATION;
+            String who = user.getName() + (isStudent ? " 학생" : " 학부모");
+            String title = isStudent ? "학생 가입 승인 요청" : "학부모 가입 승인 요청";
+            notificationService.notify(classGroup.getHomeroomTeacher().getUser().getId(),
+                    NotificationEventType.APPROVAL, title,
+                    who + "이 학급 가입 승인을 요청했습니다. 승인 대기 목록을 확인해 주세요.");
+        }
     }
 
     private TokenResponse issueTokens(User user) {
