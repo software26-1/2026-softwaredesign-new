@@ -4,6 +4,7 @@ import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordCreateOrUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordResponse;
 import com.softwaredesign.schoolsystem.domain.record.entity.StudentRecord;
+import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
 import com.softwaredesign.schoolsystem.domain.record.repository.StudentRecordRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
@@ -29,6 +30,7 @@ public class StudentRecordService {
     private final ClassGroupRepository classGroupRepository;
     private final ParentRepository parentRepository;
     private final ParentStudentRepository parentStudentRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     public StudentRecordResponse getByStudent(Long studentId, AuthUser authUser) {
         studentId = resolveStudentId(studentId, authUser);
@@ -41,16 +43,18 @@ public class StudentRecordService {
     public StudentRecordResponse upsert(Long studentId, StudentRecordCreateOrUpdateRequest request, Long userId) {
         Teacher teacher = teacherRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
-
-        if (teacher.getPosition() == null || !teacher.getPosition().startsWith("HOMEROOM")) {
-            throw new AccessDeniedException("담임 교사만 학생부를 수정할 수 있습니다.");
-        }
-        ClassGroup homeroomClass = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
-                .orElseThrow(() -> new AccessDeniedException("담임 학급이 지정되지 않았습니다."));
         Student targetStudent = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
-        if (targetStudent.getClassGroup() == null || !targetStudent.getClassGroup().getId().equals(homeroomClass.getId())) {
-            throw new AccessDeniedException("본인 반 학생의 학생부만 수정할 수 있습니다.");
+
+        // 담임(본인 반) 또는 해당 학생이 수강하는 교과의 담당 교사만 학생부 작성/수정 가능
+        boolean isHomeroom = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .map(cg -> targetStudent.getClassGroup() != null
+                        && targetStudent.getClassGroup().getId().equals(cg.getId()))
+                .orElse(false);
+        boolean isSubjectTeacher = enrollmentRepository
+                .existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(studentId, teacher.getId());
+        if (!isHomeroom && !isSubjectTeacher) {
+            throw new AccessDeniedException("담임 또는 해당 학생을 가르치는 교과 교사만 학생부를 작성할 수 있습니다.");
         }
 
         StudentRecord record = studentRecordRepository.findByStudentId(studentId)
