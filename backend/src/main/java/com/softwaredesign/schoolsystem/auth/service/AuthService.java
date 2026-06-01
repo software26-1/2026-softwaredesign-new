@@ -4,8 +4,14 @@ import com.softwaredesign.schoolsystem.auth.dto.AdminLoginRequest;
 import com.softwaredesign.schoolsystem.auth.dto.ProfileSetupRequest;
 import com.softwaredesign.schoolsystem.auth.dto.TokenResponse;
 import com.softwaredesign.schoolsystem.auth.jwt.JwtProvider;
+import com.softwaredesign.schoolsystem.domain.approval.entity.ApprovalRequest;
+import com.softwaredesign.schoolsystem.domain.approval.entity.RequestType;
+import com.softwaredesign.schoolsystem.domain.approval.repository.ApprovalRequestRepository;
 import com.softwaredesign.schoolsystem.domain.notification.event.ProfileSetupEvent;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
+import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
+import com.softwaredesign.schoolsystem.domain.school.repository.SchoolRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Parent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
@@ -38,6 +44,9 @@ public class AuthService {
     private final StringRedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final ClassGroupRepository classGroupRepository;
+    private final SchoolRepository schoolRepository;
+    private final ApprovalRequestRepository approvalRequestRepository;
 
     // 신규 유저: 프로필 설정 완료 → WAITING_APPROVAL 상태로 변경 (승인 후 ACTIVE)
     public void setupProfile(Long userId, ProfileSetupRequest request) {
@@ -53,10 +62,14 @@ public class AuthService {
         switch (request.getRole()) {
             case TEACHER -> teacherRepository.save(
                     Teacher.createTeacher(user, request.getPosition()));
-            case STUDENT -> studentRepository.save(
-                    Student.createStudent(user, null, null, 0));
-            case PARENT -> parentRepository.save(
-                    Parent.createParent(user));
+            case STUDENT -> {
+                studentRepository.save(Student.createStudent(user, null, null, 0));
+                createClassApprovalRequest(user, request, RequestType.STUDENT_REGISTRATION);
+            }
+            case PARENT -> {
+                parentRepository.save(Parent.createParent(user));
+                createClassApprovalRequest(user, request, RequestType.PARENT_REGISTRATION);
+            }
             default -> {} // ADMIN은 별도 생성 플로우
         }
 
@@ -107,6 +120,21 @@ public class AuthService {
             redisTemplate.delete("RT:" + hashedToken);
             redisTemplate.delete("RTU:" + userId);
         }
+    }
+
+    private void createClassApprovalRequest(User user, ProfileSetupRequest request, RequestType type) {
+        if (request.getGrade() == null || request.getClassNum() == null) return;
+        long classGroupId = classGroupRepository
+                .findBySchoolSchoolNameAndGradeAndClassNumberAndIsDeletedFalse(
+                        user.getSchoolName(), request.getGrade(), request.getClassNum())
+                .map(cg -> cg.getId()).orElse(0L);
+        String detail = String.format("학교:%s|학년:%d|반:%d|번호:%d|classGroupId:%d",
+                user.getSchoolName(),
+                request.getGrade(),
+                request.getClassNum(),
+                request.getStudentNum() != null ? request.getStudentNum() : 0,
+                classGroupId);
+        approvalRequestRepository.save(ApprovalRequest.create(user, type, detail));
     }
 
     private TokenResponse issueTokens(User user) {

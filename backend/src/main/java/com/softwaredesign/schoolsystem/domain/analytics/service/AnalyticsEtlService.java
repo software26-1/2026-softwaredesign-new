@@ -120,10 +120,11 @@ public class AnalyticsEtlService {
                 INSERT INTO analytics.fact_student_course_term
                     (student_key, course_key, year, semester, avg_score,
                      midterm_score, final_score, task_score, weighted_score,
-                     class_rank, class_avg_score, last_refreshed_at)
+                     class_rank, class_avg_score, grade_level, last_refreshed_at)
                 WITH per_student AS (
                     SELECT e.student_id                                                AS student_key,
                            c.id                                                        AS course_key,
+                           c.evaluation_type                                           AS evaluation_type,
                            c.academic_year                                             AS year,
                            c.semester                                                  AS semester,
                            s.class_group_id                                            AS class_group_id,
@@ -138,25 +139,55 @@ public class AnalyticsEtlService {
                     JOIN public.enrollment e ON e.id = g.enrollment_id AND e.is_deleted = false
                     JOIN public.course c     ON c.id = e.course_id AND c.is_deleted = false
                     JOIN public.student s    ON s.id = e.student_id AND s.is_deleted = false
-                    GROUP BY e.student_id, c.id, c.academic_year, c.semester, s.class_group_id
+                    GROUP BY e.student_id, c.id, c.evaluation_type, c.academic_year, c.semester, s.class_group_id
+                ),
+                ranked AS (
+                    SELECT ps.*,
+                           RANK() OVER (PARTITION BY ps.class_group_id, ps.course_key, ps.year, ps.semester
+                                        ORDER BY ps.avg_score DESC NULLS LAST)         AS class_rank,
+                           COUNT(*) OVER (PARTITION BY ps.class_group_id, ps.course_key, ps.year, ps.semester)
+                                                                                       AS student_count,
+                           AVG(ps.avg_score) OVER (PARTITION BY ps.class_group_id, ps.course_key, ps.year, ps.semester)
+                                                                                       AS class_avg_score
+                    FROM per_student ps
                 )
-                SELECT ps.student_key,
-                       ps.course_key,
-                       ps.year,
-                       ps.semester,
-                       ps.avg_score,
-                       ps.midterm_score,
-                       ps.final_score,
-                       ps.task_score,
-                       (COALESCE(ps.midterm_score, 0) * ps.midterm_ratio / 100.0
-                        + COALESCE(ps.final_score, 0) * ps.final_ratio / 100.0
-                        + COALESCE(ps.task_score, 0) * ps.task_ratio / 100.0)          AS weighted_score,
-                       RANK() OVER (PARTITION BY ps.class_group_id, ps.course_key, ps.year, ps.semester
-                                    ORDER BY ps.avg_score DESC NULLS LAST)             AS class_rank,
-                       AVG(ps.avg_score) OVER (PARTITION BY ps.class_group_id, ps.course_key, ps.year, ps.semester)
-                                                                                       AS class_avg_score,
+                SELECT r.student_key,
+                       r.course_key,
+                       r.year,
+                       r.semester,
+                       r.avg_score,
+                       r.midterm_score,
+                       r.final_score,
+                       r.task_score,
+                       (COALESCE(r.midterm_score, 0) * r.midterm_ratio / 100.0
+                        + COALESCE(r.final_score, 0) * r.final_ratio / 100.0
+                        + COALESCE(r.task_score, 0) * r.task_ratio / 100.0)            AS weighted_score,
+                       r.class_rank,
+                       r.class_avg_score,
+                       CASE
+                         WHEN r.evaluation_type = 'ABSOLUTE' THEN
+                           CASE
+                             WHEN r.avg_score >= 90 THEN 'A'
+                             WHEN r.avg_score >= 80 THEN 'B'
+                             WHEN r.avg_score >= 70 THEN 'C'
+                             WHEN r.avg_score >= 60 THEN 'D'
+                             ELSE 'E'
+                           END
+                         ELSE
+                           CASE
+                             WHEN r.class_rank::float / r.student_count <= 0.04 THEN '1'
+                             WHEN r.class_rank::float / r.student_count <= 0.11 THEN '2'
+                             WHEN r.class_rank::float / r.student_count <= 0.23 THEN '3'
+                             WHEN r.class_rank::float / r.student_count <= 0.40 THEN '4'
+                             WHEN r.class_rank::float / r.student_count <= 0.60 THEN '5'
+                             WHEN r.class_rank::float / r.student_count <= 0.77 THEN '6'
+                             WHEN r.class_rank::float / r.student_count <= 0.89 THEN '7'
+                             WHEN r.class_rank::float / r.student_count <= 0.96 THEN '8'
+                             ELSE '9'
+                           END
+                       END                                                              AS grade_level,
                        NOW()
-                FROM per_student ps
+                FROM ranked r
                 ON CONFLICT (student_key, course_key, year, semester) DO UPDATE SET
                        avg_score        = EXCLUDED.avg_score,
                        midterm_score    = EXCLUDED.midterm_score,
@@ -165,6 +196,7 @@ public class AnalyticsEtlService {
                        weighted_score   = EXCLUDED.weighted_score,
                        class_rank       = EXCLUDED.class_rank,
                        class_avg_score  = EXCLUDED.class_avg_score,
+                       grade_level      = EXCLUDED.grade_level,
                        last_refreshed_at = EXCLUDED.last_refreshed_at
                 """).executeUpdate();
     }

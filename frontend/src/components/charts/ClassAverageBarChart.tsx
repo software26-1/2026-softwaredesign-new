@@ -4,10 +4,11 @@ import type { ClassCourseStats } from '../../types/analytics';
 
 interface Props {
   stats: ClassCourseStats[];
+  courseMap?: Record<number, string>;
 }
 
-export function ClassAverageBarChart({ stats }: Props) {
-  const labels = stats.map((s) => s.courseName ?? `과목 ${s.courseKey}`);
+export function ClassAverageBarChart({ stats, courseMap }: Props) {
+  const labels = stats.map((s) => courseMap?.[s.courseKey] ?? s.courseName ?? `과목 ${s.courseKey}`);
   const data = {
     labels,
     datasets: [

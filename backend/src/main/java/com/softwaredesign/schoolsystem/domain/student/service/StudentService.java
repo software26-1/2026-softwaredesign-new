@@ -43,11 +43,33 @@ public class StudentService {
         return StudentResponse.from(student);
     }
 
-    public List<Student> getStudents(Long classGroupId) {
+    public List<Student> getStudents(Long schoolId, Long classGroupId, Integer grade, Integer classNumber, String name) {
         if (classGroupId != null) {
-            return studentRepository.findAllByClassGroupIdAndIsDeletedFalse(classGroupId);
+            return schoolId != null
+                    ? studentRepository.findAllBySchoolIdAndClassGroupIdAndIsDeletedFalse(schoolId, classGroupId)
+                    : studentRepository.findAllByClassGroupIdAndIsDeletedFalse(classGroupId);
         }
-        return studentRepository.findAllByIsDeletedFalse();
+        if (grade != null || classNumber != null || (name != null && !name.isBlank())) {
+            return studentRepository.searchStudents(schoolId, grade, classNumber, name != null && !name.isBlank() ? name : null);
+        }
+        return schoolId != null
+                ? studentRepository.findAllBySchoolIdAndIsDeletedFalse(schoolId)
+                : studentRepository.findAllByIsDeletedFalse();
+    }
+
+    public List<StudentResponse> getUnassignedStudents(Long schoolId) {
+        return studentRepository.findAllBySchoolIdAndClassGroupIsNullAndIsDeletedFalse(schoolId)
+                .stream().map(StudentResponse::from).toList();
+    }
+
+    @Transactional
+    public StudentResponse assignClassGroup(Long studentId, Long classGroupId, Integer studentNumber) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+        ClassGroup classGroup = classGroupRepository.findById(classGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("학급을 찾을 수 없습니다."));
+        student.updateStudent(classGroup, studentNumber);
+        return StudentResponse.from(student);
     }
 
     public StudentResponse getStudent(Long studentId) {

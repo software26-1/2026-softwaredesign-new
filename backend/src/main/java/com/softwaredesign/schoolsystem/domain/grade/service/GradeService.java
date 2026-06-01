@@ -8,7 +8,6 @@ import com.softwaredesign.schoolsystem.domain.grade.dto.GradeResponse;
 import com.softwaredesign.schoolsystem.domain.grade.dto.GradeUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.grade.entity.Grade;
 import com.softwaredesign.schoolsystem.domain.grade.repository.GradeRepository;
-import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.event.GradeChangedEvent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
@@ -30,7 +29,6 @@ public class GradeService {
     private final GradeRepository gradeRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
-    private final TeacherRepository teacherRepository;
     private final ParentRepository parentRepository;
     private final ParentStudentRepository parentStudentRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -69,7 +67,23 @@ public class GradeService {
                 .toList();
     }
 
-    public List<GradeResponse> getGradesByEnrollment(Long enrollmentId) {
+    public List<GradeResponse> getGradesByEnrollment(Long enrollmentId, AuthUser authUser) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("수강 정보를 찾을 수 없습니다."));
+        String role = authUser.role();
+        if ("STUDENT".equals(role)) {
+            Student self = studentRepository.findByUserIdAndIsDeletedFalse(authUser.id())
+                    .orElseThrow(() -> new AccessDeniedException("학생 정보를 찾을 수 없습니다."));
+            if (!enrollment.getStudent().getId().equals(self.getId())) {
+                throw new AccessDeniedException("본인의 성적만 조회할 수 있습니다.");
+            }
+        } else if ("PARENT".equals(role)) {
+            Long studentId = enrollment.getStudent().getId();
+            parentRepository.findByUserIdAndIsDeletedFalse(authUser.id())
+                    .map(parent -> parentStudentRepository.findAllByParentIdAndIsDeletedFalse(parent.getId()))
+                    .filter(list -> list.stream().anyMatch(ps -> ps.getStudent().getId().equals(studentId)))
+                    .orElseThrow(() -> new AccessDeniedException("자녀의 성적만 조회할 수 있습니다."));
+        }
         return gradeRepository.findByEnrollmentId(enrollmentId).stream()
                 .map(GradeResponse::from)
                 .toList();
@@ -99,10 +113,10 @@ public class GradeService {
         eventPublisher.publishEvent(new GradeChangedEvent(studentId));
     }
 
-    // 해당 수강의 담당 교사인지 검증
+    // 해당 과목 담당 교사만 성적 수정 가능
     private void validateTeacherPermission(Enrollment enrollment, Long userId) {
-        Long teacherUserId = enrollment.getCourse().getTeacher().getUser().getId();
-        if (!teacherUserId.equals(userId)) {
+        Long courseTeacherUserId = enrollment.getCourse().getTeacher().getUser().getId();
+        if (!courseTeacherUserId.equals(userId)) {
             throw new AccessDeniedException("해당 과목 담당 교사만 성적을 관리할 수 있습니다.");
         }
     }

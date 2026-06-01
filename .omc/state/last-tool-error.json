@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"docker exec school_postgres psql -U school_user -d school_mgmt -c \\\"SELECT COUNT(*) FROM grade;\\\" && docker exec school_postgres psql -U school_user -d school_mgmt -c \\\"SELECT COUNT(*) FRO...",
+  "error": "Exit code 2\npsql: error: connection to server on socket \"/var/run/postgresql/.s.PGSQL.5432\" failed: FATAL:  role \"school_user\" does not exist",
+  "timestamp": "2026-06-01T00:22:02.068Z",
+  "retry_count": 1
+}

@@ -49,6 +49,11 @@ public class Student extends BaseEntity {
         this.school = school;
     }
 
+    public void transferToSchool() {
+        this.classGroup = null;
+        this.studentNumber = 0;
+    }
+
     public static Student createStudent(User user, School school, ClassGroup classGroup, int studentNumber) {
         Student student = new Student();
 

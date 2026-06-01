@@ -13,6 +13,7 @@ public interface CounselingRepository extends JpaRepository<Counseling, Long> {
     List<Counseling> findByTeacherId(Long teacherId);
     List<Counseling> findByStudentIdAndIsSharedTrue(Long studentId);
     List<Counseling> findByIsSharedTrue();
+    long countByStudentId(Long studentId);
 
     @Query("select c from Counseling c "
             + "where c.isShared = true "

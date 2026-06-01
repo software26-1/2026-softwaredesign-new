@@ -32,6 +32,7 @@ export interface StudentCourseTerm {
   weightedScore?: number;
   classRank?: number;
   classAvgScore?: number;
+  gradeLevel?: string;
 }
 
 export interface ScoreTrendPoint {

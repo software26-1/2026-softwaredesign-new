@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function LoginPage() {
   const [hovered, setHovered] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isInactive = new URLSearchParams(location.search).get('error') === 'inactive';
 
   const handleGoogleLogin = () => {
     window.location.href = `${import.meta.env.VITE_BACKEND_URL}/oauth2/authorization/google`;
@@ -48,6 +50,12 @@ export function LoginPage() {
 
         {/* 구분선 */}
         <div style={{ borderTop: '1px solid #f1f5f9', marginBottom: '32px' }} />
+
+        {isInactive && (
+          <div style={{ background: '#fdecea', border: '1px solid #f5c6cb', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', fontSize: '13px', color: '#c62828' }}>
+            비활성화된 계정입니다. 학교 담당자에게 문의하세요.
+          </div>
+        )}
 
         <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px', textAlign: 'center' }}>
           Google 계정으로 로그인하여 시작하세요

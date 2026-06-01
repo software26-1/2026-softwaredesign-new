@@ -12,10 +12,10 @@ export interface Notification {
 // New notification endpoints return raw DTOs (read res.data directly).
 export const notificationService = {
   async list(isRead?: boolean): Promise<Notification[]> {
-    const res = await client.get<Notification[]>('/notifications', {
+    const res = await client.get<any[]>('/notifications', {
       params: isRead != null ? { is_read: isRead } : undefined,
     });
-    return res.data;
+    return res.data.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
   },
 
   async markRead(id: number): Promise<Notification | { message?: string }> {

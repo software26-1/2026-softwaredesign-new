@@ -39,7 +39,7 @@ public class GradeController {
             @RequestParam(name = "enrollment_id", required = false) Long enrollmentId,
             @AuthenticationPrincipal AuthUser authUser) {
         if (enrollmentId != null) {
-            return ResponseEntity.ok(gradeService.getGradesByEnrollment(enrollmentId));
+            return ResponseEntity.ok(gradeService.getGradesByEnrollment(enrollmentId, authUser));
         }
         return ResponseEntity.ok(gradeService.getGradesByStudent(studentId, authUser));
     }

@@ -1,0 +1,412 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1780268607603,
+  "projectRoot": "/Users/gangminseo/Desktop/소설",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "_tmp_repo": {
+      "path": "_tmp_repo",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1780268607581,
+      "keyFiles": []
+    },
+    "backend": {
+      "path": "backend",
+      "purpose": null,
+      "fileCount": 13,
+      "lastAccessed": 1780268607585,
+      "keyFiles": [
+        "CLAUDE.md",
+        "Dockerfile",
+        "HELP.md",
+        "build.gradle",
+        "gradlew"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 2,
+      "lastAccessed": 1780268607585,
+      "keyFiles": [
+        "DEPLOY-TROUBLESHOOTING.md",
+        "DEPLOYMENT.md"
+      ]
+    },
+    "frontend": {
+      "path": "frontend",
+      "purpose": null,
+      "fileCount": 15,
+      "lastAccessed": 1780268607585,
+      "keyFiles": [
+        "README.md",
+        "Stuent_record_system.html",
+        "eslint.config.js",
+        "index.html",
+        "intellij-prompt.md"
+      ]
+    },
+    "monitoring": {
+      "path": "monitoring",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1780268607585,
+      "keyFiles": [
+        "prometheus.yml"
+      ]
+    },
+    "nginx": {
+      "path": "nginx",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1780268607586,
+      "keyFiles": [
+        "README.md",
+        "nginx-tls.conf",
+        "nginx.conf"
+      ]
+    },
+    "frontend/dist": {
+      "path": "frontend/dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 3,
+      "lastAccessed": 1780268607586,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg",
+        "index.html"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/service/GradeService.java",
+      "accessCount": 17,
+      "lastAccessed": 1780283103236,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/controller/StudentController.java",
+      "accessCount": 15,
+      "lastAccessed": 1780279958504,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/dto/MyProfileResponse.java",
+      "accessCount": 11,
+      "lastAccessed": 1780283943183,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/service/UserProfileService.java",
+      "accessCount": 10,
+      "lastAccessed": 1780283977442,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/academic/controller/CourseController.java",
+      "accessCount": 10,
+      "lastAccessed": 1780289198634,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/controller/AttendanceController.java",
+      "accessCount": 8,
+      "lastAccessed": 1780290982533,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/service/AttendanceService.java",
+      "accessCount": 8,
+      "lastAccessed": 1780290990330,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/service/StudentService.java",
+      "accessCount": 7,
+      "lastAccessed": 1780279998002,
+      "type": "file"
+    },
+    {
+      "path": ".project-context.md",
+      "accessCount": 5,
+      "lastAccessed": 1780192301982,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/controller/TeacherController.java",
+      "accessCount": 5,
+      "lastAccessed": 1780192690944,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/academic/service/CourseService.java",
+      "accessCount": 5,
+      "lastAccessed": 1780287527323,
+      "type": "file"
+    },
+    {
+      "path": "backend/CLAUDE.md",
+      "accessCount": 4,
+      "lastAccessed": 1780192302181,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/school/service/TeacherService.java",
+      "accessCount": 4,
+      "lastAccessed": 1780195464421,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/controller/GradeController.java",
+      "accessCount": 4,
+      "lastAccessed": 1780277579968,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/counseling/repository/CounselingRepository.java",
+      "accessCount": 4,
+      "lastAccessed": 1780278642042,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/feedback/repository/FeedbackRepository.java",
+      "accessCount": 4,
+      "lastAccessed": 1780278816429,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/repository/GradeRepository.java",
+      "accessCount": 4,
+      "lastAccessed": 1780279006722,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/controller/UserProfileController.java",
+      "accessCount": 4,
+      "lastAccessed": 1780283970581,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/controller/GradeSummaryController.java",
+      "accessCount": 3,
+      "lastAccessed": 1779876658612,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/service/GradeSummaryService.java",
+      "accessCount": 3,
+      "lastAccessed": 1779876669548,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/entity/User.java",
+      "accessCount": 3,
+      "lastAccessed": 1780209876121,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/entity/Student.java",
+      "accessCount": 3,
+      "lastAccessed": 1780209898308,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/counseling/controller/CounselingController.java",
+      "accessCount": 3,
+      "lastAccessed": 1780274754375,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/StudentResponse.java",
+      "accessCount": 3,
+      "lastAccessed": 1780278340525,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/academic/entity/Course.java",
+      "accessCount": 3,
+      "lastAccessed": 1780284837464,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/repository/AttendanceRepository.java",
+      "accessCount": 3,
+      "lastAccessed": 1780290973305,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/entity/Grade.java",
+      "accessCount": 2,
+      "lastAccessed": 1779754352030,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/record/controller/StudentRecordController.java",
+      "accessCount": 2,
+      "lastAccessed": 1779866721382,
+      "type": "file"
+    },
+    {
+      "path": "frontend/intellij-prompt.md",
+      "accessCount": 2,
+      "lastAccessed": 1779924622816,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/feedback/controller/FeedbackController.java",
+      "accessCount": 2,
+      "lastAccessed": 1780137495895,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/academic/service/EnrollmentService.java",
+      "accessCount": 1,
+      "lastAccessed": 1779753693083,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/academic/controller/EnrollmentController.java",
+      "accessCount": 1,
+      "lastAccessed": 1779753693594,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/resources/db/migration/V3__create_all_tables.sql",
+      "accessCount": 1,
+      "lastAccessed": 1779754256278,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/entity/GradeSummary.java",
+      "accessCount": 1,
+      "lastAccessed": 1779757283996,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/entity/Attendance.java",
+      "accessCount": 1,
+      "lastAccessed": 1779759056722,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/feedback/entity/Feedback.java",
+      "accessCount": 1,
+      "lastAccessed": 1779759057685,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/counseling/entity/Counseling.java",
+      "accessCount": 1,
+      "lastAccessed": 1779759058337,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/record/entity/StudentRecord.java",
+      "accessCount": 1,
+      "lastAccessed": 1779759058721,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/repository/GradeSummaryRepository.java",
+      "accessCount": 1,
+      "lastAccessed": 1779759086712,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/record/repository/StudentRecordRepository.java",
+      "accessCount": 1,
+      "lastAccessed": 1779759088979,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/dto/GradeCreateRequest.java",
+      "accessCount": 1,
+      "lastAccessed": 1779764555695,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/dto/GradeUpdateRequest.java",
+      "accessCount": 1,
+      "lastAccessed": 1779764556722,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/dto/GradeResponse.java",
+      "accessCount": 1,
+      "lastAccessed": 1779764556899,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/grade/dto/GradeSummaryResponse.java",
+      "accessCount": 1,
+      "lastAccessed": 1779767032303,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/dto/AttendanceCreateRequest.java",
+      "accessCount": 1,
+      "lastAccessed": 1779770528592,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/dto/AttendanceUpdateRequest.java",
+      "accessCount": 1,
+      "lastAccessed": 1779770529057,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/dto/AttendanceResponse.java",
+      "accessCount": 1,
+      "lastAccessed": 1779770529990,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/dto/AttendanceSummaryResponse.java",
+      "accessCount": 1,
+      "lastAccessed": 1779770530444,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/search/controller/StudentSearchController.java",
+      "accessCount": 1,
+      "lastAccessed": 1779860451602,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/dto/MyProfileUpdateRequest.java",
+      "accessCount": 1,
+      "lastAccessed": 1779862550519,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

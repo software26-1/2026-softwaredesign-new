@@ -8,6 +8,7 @@ import {
   LineElement, Filler, Tooltip, Legend,
 } from 'chart.js';
 import { studentService } from '../services/studentService';
+import client from '../api/client';
 import { feedbackService } from '../services/feedbackService';
 import { counselingService } from '../services/counselingService';
 import { analyticsService } from '../services/analyticsService';
@@ -27,21 +28,38 @@ const inputStyle: React.CSSProperties = { padding: '9px 14px', border: '1px soli
 
 export function StudentSearchPage() {
   const [filters, setFilters] = useState({ grade: '', classNumber: '', name: '', contentType: 'all' });
+  const [allClassGroups, setAllClassGroups] = useState<{ id: number; grade: number; classNumber: number }[]>([]);
+  const [schoolId, setSchoolId] = useState<number | null>(null);
   const [results, setResults] = useState<StudentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<StudentDetail | null>(null);
-  const [activeTab, setActiveTab] = useState<'info' | 'grade' | 'feedback' | 'counseling'>('info');
+  const [activeTab, setActiveTab] = useState<'grade' | 'feedback' | 'counseling'>('grade');
   const [modalFeedbacks, setModalFeedbacks] = useState<Feedback[]>([]);
   const [modalCounselings, setModalCounselings] = useState<Counseling[]>([]);
   const [modalCourses, setModalCourses] = useState<StudentCourseTerm[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
+    client.get<any>('/users/me').then(r => {
+      const profile = r?.data?.data ?? r?.data ?? null;
+      if (profile?.schoolId) {
+        setSchoolId(profile.schoolId);
+        client.get<any[]>(`/schools/${profile.schoolId}/class-groups`)
+          .then(r2 => {
+            const list: any[] = Array.isArray(r2.data) ? r2.data : (r2.data?.data ?? []);
+            setAllClassGroups(list.map((cg: any) => ({ id: cg.id, grade: cg.grade, classNumber: cg.classNumber })));
+          }).catch(() => {});
+      }
+    }).catch(() => {});
     studentService.search({})
       .then(res => setResults(res))
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setFilters(f => ({ ...f, classNumber: '' }));
+  }, [filters.grade]);
 
   const fetchStudents = (params: { grade?: number; classNumber?: number; name?: string }) => {
     setLoading(true);
@@ -66,13 +84,13 @@ export function StudentSearchPage() {
 
   const handleSelectStudent = (s: StudentDetail) => {
     setSelected(s);
-    setActiveTab('info');
+    setActiveTab('grade');
     setModalFeedbacks([]);
     setModalCounselings([]);
     setModalCourses([]);
   };
 
-  const handleTabChange = (tab: 'info' | 'grade' | 'feedback' | 'counseling') => {
+  const handleTabChange = (tab: 'grade' | 'feedback' | 'counseling') => {
     setActiveTab(tab);
     if (!selected) return;
     if (tab === 'feedback') {
@@ -119,7 +137,12 @@ export function StudentSearchPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '16px' }}>
           {[
             { label: '학년', key: 'grade', options: ['1','2','3'].map(v => ({ value: v, label: `${v}학년` })) },
-            { label: '반', key: 'classNumber', options: Array.from({length: 10}, (_, i) => ({ value: String(i+1), label: `${i+1}반` })) },
+            { label: '반', key: 'classNumber', options: allClassGroups
+                .filter(cg => !filters.grade || cg.grade === Number(filters.grade))
+                .map(cg => cg.classNumber)
+                .filter((v, i, a) => a.indexOf(v) === i)
+                .sort((a, b) => a - b)
+                .map(n => ({ value: String(n), label: `${n}반` })) },
           ].map(({ label, key, options }) => (
             <div key={key}>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>{label}</label>
@@ -190,11 +213,34 @@ export function StudentSearchPage() {
         )}
       </div>
 
-      <Modal isOpen={!!selected} title={selected ? `${selected.name} 학생 상세` : ''} onClose={() => setSelected(null)} width={700}>
+      <Modal isOpen={!!selected} title={selected ? `${selected.name} (${selected.studentNumber}번)` : ''} onClose={() => setSelected(null)} width={700}>
         {selected && (
           <div>
+            {/* 학생 헤더 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', background: 'linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%)', borderRadius: '12px', marginBottom: '20px', color: '#fff' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 700, flexShrink: 0 }}>
+                {selected.name[0]}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>{selected.name}</p>
+                <p style={{ fontSize: '13px', opacity: 0.8 }}>{selected.grade}학년 {selected.classNumber}반 {selected.studentNumber}번</p>
+              </div>
+              <div style={{ display: 'flex', gap: '20px', textAlign: 'center' }}>
+                {[
+                  { label: '최근 성적', value: selected.recentGradeScore != null ? `${selected.recentGradeScore}점` : '—' },
+                  { label: '피드백', value: selected.feedbackCount != null ? `${selected.feedbackCount}건` : '—' },
+                  { label: '상담', value: selected.counselingCount != null ? `${selected.counselingCount}회` : '—' },
+                ].map(item => (
+                  <div key={item.label}>
+                    <p style={{ fontSize: '11px', opacity: 0.7, marginBottom: '4px' }}>{item.label}</p>
+                    <p style={{ fontSize: '16px', fontWeight: 700 }}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #f1f5f9' }}>
-              {([['info','기본 정보'],['grade','성적'],['feedback','피드백'],['counseling','상담']] as const).map(([tab, label]) => (
+              {([['grade','성적'],['feedback','피드백'],['counseling','상담']] as const).map(([tab, label]) => (
                 <button key={tab} onClick={() => handleTabChange(tab)}
                   style={{ padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#1e5a99' : '#94a3b8', borderBottom: activeTab === tab ? '2px solid #1e5a99' : '2px solid transparent', marginBottom: '-2px', fontFamily: "'Noto Sans KR', sans-serif" }}>
                   {label}
@@ -203,24 +249,6 @@ export function StudentSearchPage() {
             </div>
 
             {detailLoading && <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>}
-
-            {!detailLoading && activeTab === 'info' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {[
-                  ['이름', selected.name],
-                  ['학년/반/번호', `${selected.grade}학년 ${selected.classNumber}반 ${selected.studentNumber}번`],
-                  ['최근 성적', selected.recentGradeScore != null ? `${selected.recentGradeScore}점` : '—'],
-                  ['등급', selected.recentGradeLevel ?? '—'],
-                  ['피드백 수', selected.feedbackCount != null ? `${selected.feedbackCount}건` : '—'],
-                  ['상담 횟수', selected.counselingCount != null ? `${selected.counselingCount}회` : '—'],
-                ].map(([k, v]) => (
-                  <div key={k} style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '8px' }}>
-                    <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>{k}</p>
-                    <p style={{ fontSize: '15px', fontWeight: 700, color: '#1a2332' }}>{v}</p>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {!detailLoading && activeTab === 'grade' && (
               <div>
@@ -260,10 +288,10 @@ export function StudentSearchPage() {
                 ) : modalCounselings.map((c) => (
                   <div key={c.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', gap: '12px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>{c.counselDate?.slice(0, 10)}</span>
+                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>{c.counseledAt?.slice(0, 10)}</span>
                       <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{c.teacherName} 선생님</span>
                     </div>
-                    <p style={{ fontSize: '13px', color: '#334155', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px' }}>{c.mainContent}</p>
+                    <p style={{ fontSize: '13px', color: '#334155', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px' }}>{c.content}</p>
                   </div>
                 ))}
               </div>

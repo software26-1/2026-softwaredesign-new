@@ -19,12 +19,17 @@ public class UserSummaryResponse {
     private final LocalDateTime updatedAt;
     private final String residentNumber;
     private final String position;
+    private final Long teacherId;
 
     public UserSummaryResponse(User user) {
-        this(user, null);
+        this(user, null, null);
     }
 
     public UserSummaryResponse(User user, String position) {
+        this(user, position, null);
+    }
+
+    public UserSummaryResponse(User user, String position, Long teacherId) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
@@ -36,6 +41,7 @@ public class UserSummaryResponse {
         this.updatedAt = user.getUpdatedAt();
         this.residentNumber = maskResidentNumber(user.getResidentNumber());
         this.position = position;
+        this.teacherId = teacherId;
     }
 
     private static String maskResidentNumber(String raw) {

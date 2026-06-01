@@ -15,7 +15,7 @@ export function CounselingPage() {
   const [list, setList] = useState<Counseling[]>([]);
   const [selected, setSelected] = useState<Counseling | null>(null);
   const [search, setSearch] = useState({ studentName: '', startDate: '', endDate: '' });
-  const [form, setForm] = useState({ studentId: '', counselDate: new Date().toISOString().slice(0, 10), mainContent: '', nextPlan: '', isShared: true });
+  const [form, setForm] = useState({ studentId: '', counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -49,13 +49,13 @@ export function CounselingPage() {
     try {
       const created = await counselingService.create({
         studentId: Number(form.studentId),
-        counselDate: form.counselDate,
-        mainContent: form.mainContent,
+        counseledAt: form.counseledAt,
+        content: form.content,
         nextPlan: form.nextPlan,
         isShared: form.isShared,
       });
       setList(prev => [created, ...prev]);
-      setForm({ studentId: '', counselDate: new Date().toISOString().slice(0, 10), mainContent: '', nextPlan: '', isShared: true });
+      setForm({ studentId: '', counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
       setMsg('상담 내역이 저장되었습니다.');
       setTimeout(() => setMsg(''), 3000);
     } catch {
@@ -67,8 +67,8 @@ export function CounselingPage() {
 
   const filtered = list.filter(c =>
     (!search.studentName || c.studentName?.includes(search.studentName)) &&
-    (!search.startDate || (c.counselDate ?? '').slice(0, 10) >= search.startDate) &&
-    (!search.endDate || (c.counselDate ?? '').slice(0, 10) <= search.endDate)
+    (!search.startDate || (c.counseledAt ?? '').slice(0, 10) >= search.startDate) &&
+    (!search.endDate || (c.counseledAt ?? '').slice(0, 10) <= search.endDate)
   );
 
   return (
@@ -93,12 +93,12 @@ export function CounselingPage() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>상담 일자</label>
-              <input type="date" required style={inputStyle} value={form.counselDate} onChange={e => setForm({ ...form, counselDate: e.target.value })} />
+              <input type="date" required style={inputStyle} value={form.counseledAt} onChange={e => setForm({ ...form, counseledAt: e.target.value })} />
             </div>
           </div>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>주요 내용</label>
-            <textarea required value={form.mainContent} onChange={e => setForm({ ...form, mainContent: e.target.value })} placeholder="상담 주요 내용을 입력하세요" style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
+            <textarea required value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder="상담 주요 내용을 입력하세요" style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
           </div>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>차후 계획</label>
@@ -143,13 +143,13 @@ export function CounselingPage() {
             <tbody>
               {filtered.map(c => (
                 <tr key={c.id}>
-                  <td style={{ ...tdStyle, color: '#94a3b8' }}>{c.counselDate?.slice(0, 10)}</td>
+                  <td style={{ ...tdStyle, color: '#94a3b8' }}>{c.counseledAt?.slice(0, 10)}</td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{c.studentName}</td>
                   <td style={{ ...tdStyle, color: '#475569' }}>{c.teacherName}</td>
-                  <td style={{ ...tdStyle, maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#64748b' }}>{c.mainContent}</td>
+                  <td style={{ ...tdStyle, maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#64748b' }}>{c.content}</td>
                   <td style={tdStyle}>
-                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: c.isShared ? '#e8f5e9' : '#f5f5f5', color: c.isShared ? '#2e7d32' : '#9e9e9e' }}>
-                      {c.isShared ? '공유' : '비공개'}
+                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: c.shared ? '#e8f5e9' : '#f5f5f5', color: c.shared ? '#2e7d32' : '#9e9e9e' }}>
+                      {c.shared ? '공유' : '비공개'}
                     </span>
                   </td>
                   <td style={tdStyle}>
@@ -169,7 +169,7 @@ export function CounselingPage() {
         {selected && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[['학생', selected.studentName], ['상담 교사', selected.teacherName], ['상담일', selected.counselDate?.slice(0, 10)]].map(([k, v]) => (
+              {[['학생', selected.studentName], ['상담 교사', selected.teacherName], ['상담일', selected.counseledAt?.slice(0, 10)]].map(([k, v]) => (
                 <div key={k} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
                   <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>{k}</p>
                   <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a2332' }}>{v}</p>
@@ -177,14 +177,14 @@ export function CounselingPage() {
               ))}
               <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
                 <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>공유 여부</p>
-                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: selected.isShared ? '#e8f5e9' : '#f5f5f5', color: selected.isShared ? '#2e7d32' : '#9e9e9e' }}>
-                  {selected.isShared ? '공유' : '비공개'}
+                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: selected.shared ? '#e8f5e9' : '#f5f5f5', color: selected.shared ? '#2e7d32' : '#9e9e9e' }}>
+                  {selected.shared ? '공유' : '비공개'}
                 </span>
               </div>
             </div>
             <div>
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px' }}>주요 내용</p>
-              <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.8', padding: '14px', background: '#f8fafc', borderRadius: '8px' }}>{selected.mainContent}</p>
+              <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.8', padding: '14px', background: '#f8fafc', borderRadius: '8px' }}>{selected.content}</p>
             </div>
             {selected.nextPlan && (
               <div>

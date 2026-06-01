@@ -19,7 +19,7 @@ export function MainLayout() {
   return (
     <div style={{ minHeight: '100vh', background: '#f7f8fa' }}>
       <Header user={user} onLogout={logout} />
-      <Sidebar role={user.role} />
+      <Sidebar role={user.role} classGroupId={(user as any).classGroupId} />
       <main
         style={{
           marginLeft: '220px',

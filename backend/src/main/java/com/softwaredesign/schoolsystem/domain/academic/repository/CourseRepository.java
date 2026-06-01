@@ -8,4 +8,5 @@ import java.util.List;
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findAllByAcademicYearAndSemesterAndIsDeletedFalse(int academicYear, int semester);
     List<Course> findAllByAcademicYearAndSemesterAndTeacherIdAndIsDeletedFalse(int academicYear, int semester, Long teacherId);
+    List<Course> findAllByAcademicYearAndSemesterAndTeacherIsNullAndIsDeletedFalse(int academicYear, int semester);
 }

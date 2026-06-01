@@ -5,6 +5,9 @@ import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordCreateOrUp
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordResponse;
 import com.softwaredesign.schoolsystem.domain.record.entity.StudentRecord;
 import com.softwaredesign.schoolsystem.domain.record.repository.StudentRecordRepository;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
+import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
@@ -23,27 +26,35 @@ public class StudentRecordService {
     private final StudentRecordRepository studentRecordRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private final ClassGroupRepository classGroupRepository;
     private final ParentRepository parentRepository;
     private final ParentStudentRepository parentStudentRepository;
 
     public StudentRecordResponse getByStudent(Long studentId, AuthUser authUser) {
         studentId = resolveStudentId(studentId, authUser);
-        StudentRecord record = studentRecordRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생부를 찾을 수 없습니다."));
-        return StudentRecordResponse.from(record);
+        return studentRecordRepository.findByStudentId(studentId)
+                .map(StudentRecordResponse::from)
+                .orElse(null);
     }
 
     @Transactional
     public StudentRecordResponse upsert(Long studentId, StudentRecordCreateOrUpdateRequest request, Long userId) {
-        teacherRepository.findByUserId(userId)
+        Teacher teacher = teacherRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
 
+        if (teacher.getPosition() == null || !teacher.getPosition().startsWith("HOMEROOM")) {
+            throw new AccessDeniedException("담임 교사만 학생부를 수정할 수 있습니다.");
+        }
+        ClassGroup homeroomClass = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .orElseThrow(() -> new AccessDeniedException("담임 학급이 지정되지 않았습니다."));
+        Student targetStudent = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+        if (targetStudent.getClassGroup() == null || !targetStudent.getClassGroup().getId().equals(homeroomClass.getId())) {
+            throw new AccessDeniedException("본인 반 학생의 학생부만 수정할 수 있습니다.");
+        }
+
         StudentRecord record = studentRecordRepository.findByStudentId(studentId)
-                .orElseGet(() -> {
-                    Student student = studentRepository.findById(studentId)
-                            .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
-                    return studentRecordRepository.save(StudentRecord.createStudentRecord(student));
-                });
+                .orElseGet(() -> studentRecordRepository.save(StudentRecord.createStudentRecord(targetStudent)));
 
         record.updateStudentRecord(request.getAchievements(), request.getExtracurricular(),
                 request.getVolunteerHours(), request.getCareerAspirations());

@@ -3,7 +3,8 @@ import type { UserRole } from '../../types/user';
 
 const teacherNav = [
   { path: '/dashboard', label: '대시보드' },
-  { path: '/analytics', label: '학습 분석' },
+  { path: '/analytics', label: '학급 분석' },
+  { path: '/class-management', label: '학급 관리' },
   { path: '/students/search', label: '학생 검색' },
   { path: '/grades', label: '성적 관리' },
   { path: '/attendance', label: '출결 관리' },
@@ -16,7 +17,7 @@ const teacherNav = [
 
 const studentNav = [
   { path: '/dashboard', label: '대시보드' },
-  { path: '/analytics', label: '학습 분석' },
+  { path: '/analytics', label: '학급 분석' },
   { path: '/my-grades', label: '내 성적' },
   { path: '/my-attendance', label: '출결 내역' },
   { path: '/my-feedback', label: '피드백 확인' },
@@ -26,7 +27,7 @@ const studentNav = [
 
 const parentNav = [
   { path: '/dashboard', label: '대시보드' },
-  { path: '/analytics', label: '학습 분석' },
+  { path: '/analytics', label: '학급 분석' },
   { path: '/child-grades', label: '자녀 성적' },
   { path: '/child-feedback', label: '자녀 피드백' },
   { path: '/notifications', label: '알림' },
@@ -34,9 +35,10 @@ const parentNav = [
 
 const adminNav = [
   { path: '/dashboard', label: '대시보드' },
-  { path: '/analytics', label: '학습 분석' },
-  { path: '/admin/users', label: '사용자 관리' },
-  { path: '/admin/schools', label: '내 학교 정보' },
+  { path: '/admin/users', label: '교사 관리' },
+  { path: '/admin/schools', label: '학교 관리' },
+  { path: '/admin/courses', label: '과목 관리' },
+  { path: '/admin/approvals', label: '승인 대기' },
   { path: '/notifications', label: '알림' },
 ];
 
@@ -49,12 +51,16 @@ const navByRole: Record<UserRole, typeof teacherNav> = {
 
 interface SidebarProps {
   role: UserRole;
+  classGroupId?: number | null;
 }
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar({ role, classGroupId }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const navItems = navByRole[role] ?? teacherNav;
+  let navItems = navByRole[role] ?? teacherNav;
+  if (role === 'TEACHER' && !classGroupId) {
+    navItems = navItems.filter(item => item.path !== '/analytics' && item.path !== '/class-management');
+  }
 
   return (
     <aside

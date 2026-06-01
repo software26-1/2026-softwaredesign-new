@@ -45,7 +45,8 @@ public class TeacherService {
         }
 
         if (request.getPosition() != null) {
-            teacher.updatePosition(request.getPosition());
+            String pos = request.getPosition().isBlank() ? null : request.getPosition();
+            teacher.updatePosition(pos);
         }
 
         return TeacherResponse.from(teacher);

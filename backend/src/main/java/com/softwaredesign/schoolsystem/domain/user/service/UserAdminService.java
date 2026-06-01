@@ -62,8 +62,8 @@ public class UserAdminService {
 
     public UserSummaryResponse approveUser(Long userId) {
         User user = findUser(userId);
-        if (user.getStatus() != UserStatus.WAITING_APPROVAL) {
-            throw new IllegalStateException("승인 대기 상태의 사용자가 아닙니다.");
+        if (user.getStatus() == UserStatus.ACTIVE) {
+            throw new IllegalStateException("이미 활성 상태의 사용자입니다.");
         }
         user.approve();
         return toResponse(user);
@@ -93,11 +93,14 @@ public class UserAdminService {
 
     private UserSummaryResponse toResponse(User user) {
         String position = null;
+        Long teacherId = null;
         if (user.getRole() == UserRole.TEACHER) {
-            position = teacherRepository.findByUserId(user.getId())
-                    .map(t -> t.getPosition())
-                    .orElse(null);
+            var teacher = teacherRepository.findByUserId(user.getId()).orElse(null);
+            if (teacher != null) {
+                position = teacher.getPosition();
+                teacherId = teacher.getId();
+            }
         }
-        return new UserSummaryResponse(user, position);
+        return new UserSummaryResponse(user, position, teacherId);
     }
 }

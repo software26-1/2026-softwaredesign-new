@@ -17,6 +17,7 @@ public record StudentCourseTermResponse(
         BigDecimal weightedScore,
         Integer classRank,
         BigDecimal classAvgScore,
+        String gradeLevel,
         LocalDateTime lastRefreshedAt
 ) {
     public static StudentCourseTermResponse from(FactStudentCourseTerm e) {
@@ -32,6 +33,7 @@ public record StudentCourseTermResponse(
                 e.getWeightedScore(),
                 e.getClassRank(),
                 e.getClassAvgScore(),
+                e.getGradeLevel(),
                 e.getLastRefreshedAt()
         );
     }

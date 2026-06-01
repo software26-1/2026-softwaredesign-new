@@ -8,7 +8,9 @@ import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackUpdateRequest
 import com.softwaredesign.schoolsystem.domain.feedback.entity.Feedback;
 import com.softwaredesign.schoolsystem.domain.feedback.entity.FeedbackType;
 import com.softwaredesign.schoolsystem.domain.feedback.repository.FeedbackRepository;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
+import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.ParentStudent;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
@@ -29,6 +31,7 @@ public class FeedbackService {
 
     private final FeedbackRepository feedbackRepository;
     private final TeacherRepository teacherRepository;
+    private final ClassGroupRepository classGroupRepository;
     private final StudentRepository studentRepository;
     private final ParentStudentRepository parentStudentRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -39,6 +42,10 @@ public class FeedbackService {
                 .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+
+        if (FeedbackType.ACADEMIC.equals(request.getType())) {
+            validateGradeFeedbackPermission(teacher, student);
+        }
 
         boolean visibleToStudent = request.getVisibleToStudent() == null || request.getVisibleToStudent();
         boolean visibleToParent = request.getVisibleToParent() == null || request.getVisibleToParent();
@@ -102,9 +109,28 @@ public class FeedbackService {
     }
 
     private void validateOwner(Feedback feedback, Long userId) {
-        if (!feedback.getTeacher().getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("해당 피드백을 작성한 교사만 관리할 수 있습니다.");
+        Teacher teacher = teacherRepository.findByUserId(userId)
+                .orElseThrow(() -> new AccessDeniedException("교사를 찾을 수 없습니다."));
+        boolean isAuthor = feedback.getTeacher().getUser().getId().equals(userId);
+        boolean isHomeroom = isHomeroomOfStudent(teacher, feedback.getStudent());
+        if (!isAuthor && !isHomeroom) {
+            throw new AccessDeniedException("작성자 또는 담임 교사만 피드백을 수정/삭제할 수 있습니다.");
         }
+    }
+
+    private void validateGradeFeedbackPermission(Teacher teacher, Student student) {
+        boolean isSubject = teacher.getPosition() != null &&
+                (teacher.getPosition().equals("SUBJECT") || teacher.getPosition().equals("HOMEROOM_SUBJECT"));
+        boolean isHomeroom = isHomeroomOfStudent(teacher, student);
+        if (!isSubject && !isHomeroom) {
+            throw new AccessDeniedException("성적 피드백은 교과 담당 또는 담임 교사만 작성할 수 있습니다.");
+        }
+    }
+
+    private boolean isHomeroomOfStudent(Teacher teacher, Student student) {
+        return classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .map(cg -> student.getClassGroup() != null && student.getClassGroup().getId().equals(cg.getId()))
+                .orElse(false);
     }
 
     private boolean isParentUser(ParentStudent parentStudent, Long userId) {
