@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -222,6 +222,31 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
     }
   };
 
+  // 우리 반이 실제로 수강하는(수강 인원 있는) 과목만 사용 → 빈 막대/분반 중복 제거
+  const validStats = useMemo(() => {
+    const filtered = stats.filter(s => (s.studentCount ?? 0) > 0);
+    return filtered.length > 0 ? filtered : stats;
+  }, [stats]);
+
+  // 과목 드롭다운: 우리 반 수강 과목만, 같은 이름 분반은 한 번만
+  const courseOptions = useMemo(() => {
+    if (validStats.length === 0) return courses;
+    const keys = new Set(validStats.map(s => s.courseKey));
+    const seen = new Set<string>();
+    return courses.filter(c => {
+      if (!keys.has(c.id) || seen.has(c.name)) return false;
+      seen.add(c.name);
+      return true;
+    });
+  }, [validStats, courses]);
+
+  // 현재 선택된 과목이 옵션에 없으면 첫 과목으로 보정
+  useEffect(() => {
+    if (courseOptions.length > 0 && !courseOptions.some(c => c.id === courseId)) {
+      setCourseId(courseOptions[0].id);
+    }
+  }, [courseOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const selectStyle: React.CSSProperties = {
     padding: '8px 12px',
     border: '1px solid #e2e8f0',
@@ -249,13 +274,13 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
               과목
             </label>
-            {courses.length > 0 ? (
+            {courseOptions.length > 0 ? (
               <select
                 value={courseId}
                 onChange={(e) => setCourseId(Number(e.target.value))}
                 style={selectStyle}
               >
-                {courses.map((c) => (
+                {courseOptions.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -281,9 +306,9 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         <Card title="과목별 반 평균">
-          {stats.length > 0 ? (
+          {validStats.length > 0 ? (
             <ClassAverageBarChart
-              stats={stats}
+              stats={validStats}
               courseMap={Object.fromEntries(courses.map((c) => [c.id, c.name]))}
             />
           ) : <EmptyState />}
