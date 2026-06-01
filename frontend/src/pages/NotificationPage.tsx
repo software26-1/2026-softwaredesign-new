@@ -8,8 +8,8 @@ const typeBg: Record<string, string> = { GRADE_UPDATE: '#ebf4ff', FEEDBACK: '#e8
 const typeColor: Record<string, string> = { GRADE_UPDATE: '#1e5a99', FEEDBACK: '#2e7d32', COUNSELING: '#e65100', APPROVAL: '#6a1b9a' };
 
 const TYPE_FILTERS_BY_ROLE: Record<string, ('ALL' | NotiType)[]> = {
-  ADMIN:   ['ALL'],
-  TEACHER: ['ALL'],
+  ADMIN:   ['ALL', 'APPROVAL'],
+  TEACHER: ['ALL', 'APPROVAL'],
   STUDENT: ['ALL', 'GRADE_UPDATE', 'FEEDBACK'],
   PARENT:  ['ALL', 'GRADE_UPDATE', 'FEEDBACK'],
 };

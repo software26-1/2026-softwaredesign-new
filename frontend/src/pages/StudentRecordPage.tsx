@@ -3,7 +3,9 @@ import { Button } from '../components/common/Button';
 import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { studentRecordService } from '../services/studentRecordService';
 import { studentService } from '../services/studentService';
+import { analyticsService } from '../services/analyticsService';
 import type { Student } from '../types/student';
+import type { LearningSummary } from '../types/analytics';
 
 const inputStyle: React.CSSProperties = { padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', width: '100%' };
 const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' };
@@ -24,6 +26,7 @@ export function StudentRecordPage() {
   const [year, setYear] = useState(YEAR);
   const [semester, setSemester] = useState(new Date().getMonth() < 7 ? 1 : 2);
   const [record, setRecord] = useState<RecordData | null>(null);
+  const [summary, setSummary] = useState<LearningSummary | null>(null);
   const [form, setForm] = useState({ achievements: '', extracurricular: '', volunteerHours: 0, careerAspirations: '' });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -35,6 +38,12 @@ export function StudentRecordPage() {
   useEffect(() => {
     studentService.search({}).then(setStudents).catch(() => setStudents([]));
   }, []);
+
+  useEffect(() => {
+    if (!selectedId) { setSummary(null); return; }
+    analyticsService.getStudentSummary(Number(selectedId), year, semester)
+      .then(setSummary).catch(() => setSummary(null));
+  }, [selectedId, year, semester]);
 
   useEffect(() => {
     if (!selectedId) { setRecord(null); return; }
@@ -152,20 +161,57 @@ export function StudentRecordPage() {
         </div>
         {!selectedId ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>학생을 선택하면 학생부 기록이 표시됩니다.</p>
-        ) : !record ? (
-          <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>작성된 학생부 기록이 없습니다.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['특기사항', '비교과 활동', '봉사 시간', '진로 희망'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
-            <tbody>
-              <tr>
-                <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.achievements || '—'}</td>
-                <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.extracurricular || '—'}</td>
-                <td style={tdStyle}>{record.volunteerHours ?? 0}h</td>
-                <td style={{ ...tdStyle, color: '#475569' }}>{record.careerAspirations || '—'}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div style={{ padding: '20px 24px' }}>
+            {/* 기본 정보 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', padding: '14px 18px', background: '#f8fafc', borderRadius: '10px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#1e5a99', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '16px', flexShrink: 0 }}>
+                {selectedStudent?.name?.[0]}
+              </div>
+              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                {[['이름', selectedStudent?.name], ['학년', `${selectedStudent?.grade}학년`], ['반', `${selectedStudent?.classNumber}반`], ['번호', `${selectedStudent?.studentNumber}번`]].map(([k, v]) => (
+                  <div key={k as string}>
+                    <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{k}</p>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a2332' }}>{v}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 출결 상황 (성적 외 정보) */}
+            <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>출결 상황</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
+              {[
+                ['출석률', summary?.attendanceRate != null ? `${summary.attendanceRate.toFixed(1)}%` : '—'],
+                ['결석', `${summary?.absentCount ?? 0}회`],
+                ['지각', `${summary?.lateCount ?? 0}회`],
+                ['조퇴', `${summary?.earlyLeaveCount ?? 0}회`],
+              ].map(([k, v]) => (
+                <div key={k} style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '2px' }}>{k}</p>
+                  <p style={{ fontSize: '15px', fontWeight: 700, color: '#1a2332' }}>{v}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* 특기사항 등 */}
+            <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>특기사항 및 기록</p>
+            {!record ? (
+              <p style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', background: '#f8fafc', borderRadius: '8px' }}>작성된 학생부 기록이 없습니다. 위에서 작성해 주세요.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #f1f5f9', borderRadius: '8px' }}>
+                <thead><tr>{['특기사항', '비교과 활동', '봉사 시간', '진로 희망'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+                <tbody>
+                  <tr>
+                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.achievements || '—'}</td>
+                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.extracurricular || '—'}</td>
+                    <td style={tdStyle}>{record.volunteerHours ?? 0}h</td>
+                    <td style={{ ...tdStyle, color: '#475569' }}>{record.careerAspirations || '—'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
         )}
       </div>
     </div>

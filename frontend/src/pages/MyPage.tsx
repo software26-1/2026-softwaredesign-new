@@ -4,7 +4,6 @@ import { authService } from '../services/authService';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import client from '../api/client';
-import { SCHOOLS } from '../data/schools';
 
 const roleLabel: Record<string, string> = { TEACHER: '교사', STUDENT: '학생', PARENT: '학부모', ADMIN: '관리자' };
 const roleBg: Record<string, string> = { TEACHER: '#1e5a99', STUDENT: '#2ecc71', PARENT: '#f39c12', ADMIN: '#6c5ce7' };
@@ -69,6 +68,16 @@ export function MyPage() {
   const [schoolQuery, setSchoolQuery] = useState('');
   const [showSchoolList, setShowSchoolList] = useState(false);
   const schoolRef = useRef<HTMLDivElement>(null);
+  // 시스템에 등록된 학교만 전근 대상으로 선택 가능
+  const [dbSchools, setDbSchools] = useState<{ id: number; schoolName: string }[]>([]);
+
+  useEffect(() => {
+    if (user?.role !== 'TEACHER') return;
+    client.get<any>('/schools').then(r => {
+      const list = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
+      setDbSchools(list.map((s: any) => ({ id: s.id, schoolName: s.schoolName })));
+    }).catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -78,7 +87,10 @@ export function MyPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const schoolResults = schoolQuery.length >= 1 ? SCHOOLS.filter(s => s.includes(schoolQuery)).slice(0, 6) : [];
+  // 등록 학교 우선 검색, 본인 학교는 제외
+  const schoolResults = schoolQuery.length >= 1
+    ? dbSchools.map(s => s.schoolName).filter(name => name.includes(schoolQuery) && name !== (user as any).schoolName).slice(0, 6)
+    : [];
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
