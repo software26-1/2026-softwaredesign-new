@@ -54,7 +54,28 @@ public class ApprovalRequestService {
         ApprovalRequest request = ApprovalRequest.create(
                 requester, req.getRequestType(), req.getRequestDetail());
         approvalRequestRepository.save(request);
+
+        // 학생/학부모 가입 승인 요청 → 해당 학급 담임에게 알림
+        if (req.getRequestType() == RequestType.STUDENT_REGISTRATION
+                || req.getRequestType() == RequestType.PARENT_REGISTRATION) {
+            notifyHomeroomTeacher(req.getRequestDetail(), requester, req.getRequestType());
+        }
         return ApprovalResponse.from(request);
+    }
+
+    private void notifyHomeroomTeacher(String detail, User requester, RequestType type) {
+        if (detail == null) return;
+        long cgId = parseDetailInt(detail, "classGroupId");
+        if (cgId <= 0) return;
+        classGroupRepository.findById(cgId).ifPresent(cg -> {
+            if (cg.getHomeroomTeacher() == null || cg.getHomeroomTeacher().getUser() == null) return;
+            boolean isStudent = type == RequestType.STUDENT_REGISTRATION;
+            String who = requester.getName() + (isStudent ? " 학생" : " 학부모");
+            String title = isStudent ? "학생 가입 승인 요청" : "학부모 가입 승인 요청";
+            notificationService.notify(cg.getHomeroomTeacher().getUser().getId(),
+                    NotificationEventType.APPROVAL, title,
+                    who + "이 학급 가입 승인을 요청했습니다. 승인 대기 목록을 확인해 주세요.");
+        });
     }
 
     @Transactional
