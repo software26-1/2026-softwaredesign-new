@@ -21,6 +21,8 @@ import { MyRecordsPage } from './pages/student/MyRecordsPage';
 import { MyAttendancePage } from './pages/student/MyAttendancePage';
 import { ChildGradesPage } from './pages/parent/ChildGradesPage';
 import { ChildFeedbackPage } from './pages/parent/ChildFeedbackPage';
+import { ChildAttendancePage } from './pages/parent/ChildAttendancePage';
+import { ChildRecordsPage } from './pages/parent/ChildRecordsPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { SchoolManagementPage } from './pages/admin/SchoolManagementPage';
 import { ApprovalPage } from './pages/admin/ApprovalPage';
@@ -67,7 +69,9 @@ function App() {
           <Route path="/my-records" element={<RoleGuard roles={['STUDENT']}><MyRecordsPage /></RoleGuard>} />
           {/* 학부모 전용 */}
           <Route path="/child-grades" element={<RoleGuard roles={['PARENT']}><ChildGradesPage /></RoleGuard>} />
+          <Route path="/child-attendance" element={<RoleGuard roles={['PARENT']}><ChildAttendancePage /></RoleGuard>} />
           <Route path="/child-feedback" element={<RoleGuard roles={['PARENT']}><ChildFeedbackPage /></RoleGuard>} />
+          <Route path="/child-records" element={<RoleGuard roles={['PARENT']}><ChildRecordsPage /></RoleGuard>} />
           {/* 관리자 전용 */}
           <Route path="/admin/users" element={<RoleGuard roles={['ADMIN']}><UserManagementPage /></RoleGuard>} />
           <Route path="/admin/schools" element={<RoleGuard roles={['ADMIN']}><SchoolManagementPage /></RoleGuard>} />

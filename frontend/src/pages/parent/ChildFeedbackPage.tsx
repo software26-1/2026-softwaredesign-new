@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import client from '../../api/client';
+import { TermFilter } from '../../components/common/TermFilter';
+import { gradeToYear, inTerm } from '../../utils/term';
 
 interface FeedbackItem {
   id: number;
@@ -18,6 +20,9 @@ export function ChildFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [child, setChild] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [curGrade, setCurGrade] = useState(1);
+  const [selGrade, setSelGrade] = useState(1);
+  const [semester, setSemester] = useState<1 | 2>(1);
 
   useEffect(() => {
     client.get<any>('/parents/me/students')
@@ -26,6 +31,8 @@ export function ChildFeedbackPage() {
         const firstChild = children[0];
         if (firstChild) {
           setChild(firstChild);
+          const g = firstChild.grade ?? 1;
+          setCurGrade(g); setSelGrade(g);
           return client.get<any>(`/feedbacks?student_id=${firstChild.studentId ?? firstChild.id}`);
         }
       })
@@ -39,13 +46,19 @@ export function ChildFeedbackPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const year = gradeToYear(curGrade, selGrade);
+  const visible = feedbacks.filter(f => inTerm(f.createdAt, year, semester));
+
   return (
     <div>
-      <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>CHILD FEEDBACK</p>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
-          자녀 피드백 확인{child ? ` — ${child.studentName ?? child.name}` : ''}
-        </h1>
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>CHILD FEEDBACK</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
+            자녀 피드백{child ? ` · ${child.studentName ?? child.name}` : ''}
+          </h1>
+        </div>
+        {child && <TermFilter curGrade={curGrade} selGrade={selGrade} semester={semester} onGrade={setSelGrade} onSemester={setSemester} />}
       </div>
 
       {loading ? (
@@ -54,14 +67,14 @@ export function ChildFeedbackPage() {
         <div style={{ background: '#fff', borderRadius: '10px', padding: '60px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>연결된 자녀가 없습니다.</p>
         </div>
-      ) : feedbacks.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: '10px', padding: '60px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>피드백이 없습니다.</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>{selGrade}학년 {semester}학기 피드백이 없습니다.</p>
         </div>
       ) : (
         <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          {feedbacks.map((f, i) => (
-            <div key={f.id} style={{ padding: '20px 24px', borderBottom: i < feedbacks.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+          {visible.map((f, i) => (
+            <div key={f.id} style={{ padding: '20px 24px', borderBottom: i < visible.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: typeBg[f.type] ?? '#f5f5f5', color: typeColor[f.type] ?? '#666' }}>

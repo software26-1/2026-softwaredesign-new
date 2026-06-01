@@ -163,6 +163,18 @@
       "type": "file"
     },
     {
+      "path": "frontend/src/pages/student/MyFeedbackPage.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780317528719,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/components/layout/Sidebar.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780317669134,
+      "type": "file"
+    },
+    {
       "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/notification/listener/NotificationDomainEventListener.java",
       "accessCount": 4,
       "lastAccessed": 1780315326099,
@@ -181,15 +193,15 @@
       "type": "file"
     },
     {
-      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/notification/service/NotificationService.java",
-      "accessCount": 3,
-      "lastAccessed": 1780311542963,
+      "path": "frontend/src/App.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1780317685454,
       "type": "file"
     },
     {
-      "path": "frontend/src/components/layout/Sidebar.tsx",
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/notification/service/NotificationService.java",
       "accessCount": 3,
-      "lastAccessed": 1780314993244,
+      "lastAccessed": 1780311542963,
       "type": "file"
     },
     {
@@ -199,9 +211,9 @@
       "type": "file"
     },
     {
-      "path": "frontend/src/pages/student/MyFeedbackPage.tsx",
+      "path": "frontend/src/pages/student/MyRecordsPage.tsx",
       "accessCount": 3,
-      "lastAccessed": 1780317000896,
+      "lastAccessed": 1780317592942,
       "type": "file"
     },
     {
@@ -265,12 +277,6 @@
       "type": "file"
     },
     {
-      "path": "frontend/src/pages/student/MyRecordsPage.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1780317010203,
-      "type": "file"
-    },
-    {
       "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/analytics/event/AnalyticsEventBridge.java",
       "accessCount": 2,
       "lastAccessed": 1780317135504,
@@ -280,6 +286,24 @@
       "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/analytics/service/AnalyticsEtlService.java",
       "accessCount": 2,
       "lastAccessed": 1780317267097,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/student/dto/StudentOfParentResponse.java",
+      "accessCount": 2,
+      "lastAccessed": 1780317485180,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/record/dto/StudentRecordResponse.java",
+      "accessCount": 2,
+      "lastAccessed": 1780317560585,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/pages/parent/ChildFeedbackPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780317650065,
       "type": "file"
     },
     {
@@ -334,6 +358,36 @@
       "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/user/controller/UserProfileController.java",
       "accessCount": 1,
       "lastAccessed": 1780316804283,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/utils/term.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780317493927,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/components/common/TermFilter.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780317510493,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/components/common/StudentRecordView.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780317579130,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/pages/parent/ChildRecordsPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780317603789,
+      "type": "file"
+    },
+    {
+      "path": "frontend/src/pages/parent/ChildAttendancePage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780317624473,
       "type": "file"
     }
   ],

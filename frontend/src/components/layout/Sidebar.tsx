@@ -27,7 +27,9 @@ const studentNav = [
 const parentNav = [
   { path: '/dashboard', label: '대시보드' },
   { path: '/child-grades', label: '자녀 성적' },
+  { path: '/child-attendance', label: '자녀 출결' },
   { path: '/child-feedback', label: '자녀 피드백' },
+  { path: '/child-records', label: '자녀 학생부' },
   { path: '/notifications', label: '알림' },
 ];
 
