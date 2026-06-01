@@ -79,9 +79,11 @@ public class ApprovalRequestService {
         ApprovalRequest request = ApprovalRequest.createTransfer(requester, type, detail, fromSchool, toSchool);
         approvalRequestRepository.save(request);
 
-        // 두 학교 admin에게 알림
-        notifySchoolAdmin(fromSchool, "전근/전학 신청이 접수되었습니다.");
-        notifySchoolAdmin(toSchool, "전근/전학 수락 요청이 접수되었습니다.");
+        // 두 학교 admin에게 알림 (신청자 이름 포함)
+        String who = requester.getName() + (type == RequestType.TEACHER_TRANSFER ? " 선생님" : " 학생");
+        String act = type == RequestType.TEACHER_TRANSFER ? "전근" : "전학";
+        notifySchoolAdmin(fromSchool, act + " 신청", who + "이 " + act + " 신청을 했습니다.");
+        notifySchoolAdmin(toSchool, act + " 수락 요청", who + "의 " + act + " 수락 요청이 접수되었습니다.");
 
         return ApprovalResponse.from(request);
     }
@@ -246,10 +248,10 @@ public class ApprovalRequestService {
         return 0;
     }
 
-    private void notifySchoolAdmin(School school, String message) {
+    private void notifySchoolAdmin(School school, String title, String message) {
         if (school == null) return;
         adminRepository.findBySchoolId(school.getId()).ifPresent(admin ->
                 notificationService.notify(admin.getUser().getId(), NotificationEventType.APPROVAL,
-                        "승인 요청", message));
+                        title, message));
     }
 }

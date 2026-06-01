@@ -15,7 +15,9 @@ export const notificationService = {
     const res = await client.get<any[]>('/notifications', {
       params: isRead != null ? { is_read: isRead } : undefined,
     });
-    return res.data.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
+    const list = (Array.isArray(res.data) ? res.data : []).map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
+    // 최신순(내림차순) 정렬
+    return list.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
   },
 
   async markRead(id: number): Promise<Notification | { message?: string }> {
