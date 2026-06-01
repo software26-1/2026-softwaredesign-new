@@ -128,8 +128,14 @@
     },
     {
       "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/feedback/service/FeedbackService.java",
+      "accessCount": 11,
+      "lastAccessed": 1780318296026,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/test/java/com/softwaredesign/schoolsystem/domain/attendance/service/AttendanceServiceTest.java",
       "accessCount": 10,
-      "lastAccessed": 1780316845833,
+      "lastAccessed": 1780317964443,
       "type": "file"
     },
     {
@@ -172,6 +178,12 @@
       "path": "frontend/src/components/layout/Sidebar.tsx",
       "accessCount": 5,
       "lastAccessed": 1780317669134,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/test/java/com/softwaredesign/schoolsystem/domain/counseling/service/CounselingServiceTest.java",
+      "accessCount": 5,
+      "lastAccessed": 1780318428628,
       "type": "file"
     },
     {
@@ -304,6 +316,18 @@
       "path": "frontend/src/pages/parent/ChildFeedbackPage.tsx",
       "accessCount": 2,
       "lastAccessed": 1780317650065,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/main/java/com/softwaredesign/schoolsystem/domain/attendance/service/AttendanceService.java",
+      "accessCount": 2,
+      "lastAccessed": 1780317875704,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/test/java/com/softwaredesign/schoolsystem/domain/grade/service/GradeServiceTest.java",
+      "accessCount": 2,
+      "lastAccessed": 1780318054064,
       "type": "file"
     },
     {

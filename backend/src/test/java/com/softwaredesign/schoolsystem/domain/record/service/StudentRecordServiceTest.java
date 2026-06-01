@@ -4,12 +4,15 @@ import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordCreateOrUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordResponse;
 import com.softwaredesign.schoolsystem.domain.record.entity.StudentRecord;
+import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
 import com.softwaredesign.schoolsystem.domain.record.repository.StudentRecordRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
+import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,11 +42,18 @@ class StudentRecordServiceTest {
     private StudentRepository studentRepository;
     @Mock
     private TeacherRepository teacherRepository;
+    @Mock
+    private ClassGroupRepository classGroupRepository;
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private StudentRecordService studentRecordService;
 
     private static final Long TEACHER_USER_ID = 10L;
+    private static final Long TEACHER_ID = 5L;
     private static final Long STUDENT_ID = 100L;
 
     private Student student;
@@ -57,6 +67,13 @@ class StudentRecordServiceTest {
         lenient().when(student.getId()).thenReturn(STUDENT_ID);
         lenient().when(student.getUser()).thenReturn(studentUser);
         teacher = org.mockito.Mockito.mock(Teacher.class);
+        lenient().when(teacher.getId()).thenReturn(TEACHER_ID);
+    }
+
+    /** 해당 학생을 가르치는 교과 교사로 인정되도록 스텁(담임/교과 권한 통과). */
+    private void givenSubjectTeacher() {
+        given(enrollmentRepository.existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(STUDENT_ID, TEACHER_ID))
+                .willReturn(true);
     }
 
     private StudentRecordCreateOrUpdateRequest request() {
@@ -71,7 +88,7 @@ class StudentRecordServiceTest {
     @Test
     @DisplayName("학생부가 존재하면 조회된다")
     void getByStudent_success() {
-        StudentRecord record = StudentRecord.createStudentRecord(student);
+        StudentRecord record = StudentRecord.createStudentRecord(student, 2026, 1);
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
 
         AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
@@ -82,22 +99,24 @@ class StudentRecordServiceTest {
     }
 
     @Test
-    @DisplayName("학생부가 없으면 IllegalArgumentException 발생")
+    @DisplayName("학생부가 없으면 null 을 반환한다")
     void getByStudent_notFound() {
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.empty());
 
         AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
-        assertThatThrownBy(() -> studentRecordService.getByStudent(STUDENT_ID, teacher))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("학생부");
+        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, teacher);
+
+        assertThat(response).isNull();
     }
 
     @Test
     @DisplayName("기존 학생부가 있으면 갱신만 하고 새로 저장하지 않는다")
     void upsert_updatesExisting() {
-        StudentRecord record = StudentRecord.createStudentRecord(student);
+        StudentRecord record = StudentRecord.createStudentRecord(student, 2026, 1);
         given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
+        given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
+        givenSubjectTeacher();
 
         StudentRecordResponse response = studentRecordService.upsert(STUDENT_ID, request(), TEACHER_USER_ID);
 
@@ -114,6 +133,7 @@ class StudentRecordServiceTest {
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(studentRecordRepository.save(any(StudentRecord.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
+        givenSubjectTeacher();
 
         StudentRecordResponse response = studentRecordService.upsert(STUDENT_ID, request(), TEACHER_USER_ID);
 
@@ -135,7 +155,6 @@ class StudentRecordServiceTest {
     @DisplayName("학생부 신규 생성 시 학생을 찾을 수 없으면 IllegalArgumentException 발생")
     void upsert_studentNotFound() {
         given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
-        given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.empty());
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> studentRecordService.upsert(STUDENT_ID, request(), TEACHER_USER_ID))
