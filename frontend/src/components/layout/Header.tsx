@@ -32,7 +32,8 @@ export function Header({ user, onLogout }: HeaderProps) {
   const fetchUnread = () => {
     client.get<any>('/notifications').then(res => {
       const data = Array.isArray(res.data) ? res.data : (res.data.data ?? []);
-      const mapped = data.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
+      const mapped = data.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }))
+        .sort((a: any, b: any) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
       setUnreadCount(mapped.filter((n: any) => !n.isRead).length);
       setRecentNotis(mapped.slice(0, 5));
     }).catch(() => {});

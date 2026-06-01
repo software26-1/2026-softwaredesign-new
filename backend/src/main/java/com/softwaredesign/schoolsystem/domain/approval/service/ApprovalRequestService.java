@@ -162,15 +162,31 @@ public class ApprovalRequestService {
         }
 
         // 둘 다 승인되면 실제 처리
+        boolean executed = false;
         if (request.isBothApproved()) {
             executeTransfer(request);
+            executed = true;
+        }
+
+        // 전근/전학은 보내는 학교·받는 학교 양쪽 승인이 필요 → 어느 단계인지 명확히 안내
+        String act = request.getRequestType() == RequestType.TEACHER_TRANSFER ? "전근" : "전학";
+        String sideName = isFromSchool
+                ? (request.getFromSchool() != null ? request.getFromSchool().getSchoolName() : "보내는 학교")
+                : (request.getToSchool() != null ? request.getToSchool().getSchoolName() : "받는 학교");
+        String message;
+        if (!approve) {
+            message = sideName + "에서 거절하여 " + act + " 신청이 반려되었습니다.";
+        } else if (executed) {
+            message = "양쪽 학교가 모두 승인하여 " + act + "이 최종 완료되었습니다.";
+        } else {
+            message = sideName + "에서 승인했습니다. 나머지 학교의 승인을 기다리는 중입니다.";
         }
 
         notificationService.notify(
                 request.getRequester().getId(),
                 NotificationEventType.APPROVAL,
-                "전근/전학 승인 결과",
-                approve ? "승인되었습니다." : "거절되었습니다.");
+                act + " 승인 결과",
+                message);
 
         return ApprovalResponse.from(request);
     }
