@@ -1,6 +1,7 @@
 package com.softwaredesign.schoolsystem.domain.feedback.service;
 
 import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
+import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.event.FeedbackChangedEvent;
 import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackCreateRequest;
 import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackResponse;
@@ -34,6 +35,7 @@ public class FeedbackService {
     private final ClassGroupRepository classGroupRepository;
     private final StudentRepository studentRepository;
     private final ParentStudentRepository parentStudentRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -120,11 +122,13 @@ public class FeedbackService {
     }
 
     private void validateGradeFeedbackPermission(Teacher teacher, Student student) {
-        boolean isSubject = teacher.getPosition() != null &&
-                (teacher.getPosition().equals("SUBJECT") || teacher.getPosition().equals("HOMEROOM_SUBJECT"));
+        // 담임이거나 해당 학생을 실제로 가르치는(수강) 교과 교사만 성적 피드백 작성 가능.
+        // (학생부 권한과 동일 기준 — position 문자열만 보면 안 가르치는 학생에게도 작성되는 구멍이 있었음)
         boolean isHomeroom = isHomeroomOfStudent(teacher, student);
-        if (!isSubject && !isHomeroom) {
-            throw new AccessDeniedException("성적 피드백은 교과 담당 또는 담임 교사만 작성할 수 있습니다.");
+        boolean isSubjectTeacher = enrollmentRepository
+                .existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(student.getId(), teacher.getId());
+        if (!isHomeroom && !isSubjectTeacher) {
+            throw new AccessDeniedException("성적 피드백은 담임 또는 해당 학생을 가르치는 교과 교사만 작성할 수 있습니다.");
         }
     }
 
