@@ -281,7 +281,6 @@ export function StudentSearchPage() {
               </div>
               <div style={{ display: 'flex', gap: '20px', textAlign: 'center' }}>
                 {[
-                  { label: '최근 성적', value: selected.recentGradeScore != null ? `${selected.recentGradeScore}점` : '—' },
                   { label: '피드백', value: selected.feedbackCount != null ? `${selected.feedbackCount}건` : '—' },
                   { label: '상담', value: selected.counselingCount != null ? `${selected.counselingCount}회` : '—' },
                 ].map(item => (
