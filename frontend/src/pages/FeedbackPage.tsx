@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
 import { feedbackService } from '../services/feedbackService';
-import { studentService } from '../services/studentService';
 import client from '../api/client';
 import type { Feedback, FeedbackCategory } from '../types/feedback';
 import type { Student } from '../types/student';
@@ -31,8 +30,8 @@ export function FeedbackPage() {
   const year = new Date().getFullYear();
 
   useEffect(() => {
-    client.get<any[]>('/class-groups', { params: { academic_year: year } })
-      .then(r => setClassGroups(Array.isArray(r.data) ? r.data : r.data?.data ?? []))
+    client.get('/class-groups', { params: { academic_year: year } })
+      .then((r: any) => setClassGroups(Array.isArray(r.data) ? r.data : r.data?.data ?? []))
       .catch(() => {});
   }, []);
 
@@ -45,10 +44,10 @@ export function FeedbackPage() {
 
   useEffect(() => {
     if (!classGroupId) { setStudents([]); return; }
-    client.get<any[]>(`/students`, { params: { class_group_id: classGroupId } })
-      .then(r => {
+    client.get(`/students`, { params: { class_group_id: classGroupId } })
+      .then((r: any) => {
         const list = Array.isArray(r.data) ? r.data : r.data?.data ?? [];
-        setStudents(list.sort((a, b) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)));
+        setStudents(list.sort((a: any, b: any) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)));
       })
       .catch(() => {});
   }, [classGroupId]);

@@ -29,7 +29,6 @@ const inputStyle: React.CSSProperties = { padding: '9px 14px', border: '1px soli
 export function StudentSearchPage() {
   const [filters, setFilters] = useState({ grade: '', classNumber: '', name: '', contentType: 'all' });
   const [allClassGroups, setAllClassGroups] = useState<{ id: number; grade: number; classNumber: number }[]>([]);
-  const [schoolId, setSchoolId] = useState<number | null>(null);
   const [results, setResults] = useState<StudentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<StudentDetail | null>(null);
@@ -43,9 +42,8 @@ export function StudentSearchPage() {
     client.get<any>('/users/me').then(r => {
       const profile = r?.data?.data ?? r?.data ?? null;
       if (profile?.schoolId) {
-        setSchoolId(profile.schoolId);
-        client.get<any[]>(`/schools/${profile.schoolId}/class-groups`)
-          .then(r2 => {
+        client.get(`/schools/${profile.schoolId}/class-groups`)
+          .then((r2: any) => {
             const list: any[] = Array.isArray(r2.data) ? r2.data : (r2.data?.data ?? []);
             setAllClassGroups(list.map((cg: any) => ({ id: cg.id, grade: cg.grade, classNumber: cg.classNumber })));
           }).catch(() => {});

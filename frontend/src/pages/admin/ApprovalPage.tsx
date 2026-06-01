@@ -21,12 +21,6 @@ interface ApprovalRow {
 
 type TabType = 'join' | 'teacher_transfer' | 'student_transfer';
 
-const TYPE_MAP: Record<string, string> = {
-  TEACHER_JOIN: '교사 가입',
-  TEACHER_TRANSFER: '교사 전근',
-  STUDENT_TRANSFER: '학생 전학',
-};
-
 const STATUS_MAP: Record<string, string> = {
   PENDING: '대기 중',
   APPROVED: '승인됨',

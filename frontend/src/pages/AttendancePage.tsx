@@ -43,8 +43,8 @@ export function AttendancePage() {
 
   useEffect(() => {
     if (!classGroupId) return;
-    client.get<any[]>(`/students?class_group_id=${classGroupId}`)
-      .then(r => {
+    client.get(`/students?class_group_id=${classGroupId}`)
+      .then((r: any) => {
         const list = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
         setStudents(list.sort((a: any, b: any) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)));
         const initial: Record<number, AttendanceRecord> = {};
@@ -55,8 +55,8 @@ export function AttendancePage() {
 
   useEffect(() => {
     if (!classGroupId || !date) return;
-    client.get<any[]>(`/attendances?class_group_id=${classGroupId}&date=${date}`)
-      .then(r => {
+    client.get(`/attendances?class_group_id=${classGroupId}&date=${date}`)
+      .then((r: any) => {
         const list = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
         if (list.length > 0) {
           const loaded: Record<number, AttendanceRecord> = {};

@@ -35,8 +35,8 @@ export function TeacherDashboard({ user }: Props) {
         }
         analyticsService.getClassCourses(cg, YEAR, SEMESTER).then(setClassCourses).catch(() => {});
         analyticsService.getClassAtRisk(cg, YEAR, SEMESTER).then(setAtRisk).catch(() => {});
-        client.get<any[]>(`/courses/for-class`, { params: { academic_year: YEAR, semester: SEMESTER } })
-          .then(r => {
+        client.get(`/courses/for-class`, { params: { academic_year: YEAR, semester: SEMESTER } })
+          .then((r: any) => {
             const list: any[] = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
             setCourseMap(Object.fromEntries(list.map((c: any) => [c.id, c.courseName])));
           }).catch(() => {});

@@ -45,8 +45,6 @@ export function MyPage() {
   const [schoolQuery, setSchoolQuery] = useState('');
   const [showSchoolList, setShowSchoolList] = useState(false);
   const schoolRef = useRef<HTMLDivElement>(null);
-  const YEAR = new Date().getFullYear();
-  const SEMESTER = new Date().getMonth() < 7 ? 1 : 2;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -117,7 +115,7 @@ export function MyPage() {
               {roleLabel[user.role]}
             </span>
           </div>
-          <p style={{ fontSize: '13px', color: '#94a3b8' }}>{user.email}</p>
+          <p style={{ fontSize: '13px', color: '#94a3b8' }}>{(user as any).email || '—'}</p>
         </div>
       </div>
 

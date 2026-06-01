@@ -22,7 +22,6 @@ export function CourseManagementPage() {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
-  const [assignMsg, setAssignMsg] = useState('');
   const [form, setForm] = useState({
     courseName: '', curriculumId: 1, grade: 1,
     midtermRatio: 35, finalRatio: 35, taskRatio: 30, evaluationType: 'RELATIVE',
@@ -41,7 +40,7 @@ export function CourseManagementPage() {
   useEffect(() => { loadCourses(); }, [year, semester]);
 
   useEffect(() => {
-    client.get<any[]>('/teachers').then(r => setTeachers(Array.isArray(r.data) ? r.data : (r.data?.data ?? []))).catch(() => {});
+    client.get('/teachers').then((r: any) => setTeachers(Array.isArray(r.data) ? r.data : (r.data?.data ?? []))).catch(() => {});
   }, []);
 
   const assignTeacher = async (courseId: number, teacherId: number) => {

@@ -42,7 +42,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "cd /Users/gangminseo/Desktop/소설/frontend && npm run build 2>&1 | grep -E \"error|✓ built\"",
+    "buildCommand": "npm run build 2>&1 | grep \"error TS\" | wc -l",
     "testCommand": null,
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
@@ -187,15 +187,51 @@
       "type": "file"
     },
     {
+      "path": "src/pages/StudentSearchPage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1780295089238,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/AttendancePage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1780295113563,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/CourseManagementPage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1780295183869,
+      "type": "file"
+    },
+    {
       "path": "src/pages/admin/SchoolManagementPage.tsx",
       "accessCount": 3,
       "lastAccessed": 1780144611213,
       "type": "file"
     },
     {
+      "path": "src/pages/FeedbackPage.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780295035417,
+      "type": "file"
+    },
+    {
       "path": "src/pages/dashboard/TeacherDashboard.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780295073091,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/MyPage.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780295154292,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/ApprovalPage.tsx",
       "accessCount": 2,
-      "lastAccessed": 1780138751877,
+      "lastAccessed": 1780295146831,
       "type": "file"
     }
   ],
