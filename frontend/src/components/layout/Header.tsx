@@ -70,7 +70,10 @@ export function Header({ user, onLogout }: HeaderProps) {
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div
+        onClick={() => navigate('/dashboard')}
+        style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+      >
         <div
           style={{
             width: '28px',

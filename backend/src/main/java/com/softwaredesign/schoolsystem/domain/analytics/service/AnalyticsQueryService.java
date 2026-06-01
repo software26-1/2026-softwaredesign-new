@@ -2,6 +2,8 @@ package com.softwaredesign.schoolsystem.domain.analytics.service;
 
 import com.softwaredesign.schoolsystem.domain.analytics.dto.*;
 import com.softwaredesign.schoolsystem.domain.analytics.entity.FactStudentCourseTerm;
+import com.softwaredesign.schoolsystem.domain.analytics.entity.DimCourse;
+import com.softwaredesign.schoolsystem.domain.analytics.repository.DimCourseRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactClassCourseStatsRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentCourseTermRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentLearningSummaryRepository;
@@ -12,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +25,13 @@ public class AnalyticsQueryService {
     private final FactStudentLearningSummaryRepository learningSummaryRepository;
     private final FactStudentCourseTermRepository courseTermRepository;
     private final FactClassCourseStatsRepository classCourseStatsRepository;
+    private final DimCourseRepository dimCourseRepository;
+
+    private Map<Long, String> courseNameMap() {
+        return dimCourseRepository.findAll().stream()
+                .filter(c -> c.getCourseName() != null)
+                .collect(Collectors.toMap(DimCourse::getCourseKey, DimCourse::getCourseName, (a, b) -> a));
+    }
 
     public LearningSummaryResponse getStudentSummary(Long studentId, Integer year, Integer semester) {
         return learningSummaryRepository.findByStudentKeyAndYearAndSemester(studentId, year, semester)
@@ -29,8 +40,9 @@ public class AnalyticsQueryService {
     }
 
     public List<StudentCourseTermResponse> getStudentCourses(Long studentId, Integer year, Integer semester) {
+        Map<Long, String> names = courseNameMap();
         return courseTermRepository.findByStudentKeyAndYearAndSemester(studentId, year, semester)
-                .stream().map(StudentCourseTermResponse::from).toList();
+                .stream().map(e -> StudentCourseTermResponse.from(e, names.get(e.getCourseKey()))).toList();
     }
 
     public List<ScoreTrendPointResponse> getStudentTrend(Long studentId, Long courseId) {

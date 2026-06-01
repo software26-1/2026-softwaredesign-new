@@ -1,60 +1,63 @@
 import { useState, useEffect } from 'react';
 import client from '../../api/client';
 import { analyticsService } from '../../services/analyticsService';
+import { CourseRadarChart } from '../../components/charts/CourseRadarChart';
+import type { LearningSummary, StudentCourseTerm } from '../../types/analytics';
 
 const YEAR = new Date().getFullYear();
 
-function calcNaesin(rank: number, total: number): number {
-  const pct = (rank / total) * 100;
-  if (pct <= 4) return 1; if (pct <= 11) return 2; if (pct <= 23) return 3;
-  if (pct <= 40) return 4; if (pct <= 60) return 5; if (pct <= 77) return 6;
-  if (pct <= 89) return 7; if (pct <= 96) return 8; return 9;
-}
-
-const thStyle: React.CSSProperties = { padding: '10px 14px', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '12px', borderBottom: '2px solid #d1d5db', borderRight: '1px solid #e5e7eb', background: '#f3f4f6' };
-const tdStyle: React.CSSProperties = { padding: '10px 14px', borderBottom: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb', fontSize: '13px', textAlign: 'center', color: '#374151' };
-const filterBtn = (active: boolean): React.CSSProperties => ({ padding: '5px 12px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: '1px solid #d1d5db', fontFamily: "'Noto Sans KR', sans-serif", background: active ? '#1e5a99' : '#fff', color: active ? '#fff' : '#64748b' });
+const thStyle: React.CSSProperties = { padding: '11px 16px', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '12px', borderBottom: '2px solid #d1d5db', borderRight: '1px solid #e5e7eb', background: '#f3f4f6' };
+const tdStyle: React.CSSProperties = { padding: '11px 16px', borderBottom: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb', fontSize: '13px', textAlign: 'center', color: '#374151' };
+const filterBtn = (active: boolean): React.CSSProperties => ({ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: active ? '1px solid #1e5a99' : '1px solid #d1d5db', fontFamily: "'Noto Sans KR', sans-serif", background: active ? '#1e5a99' : '#fff', color: active ? '#fff' : '#64748b' });
 
 export function MyGradesPage() {
+  const [year, setYear] = useState<number>(YEAR);
   const [semester, setSemester] = useState<1 | 2>(1);
   const [studentId, setStudentId] = useState<number | null>(null);
-  const [summary, setSummary] = useState<any>(null);
-  const [courses, setCourses] = useState<any[]>([]);
+  const [summary, setSummary] = useState<LearningSummary | null>(null);
+  const [courses, setCourses] = useState<StudentCourseTerm[]>([]);
   const [loading, setLoading] = useState(true);
-  const [noData, setNoData] = useState(false);
 
   useEffect(() => {
     client.get<any>('/users/me').then(r => {
       const profile = r.data?.data ?? r.data;
-      const sid = profile?.studentId;
-      if (sid) setStudentId(sid);
-      else setNoData(true);
-    }).catch(() => setNoData(true));
+      if (profile?.studentId) setStudentId(profile.studentId);
+      else setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (!studentId) return;
     setLoading(true);
     Promise.all([
-      analyticsService.getStudentSummary(studentId, YEAR, semester).catch(() => null),
-      analyticsService.getStudentCourses(studentId, YEAR, semester).catch(() => []),
+      analyticsService.getStudentSummary(studentId, year, semester).catch(() => null),
+      analyticsService.getStudentCourses(studentId, year, semester).catch(() => []),
     ]).then(([s, c]) => {
       setSummary(s);
       setCourses(Array.isArray(c) ? c : []);
-      if (!s && (!c || c.length === 0)) setNoData(true);
     }).finally(() => setLoading(false));
-  }, [studentId, semester]);
+  }, [studentId, year, semester]);
 
-  const avg = summary?.overallAvgScore?.toFixed(1) ?? '—';
+  const sorted = [...courses].sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0));
+  const avg = summary?.overallAvgScore != null
+    ? summary.overallAvgScore.toFixed(1)
+    : courses.length > 0
+      ? (courses.reduce((s, c) => s + (c.avgScore ?? 0), 0) / courses.length).toFixed(1)
+      : '—';
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>MY GRADES</p>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>내 성적 조회</h1>
         </div>
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>학년도</span>
+          {[YEAR, YEAR - 1, YEAR - 2].map(y => (
+            <button key={y} onClick={() => setYear(y)} style={filterBtn(year === y)}>{y}</button>
+          ))}
+          <span style={{ width: '1px', height: '20px', background: '#e2e8f0', margin: '0 4px' }} />
           {([1, 2] as const).map(s => (
             <button key={s} onClick={() => setSemester(s)} style={filterBtn(semester === s)}>{s}학기</button>
           ))}
@@ -63,54 +66,70 @@ export function MyGradesPage() {
 
       {loading ? (
         <p style={{ color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
-      ) : noData || courses.length === 0 ? (
+      ) : courses.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: '10px', padding: '60px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>성적 데이터가 없습니다.</p>
-          <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '8px' }}>ETL 실행 후 확인하세요.</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>{year}학년도 {semester}학기 성적 데이터가 없습니다.</p>
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #1e5a99' }}>
-              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>이번 학기 평균</p>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #1e5a99', minWidth: '140px' }}>
+              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>전체 평균</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{avg}점</p>
             </div>
-            {summary?.overallClassRank && (
-              <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #10b981' }}>
+            {summary?.overallClassRank != null && (
+              <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #10b981', minWidth: '140px' }}>
                 <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>반 석차</p>
                 <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{summary.overallClassRank}위</p>
               </div>
             )}
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #2471b8', minWidth: '140px' }}>
+              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>수강 과목</p>
+              <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{courses.length}개</p>
+            </div>
           </div>
 
-          <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
-              <thead>
-                <tr>
-                  <th style={{ ...thStyle, textAlign: 'left' }}>과목</th>
-                  <th style={thStyle}>원점수</th>
-                  <th style={thStyle}>과목평균</th>
-                  <th style={thStyle}>성취도</th>
-                  <th style={thStyle}>석차/수강</th>
-                  <th style={{ ...thStyle, borderRight: 'none' }}>내신등급</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((c, i) => {
-                  const naesin = c.classRank && c.studentCount ? calcNaesin(c.classRank, c.studentCount) : null;
-                  return (
-                    <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                      <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 500 }}>{c.courseName ?? '—'}</td>
-                      <td style={{ ...tdStyle, fontWeight: 700 }}>{c.avgScore?.toFixed(1) ?? '—'}</td>
-                      <td style={tdStyle}>{c.avgScore?.toFixed(1) ?? '—'}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600 }}>{c.achievementLevel ?? '—'}</td>
-                      <td style={tdStyle}>{c.classRank && c.studentCount ? `${c.classRank}/${c.studentCount}` : '—'}</td>
-                      <td style={{ ...tdStyle, fontWeight: naesin ? 700 : 400, borderRight: 'none' }}>{naesin ? `${naesin}등급` : '—'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '20px', alignItems: 'start' }}>
+            {/* 레이더 차트: 내 평균 vs 반 평균 */}
+            <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px 24px' }}>
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '12px' }}>과목별 성적 분포</h2>
+              <CourseRadarChart courses={sorted.slice(0, 8)} />
+            </div>
+
+            {/* 성적 상세표 */}
+            <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, textAlign: 'left' }}>과목</th>
+                    <th style={thStyle}>원점수</th>
+                    <th style={thStyle}>반 평균</th>
+                    <th style={thStyle}>석차</th>
+                    <th style={{ ...thStyle, borderRight: 'none' }}>등급</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((c, i) => {
+                    const isLetter = c.gradeLevel != null && isNaN(Number(c.gradeLevel));
+                    return (
+                      <tr key={c.courseKey} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                        <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>{c.courseName ?? `과목 ${c.courseKey}`}</td>
+                        <td style={{ ...tdStyle, fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '—'}</td>
+                        <td style={tdStyle}>{c.classAvgScore?.toFixed(1) ?? '—'}</td>
+                        <td style={tdStyle}>{c.classRank != null ? `${c.classRank}위` : '—'}</td>
+                        <td style={{ ...tdStyle, borderRight: 'none' }}>
+                          {c.gradeLevel != null ? (
+                            <span style={{ display: 'inline-block', padding: '2px 9px', borderRadius: '10px', fontSize: '11px', fontWeight: 700, background: isLetter ? '#e8f5e9' : '#ebf4ff', color: isLetter ? '#2e7d32' : '#1e5a99' }}>
+                              {isLetter ? c.gradeLevel : `${c.gradeLevel}등급`}
+                            </span>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}
