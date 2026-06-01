@@ -19,8 +19,31 @@ export function MyPage() {
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
-  const [notiSettings, setNotiSettings] = useState({ grade: true, feedback: true, counseling: false, system: true });
+  const NOTI_KEY = 'noti-settings';
+  type NotiSettings = { grade: boolean; feedback: boolean; counseling: boolean; system: boolean };
+  const [notiSettings, setNotiSettings] = useState<NotiSettings>(() => {
+    const defaults: NotiSettings = { grade: true, feedback: true, counseling: false, system: true };
+    try {
+      const saved = localStorage.getItem(NOTI_KEY);
+      if (saved) return { ...defaults, ...JSON.parse(saved) };
+    } catch { /* ignore */ }
+    return defaults;
+  });
+  const [notiSaved, setNotiSaved] = useState(false);
+  const [email, setEmail] = useState<string>('');
   const [curriculumId, setCurriculumId] = useState<number>(0);
+
+  // 알림 설정 변경 시 localStorage에 저장(알림 페이지에서 이 설정을 읽어 필터링)
+  const updateNoti = (key: string, value: boolean) => {
+    setNotiSettings(prev => {
+      const next = { ...prev, [key]: value };
+      try { localStorage.setItem(NOTI_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      window.dispatchEvent(new CustomEvent('noti-settings-updated'));
+      return next;
+    });
+    setNotiSaved(true);
+    setTimeout(() => setNotiSaved(false), 2000);
+  };
   const [curriculumMsg, setCurriculumMsg] = useState('');
   const [transferSchool, setTransferSchool] = useState('');
   const [transferDetail, setTransferDetail] = useState('');
@@ -35,12 +58,13 @@ export function MyPage() {
   ];
 
   useEffect(() => {
-    if (user?.role === 'TEACHER') {
-      client.get<any>('/users/me').then(r => {
-        const profile = r?.data?.data ?? r?.data ?? null;
-        if (profile?.curriculumId) setCurriculumId(profile.curriculumId);
-      }).catch(() => {});
-    }
+    if (!user) return;
+    client.get<any>('/users/me').then(r => {
+      const profile = r?.data?.data ?? r?.data ?? null;
+      if (!profile) return;
+      if (profile.email) setEmail(profile.email);
+      if (user.role === 'TEACHER' && profile.curriculumId) setCurriculumId(profile.curriculumId);
+    }).catch(() => {});
   }, [user]);
   const [schoolQuery, setSchoolQuery] = useState('');
   const [showSchoolList, setShowSchoolList] = useState(false);
@@ -115,7 +139,7 @@ export function MyPage() {
               {roleLabel[user.role]}
             </span>
           </div>
-          <p style={{ fontSize: '13px', color: '#94a3b8' }}>{(user as any).email || '—'}</p>
+          <p style={{ fontSize: '13px', color: '#94a3b8' }}>{email || (user as any).email || '—'}</p>
         </div>
       </div>
 
@@ -176,6 +200,7 @@ export function MyPage() {
 
         {/* 알림 설정 */}
         <Card title="알림 설정">
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '14px' }}>끈 알림 유형은 알림 페이지에서 표시되지 않습니다. {notiSaved && <span style={{ color: '#2e7d32', fontWeight: 600 }}>· 저장됨</span>}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {user.role === 'ADMIN' ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -183,7 +208,7 @@ export function MyPage() {
                   <p style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', marginBottom: '2px' }}>승인 요청 알림</p>
                   <p style={{ fontSize: '12px', color: '#94a3b8' }}>가입·전근·전학 신청이 접수될 때</p>
                 </div>
-                <div onClick={() => setNotiSettings(prev => ({ ...prev, system: !prev.system }))}
+                <div onClick={() => updateNoti('system', !notiSettings.system)}
                   style={{ width: '44px', height: '24px', borderRadius: '12px', cursor: 'pointer', transition: 'background 0.2s', position: 'relative', background: notiSettings.system ? 'var(--primary-blue)' : '#e2e8f0' }}>
                   <div style={{ position: 'absolute', top: '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', left: notiSettings.system ? '23px' : '3px' }} />
                 </div>
@@ -192,14 +217,13 @@ export function MyPage() {
               ([
                 user.role !== 'PARENT' && ['grade', '성적 알림', '성적이 입력/수정될 때'],
                 ['feedback', '피드백 알림', '피드백이 작성될 때'],
-                user.role === 'TEACHER' && ['counseling', '상담 알림', '상담 내역이 등록될 때'],
               ].filter(Boolean) as [string, string, string][]).map(([key, label, desc]) => (
                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <p style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', marginBottom: '2px' }}>{label}</p>
                     <p style={{ fontSize: '12px', color: '#94a3b8' }}>{desc}</p>
                   </div>
-                  <div onClick={() => setNotiSettings(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))}
+                  <div onClick={() => updateNoti(key, !notiSettings[key as keyof typeof notiSettings])}
                     style={{ width: '44px', height: '24px', borderRadius: '12px', cursor: 'pointer', transition: 'background 0.2s', position: 'relative', background: notiSettings[key as keyof typeof notiSettings] ? 'var(--primary-blue)' : '#e2e8f0' }}>
                     <div style={{ position: 'absolute', top: '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', left: notiSettings[key as keyof typeof notiSettings] ? '23px' : '3px' }} />
                   </div>

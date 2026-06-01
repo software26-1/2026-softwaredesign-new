@@ -9,10 +9,25 @@ const typeColor: Record<string, string> = { GRADE_UPDATE: '#1e5a99', FEEDBACK: '
 
 const TYPE_FILTERS_BY_ROLE: Record<string, ('ALL' | NotiType)[]> = {
   ADMIN:   ['ALL'],
-  TEACHER: ['ALL', 'FEEDBACK', 'COUNSELING'],
+  TEACHER: ['ALL'],
   STUDENT: ['ALL', 'GRADE_UPDATE', 'FEEDBACK'],
   PARENT:  ['ALL', 'GRADE_UPDATE', 'FEEDBACK'],
 };
+
+// 마이페이지 알림 설정(localStorage)에서 꺼진 유형은 숨긴다.
+const SETTING_KEY_BY_TYPE: Record<string, string> = {
+  GRADE_UPDATE: 'grade', FEEDBACK: 'feedback', COUNSELING: 'counseling', APPROVAL: 'system',
+};
+function readMutedTypes(): Set<string> {
+  const muted = new Set<string>();
+  try {
+    const saved = JSON.parse(localStorage.getItem('noti-settings') || '{}');
+    Object.entries(SETTING_KEY_BY_TYPE).forEach(([type, key]) => {
+      if (saved[key] === false) muted.add(type);
+    });
+  } catch { /* ignore */ }
+  return muted;
+}
 
 export function NotificationPage() {
   const { user } = useAuth();
@@ -22,7 +37,15 @@ export function NotificationPage() {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
   const [loading, setLoading] = useState(true);
+  const [muted, setMuted] = useState<Set<string>>(() => readMutedTypes());
   const typeFilters = TYPE_FILTERS_BY_ROLE[user?.role ?? ''] ?? ['ALL'];
+
+  // 마이페이지에서 알림 설정을 바꾸면 즉시 반영
+  useEffect(() => {
+    const handler = () => setMuted(readMutedTypes());
+    window.addEventListener('noti-settings-updated', handler);
+    return () => window.removeEventListener('noti-settings-updated', handler);
+  }, []);
 
   const load = () => {
     notificationService.list()
@@ -37,8 +60,9 @@ export function NotificationPage() {
 
   useEffect(() => { load(); }, []);
 
-  const unreadList = notifications.filter(n => !n.isRead);
-  const readList = notifications.filter(n => n.isRead);
+  const visible = notifications.filter(n => !n.type || !muted.has(n.type));
+  const unreadList = visible.filter(n => !n.isRead);
+  const readList = visible.filter(n => n.isRead);
   const base = readTab === 'unread' ? unreadList : readList;
   const filtered = typeFilter === 'ALL' ? base : base.filter(n => n.type === typeFilter);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
