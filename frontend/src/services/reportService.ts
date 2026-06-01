@@ -18,8 +18,12 @@ export const reportService = {
     return res.data.data;
   },
 
-  async create(reportType: ReportType, format: ReportFormat): Promise<Report> {
-    const res = await client.post<ApiResponse<Report>>('/reports/grade-analysis', { reportType, format });
+  async create(reportType: ReportType, format: ReportFormat, scope?: { grade?: number; classNumber?: number }): Promise<Report> {
+    const res = await client.post<ApiResponse<Report>>('/reports/grade-analysis', {
+      reportType, format,
+      grade: scope?.grade,
+      classNumber: scope?.classNumber,
+    });
     return res.data.data;
   },
 

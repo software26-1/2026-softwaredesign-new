@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
+import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { counselingService } from '../services/counselingService';
 import { studentService } from '../services/studentService';
 import type { Counseling } from '../types/counseling';
@@ -14,12 +15,20 @@ export function CounselingPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [list, setList] = useState<Counseling[]>([]);
   const [selected, setSelected] = useState<Counseling | null>(null);
-  const [search, setSearch] = useState({ studentName: '', startDate: '', endDate: '' });
-  const [form, setForm] = useState({ studentId: '', counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
+  const [search, setSearch] = useState({ grade: '', classNumber: '', studentName: '', startDate: '', endDate: '' });
+  const [pick, setPick] = useState({ grade: '', classNumber: '', studentId: '' });
+  const [form, setForm] = useState({ counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // studentId → 학년/반 (목록 조회 학년/반 필터용)
+  const studentMap = useMemo(() => {
+    const m: Record<number, { grade: number; classNumber: number }> = {};
+    students.forEach(s => { m[s.id] = { grade: s.grade, classNumber: s.classNumber }; });
+    return m;
+  }, [students]);
 
   const loadShared = useCallback((params?: { studentName?: string; startDate?: string; endDate?: string }) => {
     setLoading(true);
@@ -44,18 +53,19 @@ export function CounselingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.studentId) return;
+    if (!pick.studentId) return;
     setSubmitting(true); setError('');
     try {
       const created = await counselingService.create({
-        studentId: Number(form.studentId),
+        studentId: Number(pick.studentId),
         counseledAt: form.counseledAt,
         content: form.content,
         nextPlan: form.nextPlan,
         isShared: form.isShared,
       });
       setList(prev => [created, ...prev]);
-      setForm({ studentId: '', counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
+      setForm({ counseledAt: new Date().toISOString().slice(0, 10), content: '', nextPlan: '', isShared: true });
+      setPick({ grade: '', classNumber: '', studentId: '' });
       setMsg('상담 내역이 저장되었습니다.');
       setTimeout(() => setMsg(''), 3000);
     } catch {
@@ -65,11 +75,18 @@ export function CounselingPage() {
     }
   };
 
-  const filtered = list.filter(c =>
-    (!search.studentName || c.studentName?.includes(search.studentName)) &&
-    (!search.startDate || (c.counseledAt ?? '').slice(0, 10) >= search.startDate) &&
-    (!search.endDate || (c.counseledAt ?? '').slice(0, 10) <= search.endDate)
-  );
+  const filtered = list.filter(c => {
+    const sm = studentMap[c.studentId];
+    return (!search.grade || sm?.grade === Number(search.grade)) &&
+      (!search.classNumber || sm?.classNumber === Number(search.classNumber)) &&
+      (!search.studentName || c.studentName?.includes(search.studentName)) &&
+      (!search.startDate || (c.counseledAt ?? '').slice(0, 10) >= search.startDate) &&
+      (!search.endDate || (c.counseledAt ?? '').slice(0, 10) <= search.endDate);
+  });
+
+  const searchClassNumbers = search.grade
+    ? [...new Set(students.filter(s => s.grade === Number(search.grade)).map(s => s.classNumber))].filter(Boolean).sort((a, b) => a - b)
+    : [];
 
   return (
     <div>
@@ -81,20 +98,12 @@ export function CounselingPage() {
       <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>상담 내역 등록</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생 선택</label>
-              <select required style={inputStyle} value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })}>
-                <option value="">학생을 선택하세요</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2, '0')})</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>상담 일자</label>
-              <input type="date" required style={inputStyle} value={form.counseledAt} onChange={e => setForm({ ...form, counseledAt: e.target.value })} />
-            </div>
+          <div style={{ marginBottom: '16px' }}>
+            <StudentFilterSelect students={students} value={pick} onChange={setPick} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>상담 일자</label>
+            <input type="date" required style={{ ...inputStyle, maxWidth: '220px' }} value={form.counseledAt} onChange={e => setForm({ ...form, counseledAt: e.target.value })} />
           </div>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>주요 내용</label>
@@ -112,14 +121,28 @@ export function CounselingPage() {
           </div>
           {msg && <div style={{ padding: '10px 14px', background: '#e8f5e9', color: '#2e7d32', borderRadius: '6px', fontSize: '13px', marginBottom: '14px', borderLeft: '3px solid #4caf50' }}>{msg}</div>}
           {error && <div style={{ padding: '10px 14px', background: '#fdecea', color: '#c62828', borderRadius: '6px', fontSize: '13px', marginBottom: '14px', borderLeft: '3px solid #e57373' }}>{error}</div>}
-          <Button type="submit" size="sm" disabled={submitting}>{submitting ? '저장 중...' : '저장'}</Button>
+          <Button type="submit" size="sm" disabled={submitting || !pick.studentId}>{submitting ? '저장 중...' : '저장'}</Button>
         </form>
       </div>
 
       <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '14px' }}>상담 내역 조회</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>학년</label>
+              <select style={inputStyle} value={search.grade} onChange={e => setSearch({ ...search, grade: e.target.value, classNumber: '' })}>
+                <option value="">전체</option>
+                {[...new Set(students.map(s => s.grade))].filter(Boolean).sort((a, b) => a - b).map(g => <option key={g} value={g}>{g}학년</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>반</label>
+              <select style={inputStyle} value={search.classNumber} disabled={!search.grade} onChange={e => setSearch({ ...search, classNumber: e.target.value })}>
+                <option value="">전체</option>
+                {searchClassNumbers.map(c => <option key={c} value={c}>{c}반</option>)}
+              </select>
+            </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>학생명</label>
               <input type="text" style={inputStyle} placeholder="학생명 입력" value={search.studentName} onChange={e => setSearch({ ...search, studentName: e.target.value })} />

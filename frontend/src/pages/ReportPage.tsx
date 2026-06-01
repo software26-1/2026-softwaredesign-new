@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
+import { studentService } from '../services/studentService';
 import { reportService, type Report, type ReportType, type ReportFormat } from '../services/reportService';
+import type { Student } from '../types/student';
 
 const TYPE_LABELS: Record<ReportType, string> = { GRADE_ANALYSIS: '성적 분석', COUNSELING_SUMMARY: '상담 요약', FEEDBACK_SUMMARY: '피드백 요약' };
 const STATUS_LABELS: Record<string, string> = { PENDING: '대기', PROCESSING: '생성 중', DONE: '완료', FAILED: '실패' };
@@ -19,6 +21,8 @@ export function ReportPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [reportType, setReportType] = useState<ReportType>('GRADE_ANALYSIS');
   const [format, setFormat] = useState<ReportFormat>('PDF');
+  const [scope, setScope] = useState({ grade: '', classNumber: '' });
+  const [students, setStudents] = useState<Student[]>([]);
   const [msg, setMsg] = useState('');
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,12 +32,21 @@ export function ReportPage() {
       .then(setReports)
       .catch(() => setReports([]))
       .finally(() => setLoading(false));
+    studentService.search({}).then(setStudents).catch(() => setStudents([]));
   }, []);
+
+  const grades = [...new Set(students.map(s => s.grade))].filter(Boolean).sort((a, b) => a - b);
+  const classNumbers = scope.grade
+    ? [...new Set(students.filter(s => s.grade === Number(scope.grade)).map(s => s.classNumber))].filter(Boolean).sort((a, b) => a - b)
+    : [];
 
   const handleCreate = async () => {
     setCreating(true); setMsg('');
     try {
-      const created = await reportService.create(reportType, format);
+      const created = await reportService.create(reportType, format, {
+        grade: scope.grade ? Number(scope.grade) : undefined,
+        classNumber: scope.classNumber ? Number(scope.classNumber) : undefined,
+      });
       setReports(prev => [created, ...prev]);
       setMsg('보고서 생성 요청이 접수되었습니다. 완료 후 다운로드 가능합니다.');
       setTimeout(() => setMsg(''), 4000);
@@ -79,6 +92,22 @@ export function ReportPage() {
             <select style={selectStyle} value={format} onChange={e => setFormat(e.target.value as ReportFormat)}>
               <option value="PDF">PDF</option>
               <option value="EXCEL">Excel</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>대상 학년</label>
+            <select style={selectStyle} value={scope.grade} onChange={e => setScope({ grade: e.target.value, classNumber: '' })}>
+              <option value="">전체</option>
+              {grades.map(g => <option key={g} value={g}>{g}학년</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>대상 반</label>
+            <select style={selectStyle} value={scope.classNumber} disabled={!scope.grade} onChange={e => setScope({ ...scope, classNumber: e.target.value })}>
+              <option value="">전체</option>
+              {classNumbers.map(c => <option key={c} value={c}>{c}반</option>)}
             </select>
           </div>
         </div>

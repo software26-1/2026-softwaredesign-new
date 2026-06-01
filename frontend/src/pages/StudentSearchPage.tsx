@@ -82,30 +82,35 @@ export function StudentSearchPage() {
 
   const handleSelectStudent = (s: StudentDetail) => {
     setSelected(s);
-    setActiveTab('grade');
     setModalFeedbacks([]);
     setModalCounselings([]);
     setModalCourses([]);
+    // '조회 내용' 필터에 맞춰 상세 모달의 초기 탭 결정
+    const initial = filters.contentType === 'feedback' ? 'feedback'
+      : filters.contentType === 'counseling' ? 'counseling'
+      : 'grade';
+    handleTabChange(initial, s);
   };
 
-  const handleTabChange = (tab: 'grade' | 'feedback' | 'counseling') => {
+  const handleTabChange = (tab: 'grade' | 'feedback' | 'counseling', student?: StudentDetail) => {
     setActiveTab(tab);
-    if (!selected) return;
+    const target = student ?? selected;
+    if (!target) return;
     if (tab === 'feedback') {
       setDetailLoading(true);
-      feedbackService.getByStudent(selected.id)
+      feedbackService.getByStudent(target.id)
         .then(setModalFeedbacks)
         .catch(() => setModalFeedbacks([]))
         .finally(() => setDetailLoading(false));
     } else if (tab === 'counseling') {
       setDetailLoading(true);
-      counselingService.getShared({ studentName: selected.name })
+      counselingService.getShared({ studentName: target.name })
         .then(setModalCounselings)
         .catch(() => setModalCounselings([]))
         .finally(() => setDetailLoading(false));
     } else if (tab === 'grade') {
       setDetailLoading(true);
-      analyticsService.getStudentCourses(selected.id, YEAR, SEMESTER)
+      analyticsService.getStudentCourses(target.id, YEAR, SEMESTER)
         .then(setModalCourses)
         .catch(() => setModalCourses([]))
         .finally(() => setDetailLoading(false));

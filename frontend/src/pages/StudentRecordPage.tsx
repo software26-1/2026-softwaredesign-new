@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
+import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { studentRecordService } from '../services/studentRecordService';
 import { studentService } from '../services/studentService';
 import type { Student } from '../types/student';
@@ -15,15 +16,21 @@ interface RecordData {
   careerAspirations?: string;
 }
 
+const YEAR = new Date().getFullYear();
+
 export function StudentRecordPage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedId, setSelectedId] = useState('');
+  const [pick, setPick] = useState({ grade: '', classNumber: '', studentId: '' });
+  const [year, setYear] = useState(YEAR);
+  const [semester, setSemester] = useState(new Date().getMonth() < 7 ? 1 : 2);
   const [record, setRecord] = useState<RecordData | null>(null);
   const [form, setForm] = useState({ achievements: '', extracurricular: '', volunteerHours: 0, careerAspirations: '' });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const selectedId = pick.studentId;
 
   useEffect(() => {
     studentService.search({}).then(setStudents).catch(() => setStudents([]));
@@ -45,7 +52,7 @@ export function StudentRecordPage() {
       })
       .catch(() => { setRecord(null); setForm({ achievements: '', extracurricular: '', volunteerHours: 0, careerAspirations: '' }); })
       .finally(() => setLoading(false));
-  }, [selectedId]);
+  }, [selectedId, year, semester]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,13 +88,23 @@ export function StudentRecordPage() {
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>학생부 작성</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생 선택</label>
-            <select required style={inputStyle} value={selectedId} onChange={e => setSelectedId(e.target.value)}>
-              <option value="">학생을 선택하세요</option>
-              {students.map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2, '0')})</option>
-              ))}
-            </select>
+            <StudentFilterSelect students={students} value={pick} onChange={setPick} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년도</label>
+              <select style={inputStyle} value={year} onChange={e => setYear(Number(e.target.value))}>
+                {[YEAR, YEAR - 1, YEAR - 2].map(y => <option key={y} value={y}>{y}학년도</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학기</label>
+              <select style={inputStyle} value={semester} onChange={e => setSemester(Number(e.target.value))}>
+                <option value={1}>1학기</option>
+                <option value={2}>2학기</option>
+              </select>
+            </div>
           </div>
 
           {loading && <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '16px' }}>불러오는 중...</p>}

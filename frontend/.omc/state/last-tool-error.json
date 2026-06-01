@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"sed -i '25d' /Users/gangminseo/Desktop/소설/frontend/src/pages/admin/CourseManagementPage.tsx\",\"description\":\"Remove assignMsg\"}",
-  "error": "Exit code 1\nsed: 1: \"/Users/gangminseo/Deskt ...\": extra characters at the end of g command",
-  "timestamp": "2026-06-01T06:26:17.435Z",
-  "retry_count": 1
-}
