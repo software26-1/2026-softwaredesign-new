@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { User } from '../../types/user';
+import client from '../../api/client';
 import { analyticsService } from '../../services/analyticsService';
 import { feedbackService } from '../../services/feedbackService';
 import type { LearningSummary, StudentCourseTerm } from '../../types/analytics';
@@ -24,18 +25,30 @@ export function StudentDashboard({ user }: Props) {
   const [pwMsg, setPwMsg] = useState('');
   const [notiSettings, setNotiSettings] = useState({ grade: true, feedback: true, counseling: false, system: true });
   const [showNotiModal, setShowNotiModal] = useState(false);
+  const [studentId, setStudentId] = useState<number | null>(null);
+
+  // user.id는 user PK이고 학생 데이터는 student PK 기준이라 /users/me의 studentId를 써야 한다.
+  useEffect(() => {
+    client.get<any>('/users/me')
+      .then(r => {
+        const profile = r.data?.data ?? r.data;
+        setStudentId(profile?.studentId ?? null);
+      })
+      .catch(() => setStudentId(null));
+  }, [user.id]);
 
   useEffect(() => {
-    analyticsService.getStudentSummary(user.id, YEAR, SEMESTER)
+    if (!studentId) return;
+    analyticsService.getStudentSummary(studentId, YEAR, SEMESTER)
       .then(setSummary)
       .catch(() => setSummary(null));
-    analyticsService.getStudentCourses(user.id, YEAR, SEMESTER)
+    analyticsService.getStudentCourses(studentId, YEAR, SEMESTER)
       .then(setCourses)
       .catch(() => setCourses([]));
-    feedbackService.getByStudent(user.id)
+    feedbackService.getByStudent(studentId)
       .then(setFeedbacks)
       .catch(() => setFeedbacks([]));
-  }, [user.id]);
+  }, [studentId]);
 
   const avg = summary?.overallAvgScore != null
     ? summary.overallAvgScore.toFixed(1)

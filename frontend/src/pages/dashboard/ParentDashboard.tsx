@@ -26,7 +26,8 @@ export function ParentDashboard({ user }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    client.get<ChildInfo[]>(`/parents/${user.id}/students`)
+    // 학부모 본인 자녀 조회는 PARENT 전용 self 엔드포인트 사용 (/parents/{id}는 ADMIN/TEACHER 전용)
+    client.get<ChildInfo[]>(`/parents/me/students`)
       .then(res => {
         const first = res.data[0];
         if (!first) return;
