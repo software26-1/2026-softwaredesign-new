@@ -259,6 +259,15 @@ public class ApprovalRequestService {
             if (req.getRequestType() == RequestType.STUDENT_REGISTRATION) {
                 String detail = req.getRequestDetail();
                 int studentNum = parseDetailInt(detail, "번호");
+                // 중복 번호 방지: 같은 반에 같은 번호의 다른 학생이 이미 있으면 승인 불가
+                boolean taken = studentRepository.findAllByClassGroupIdAndIsDeletedFalse(cg.getId())
+                        .stream().anyMatch(s -> s.getStudentNumber() == studentNum
+                                && !s.getUser().getId().equals(requester.getId()));
+                if (taken) {
+                    throw new IllegalStateException(String.format(
+                            "%d학년 %d반 %d번은 이미 사용 중입니다. 학생에게 다른 번호로 재신청을 요청하세요.",
+                            cg.getGrade(), cg.getClassNumber(), studentNum));
+                }
                 studentRepository.findByUserIdAndIsDeletedFalse(requester.getId()).ifPresent(s ->
                         s.updateStudent(cg, studentNum));
             } else if (req.getRequestType() == RequestType.PARENT_REGISTRATION) {

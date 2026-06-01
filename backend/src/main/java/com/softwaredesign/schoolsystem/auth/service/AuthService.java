@@ -132,6 +132,19 @@ public class AuthService {
                         user.getSchoolName(), request.getGrade(), request.getClassNum())
                 .orElse(null);
         long classGroupId = classGroup != null ? classGroup.getId() : 0L;
+
+        // 학생 가입: 같은 반에 같은 번호가 이미 있으면 차단 (학부모는 번호로 자녀를 찾는 것이므로 제외)
+        if (type == RequestType.STUDENT_REGISTRATION && classGroup != null
+                && request.getStudentNum() != null) {
+            boolean taken = studentRepository.findAllByClassGroupIdAndIsDeletedFalse(classGroup.getId())
+                    .stream().anyMatch(s -> s.getStudentNumber() == request.getStudentNum());
+            if (taken) {
+                throw new IllegalStateException(String.format(
+                        "%d학년 %d반 %d번은 이미 사용 중인 번호입니다. 다른 번호로 신청해 주세요.",
+                        request.getGrade(), request.getClassNum(), request.getStudentNum()));
+            }
+        }
+
         String detail = String.format("학교:%s|학년:%d|반:%d|번호:%d|classGroupId:%d",
                 user.getSchoolName(),
                 request.getGrade(),

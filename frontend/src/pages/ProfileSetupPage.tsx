@@ -230,14 +230,14 @@ export function ProfileSetupPage() {
             <label style={labelStyle}>주민등록번호</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input
-                style={{ ...inputStyle, width: '120px' }}
+                style={{ ...inputStyle, flex: 1, minWidth: 0 }}
                 type="text" placeholder="000000" maxLength={6}
                 value={ssnFront}
                 onChange={e => setSsnFront(e.target.value.replace(/\D/g, '').slice(0, 6))}
               />
               <span style={{ color: '#94a3b8', fontWeight: 600 }}>-</span>
               <input
-                style={{ ...inputStyle, width: '140px', letterSpacing: '4px' }}
+                style={{ ...inputStyle, flex: 1, minWidth: 0, letterSpacing: '2px' }}
                 type="password" placeholder="●●●●●●●" maxLength={7}
                 value={ssnBack}
                 onChange={e => setSsnBack(e.target.value.replace(/\D/g, '').slice(0, 7))}
