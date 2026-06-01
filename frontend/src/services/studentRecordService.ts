@@ -34,4 +34,8 @@ export const studentRecordService = {
     });
     return res.data;
   },
+
+  async remove(studentId: number): Promise<void> {
+    await client.delete('/student-records', { params: { student_id: studentId } });
+  },
 };

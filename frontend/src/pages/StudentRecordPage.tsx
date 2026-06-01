@@ -92,6 +92,20 @@ export function StudentRecordPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedId || !record) return;
+    if (!confirm(`${selectedStudent?.name ?? ''} 학생부 기록을 삭제하시겠습니까?`)) return;
+    try {
+      await studentRecordService.remove(Number(selectedId));
+      setRecord(null);
+      setForm({ achievements: '', extracurricular: '', volunteerHours: 0, careerAspirations: '' });
+      setMsg('학생부 기록이 삭제되었습니다.');
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e: any) {
+      setError(e?.response?.data?.message || '삭제에 실패했습니다.');
+    }
+  };
+
   const selectedStudent = students.find(s => String(s.id) === selectedId);
 
   return (
@@ -149,7 +163,8 @@ export function StudentRecordPage() {
 
           {msg && <div style={{ padding: '10px 14px', background: '#e8f5e9', color: '#2e7d32', borderRadius: '6px', fontSize: '13px', marginBottom: '14px', borderLeft: '3px solid #4caf50' }}>{msg}</div>}
           {error && <div style={{ padding: '10px 14px', background: '#fdecea', color: '#c62828', borderRadius: '6px', fontSize: '13px', marginBottom: '14px', borderLeft: '3px solid #e57373' }}>{error}</div>}
-          <Button type="submit" size="sm" disabled={submitting || !selectedId}>{submitting ? '저장 중...' : '저장'}</Button>
+          <Button type="submit" size="sm" disabled={submitting || !selectedId}>{submitting ? '저장 중...' : record ? '수정 저장' : '저장'}</Button>
+          {selectedId && record && <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: '10px' }}>기존 기록을 불러왔습니다. 값을 고쳐 다시 저장하면 수정됩니다.</span>}
         </form>
       </div>
 
@@ -195,7 +210,12 @@ export function StudentRecordPage() {
             </div>
 
             {/* 특기사항 등 */}
-            <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>특기사항 및 기록</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332' }}>특기사항 및 기록</p>
+              {record && (
+                <Button size="sm" variant="danger" onClick={handleDelete}>기록 삭제</Button>
+              )}
+            </div>
             {!record ? (
               <p style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', background: '#f8fafc', borderRadius: '8px' }}>작성된 학생부 기록이 없습니다. 위에서 작성해 주세요.</p>
             ) : (

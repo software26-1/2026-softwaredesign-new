@@ -72,6 +72,27 @@ public class StudentRecordService {
         return StudentRecordResponse.from(record);
     }
 
+    @Transactional
+    public void deleteByStudent(Long studentId, Long userId) {
+        Teacher teacher = teacherRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
+        Student targetStudent = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+
+        boolean isHomeroom = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .map(cg -> targetStudent.getClassGroup() != null
+                        && targetStudent.getClassGroup().getId().equals(cg.getId()))
+                .orElse(false);
+        boolean isSubjectTeacher = enrollmentRepository
+                .existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(studentId, teacher.getId());
+        if (!isHomeroom && !isSubjectTeacher) {
+            throw new AccessDeniedException("담임 또는 해당 학생을 가르치는 교과 교사만 학생부를 삭제할 수 있습니다.");
+        }
+
+        studentRecordRepository.findByStudentId(studentId)
+                .ifPresent(studentRecordRepository::delete);
+    }
+
     private Long resolveStudentId(Long requestedStudentId, AuthUser authUser) {
         String role = authUser.role();
         if ("STUDENT".equals(role)) {
