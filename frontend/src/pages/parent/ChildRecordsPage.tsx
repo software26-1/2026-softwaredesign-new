@@ -28,7 +28,6 @@ export function ChildRecordsPage() {
   return (
     <div>
       <div style={{ marginBottom: '20px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>CHILD RECORDS</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>자녀 학생부{childName && ` · ${childName}`}</h1>
       </div>
       <StudentRecordView key={`${curGrade}-${record?.id ?? 'none'}`} record={record} curGrade={curGrade} loading={loading} />

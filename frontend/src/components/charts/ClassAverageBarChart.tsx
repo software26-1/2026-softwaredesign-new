@@ -16,7 +16,9 @@ export function ClassAverageBarChart({ stats, courseMap }: Props) {
         label: '반 평균 점수',
         data: stats.map((s) => s.avgScore ?? 0),
         backgroundColor: '#1e5a99',
-        borderRadius: 4,
+        borderRadius: 0,
+        barPercentage: 0.65,
+        categoryPercentage: 0.75,
       },
     ],
   };

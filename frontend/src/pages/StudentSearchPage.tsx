@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { Pagination } from '../components/common/Pagination';
@@ -38,7 +39,8 @@ export function StudentSearchPage() {
   const [results, setResults] = useState<StudentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<StudentDetail | null>(null);
-  const [activeTab, setActiveTab] = useState<'grade' | 'feedback' | 'counseling' | 'record'>('grade');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'grade' | 'feedback' | 'counseling' | 'record'>((searchParams.get('tab') as 'grade' | 'feedback' | 'counseling' | 'record') ?? 'grade');
   const [modalFeedbacks, setModalFeedbacks] = useState<Feedback[]>([]);
   const [modalCounselings, setModalCounselings] = useState<Counseling[]>([]);
   const [modalCourses, setModalCourses] = useState<StudentCourseTerm[]>([]);
@@ -197,7 +199,6 @@ export function StudentSearchPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>STUDENT SEARCH</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>학생 검색 및 조회</h1>
       </div>
 

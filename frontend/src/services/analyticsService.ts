@@ -26,6 +26,11 @@ export const analyticsService = {
     return res.data;
   },
 
+  async getAllStudentCourses(studentId: number): Promise<StudentCourseTerm[]> {
+    const res = await client.get<StudentCourseTerm[]>(`/analytics/students/${studentId}/courses/all`);
+    return res.data;
+  },
+
   async getStudentTrend(studentId: number, courseId?: number): Promise<ScoreTrendPoint[]> {
     const res = await client.get<ScoreTrendPoint[]>(`/analytics/students/${studentId}/trend`, {
       params: courseId != null ? { course_id: courseId } : undefined,

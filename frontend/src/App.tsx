@@ -31,6 +31,7 @@ import { MyPage } from './pages/MyPage';
 import { ClassManagementPage } from './pages/ClassManagementPage';
 import { WaitingApprovalPage } from './pages/WaitingApprovalPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
+import { ChatbotPage } from './pages/ChatbotPage';
 
 function RoleGuard({ roles, children, requireHomeroom }: { roles: UserRole[]; children: React.ReactNode; requireHomeroom?: boolean }) {
   const { user, isLoading } = useAuth();
@@ -78,6 +79,7 @@ function App() {
           <Route path="/admin/courses" element={<RoleGuard roles={['ADMIN']}><CourseManagementPage /></RoleGuard>} />
           <Route path="/admin/approvals" element={<RoleGuard roles={['ADMIN']}><ApprovalPage /></RoleGuard>} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/chatbot" element={<ChatbotPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

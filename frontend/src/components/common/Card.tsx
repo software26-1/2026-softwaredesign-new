@@ -15,6 +15,8 @@ export function Card({ title, children, style }: CardProps) {
         padding: '24px',
         marginBottom: '24px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        overflow: 'hidden',
+        minWidth: 0,
         ...style,
       }}
     >

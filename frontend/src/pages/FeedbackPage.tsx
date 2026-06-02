@@ -92,7 +92,6 @@ export function FeedbackPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>FEEDBACK</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>피드백 작성</h1>
       </div>
 

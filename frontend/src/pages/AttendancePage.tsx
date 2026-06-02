@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 
 type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EARLY_LEAVE' | 'SICK';
@@ -20,7 +21,8 @@ const tdStyle: React.CSSProperties = { padding: '12px 20px', borderBottom: '1px 
 type PageTab = 'input' | 'history';
 
 export function AttendancePage() {
-  const [pageTab, setPageTab] = useState<PageTab>('input');
+  const [searchParams] = useSearchParams();
+  const [pageTab, setPageTab] = useState<PageTab>((searchParams.get('tab') as PageTab) ?? 'input');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [classGroupId, setClassGroupId] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
@@ -120,7 +122,6 @@ export function AttendancePage() {
 
   if (!classGroupId) return (
     <div>
-      <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>ATTENDANCE</p>
       <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', marginBottom: '20px' }}>출결 관리</h1>
       <p style={{ color: '#94a3b8', fontSize: '14px' }}>담당 학급이 지정된 담임 교사만 출결을 관리할 수 있습니다.</p>
     </div>
@@ -129,7 +130,6 @@ export function AttendancePage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>ATTENDANCE</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>출결 관리</h1>
       </div>
 

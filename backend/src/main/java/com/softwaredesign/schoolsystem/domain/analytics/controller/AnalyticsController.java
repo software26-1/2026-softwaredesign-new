@@ -33,6 +33,15 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsQueryService.getStudentSummary(studentId, year, semester));
     }
 
+    @GetMapping("/students/{studentId}/courses/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'PARENT')")
+    public ResponseEntity<List<StudentCourseTermResponse>> getAllStudentCourses(
+            @PathVariable Long studentId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        studentAccessGuard.requireCanAccessStudent(authUser, studentId);
+        return ResponseEntity.ok(analyticsQueryService.getAllStudentCourses(studentId));
+    }
+
     @GetMapping("/students/{studentId}/courses")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'PARENT')")
     public ResponseEntity<List<StudentCourseTermResponse>> getStudentCourses(

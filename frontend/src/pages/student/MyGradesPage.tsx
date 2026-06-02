@@ -56,7 +56,6 @@ export function MyGradesPage() {
     <div>
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>MY GRADES</p>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>내 성적 조회</h1>
         </div>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>

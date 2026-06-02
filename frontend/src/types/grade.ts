@@ -19,6 +19,9 @@ export interface Course {
   evaluationType?: string;
   curriculumId?: number;
   curriculumName?: string;
+  midtermRatio?: number;
+  finalRatio?: number;
+  taskRatio?: number;
 }
 
 export interface Grade {

@@ -44,7 +44,6 @@ export function ChildAttendancePage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>CHILD ATTENDANCE</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>자녀 출결{childName && ` · ${childName}`}</h1>
       </div>
 

@@ -3,6 +3,7 @@ package com.softwaredesign.schoolsystem.domain.analytics.service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,74 @@ public class AnalyticsIncrementalService {
         }
         rebuildStudentCourseTermFacts(studentId);
         rebuildLearningSummary(studentId);
+        Long classGroupId = getClassGroupId(studentId);
+        if (classGroupId != null) {
+            refreshClassCourseStats(classGroupId);
+        }
+    }
+
+    private Long getClassGroupId(Long studentId) {
+        List<?> rows = em.createNativeQuery(
+                "SELECT class_group_id FROM analytics.dim_student WHERE student_key = :sid")
+                .setParameter("sid", studentId)
+                .getResultList();
+        if (rows.isEmpty() || rows.get(0) == null) return null;
+        Object val = rows.get(0);
+        return val instanceof Number n ? n.longValue() : null;
+    }
+
+    private void refreshClassCourseStats(Long classGroupId) {
+        em.createNativeQuery("""
+                DELETE FROM analytics.fact_class_course_stats s
+                WHERE s.class_group_id = :cg
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM analytics.fact_student_course_term f
+                      JOIN analytics.dim_student ds ON ds.student_key = f.student_key
+                      WHERE ds.class_group_id = :cg
+                        AND f.course_key = s.course_key
+                        AND f.year       = s.year
+                        AND f.semester   = s.semester
+                  )
+                """)
+                .setParameter("cg", classGroupId)
+                .executeUpdate();
+
+        em.createNativeQuery("""
+                INSERT INTO analytics.fact_class_course_stats
+                    (class_group_id, course_key, year, semester, student_count,
+                     avg_score, max_score, min_score, stddev_score,
+                     avg_attendance_rate, last_refreshed_at)
+                SELECT ds.class_group_id,
+                       f.course_key,
+                       f.year,
+                       f.semester,
+                       COUNT(DISTINCT f.student_key),
+                       AVG(f.avg_score),
+                       MAX(f.avg_score),
+                       MIN(f.avg_score),
+                       COALESCE(STDDEV_SAMP(f.avg_score), 0),
+                       AVG(sls.attendance_rate),
+                       NOW()
+                FROM analytics.fact_student_course_term f
+                JOIN analytics.dim_student ds ON ds.student_key = f.student_key
+                LEFT JOIN analytics.fact_student_learning_summary sls
+                       ON sls.student_key = f.student_key
+                      AND sls.year = f.year
+                      AND sls.semester = f.semester
+                WHERE ds.class_group_id = :cg
+                GROUP BY ds.class_group_id, f.course_key, f.year, f.semester
+                ON CONFLICT (class_group_id, course_key, year, semester) DO UPDATE SET
+                       student_count       = EXCLUDED.student_count,
+                       avg_score           = EXCLUDED.avg_score,
+                       max_score           = EXCLUDED.max_score,
+                       min_score           = EXCLUDED.min_score,
+                       stddev_score        = EXCLUDED.stddev_score,
+                       avg_attendance_rate = EXCLUDED.avg_attendance_rate,
+                       last_refreshed_at   = EXCLUDED.last_refreshed_at
+                """)
+                .setParameter("cg", classGroupId)
+                .executeUpdate();
     }
 
     // ============================================================

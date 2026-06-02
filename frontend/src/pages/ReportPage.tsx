@@ -165,7 +165,6 @@ export function ReportPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>REPORTS</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>생활기록부 보고서</h1>
         <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px' }}>학생을 선택해 학교생활기록부 양식의 보고서를 생성하고 인쇄(PDF 저장)할 수 있습니다.</p>
       </div>

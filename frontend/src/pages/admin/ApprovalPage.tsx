@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import client from '../../api/client';
@@ -40,7 +41,8 @@ const thStyle: React.CSSProperties = {
 const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
 
 export function ApprovalPage() {
-  const [tab, setTab] = useState<TabType>('join');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<TabType>((searchParams.get('tab') as TabType) ?? 'join');
   const [items, setItems] = useState<ApprovalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -109,7 +111,6 @@ export function ApprovalPage() {
   return (
     <div>
       <div style={{ marginBottom: '24px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>APPROVAL</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>승인 대기</h1>
       </div>
 

@@ -46,7 +46,6 @@ export function ChildGradesPage() {
     <div>
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>CHILD GRADES</p>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
             자녀 성적 조회{child ? ` — ${child.studentName ?? child.name}` : ''}
           </h1>

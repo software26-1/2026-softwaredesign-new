@@ -128,7 +128,6 @@ export function SchoolManagementPage() {
     <div>
       {Toast}
       <div style={{ marginBottom: '24px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>SCHOOL MANAGEMENT</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>학교 관리</h1>
       </div>
 

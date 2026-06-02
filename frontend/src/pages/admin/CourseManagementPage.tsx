@@ -93,7 +93,6 @@ export function CourseManagementPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>COURSE MANAGEMENT</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>과목 관리</h1>
         <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px' }}>관리자가 과목을 개설하면, 교사가 마이페이지에서 담당 과목을 등록합니다.</p>
       </div>
@@ -147,12 +146,17 @@ export function CourseManagementPage() {
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
-            {[['중간고사', 'midtermRatio'], ['기말고사', 'finalRatio'], ['수행평가', 'taskRatio']].map(([label, key]) => (
+            {([['중간고사', 'midtermRatio', 'finalRatio', 'taskRatio'], ['기말고사', 'finalRatio', 'midtermRatio', 'taskRatio'], ['수행평가', 'taskRatio', 'midtermRatio', 'finalRatio']] as [string, string, string, string][]).map(([label, key, otherA, otherB]) => (
               <div key={key}>
                 <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>{label} 비율(%)</label>
                 <input type="number" min={0} max={100} style={inputStyle}
                   value={form[key as keyof typeof form]}
-                  onChange={e => setForm({ ...form, [key]: Number(e.target.value) })} />
+                  onChange={e => {
+                    const val = Math.min(100, Math.max(0, Number(e.target.value)));
+                    const remaining = 100 - val;
+                    const half = Math.floor(remaining / 2);
+                    setForm({ ...form, [key]: val, [otherA]: half, [otherB]: remaining - half });
+                  }} />
               </div>
             ))}
           </div>

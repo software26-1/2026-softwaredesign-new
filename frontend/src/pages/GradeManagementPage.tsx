@@ -100,7 +100,6 @@ export function GradeManagementPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>GRADE MANAGEMENT</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>성적 관리</h1>
       </div>
 
@@ -139,7 +138,15 @@ export function GradeManagementPage() {
           <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>시험 구분</label>
             <select style={{ ...selectStyle, width: '100%' }} value={examType} onChange={e => setExamType(e.target.value as ExamType)}>
-              {Object.entries(EXAM_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              {Object.entries(EXAM_LABELS)
+                .filter(([v]) => {
+                  if (!selectedCourse) return true;
+                  if (v === 'MIDTERM') return (selectedCourse.midtermRatio ?? 100) > 0;
+                  if (v === 'FINAL') return (selectedCourse.finalRatio ?? 100) > 0;
+                  if (v === 'ASSIGNMENT') return (selectedCourse.taskRatio ?? 100) > 0;
+                  return true;
+                })
+                .map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </div>
         </div>

@@ -155,6 +155,7 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
   const [studentYear, setStudentYear] = useState<number>(CURRENT_YEAR);
   const [studentSemester, setStudentSemester] = useState<number>(CURRENT_SEMESTER);
   const [studentCourses, setStudentCourses] = useState<StudentCourseTerm[]>([]);
+  const [allStudentCourses, setAllStudentCourses] = useState<StudentCourseTerm[]>([]);
   const [studentSummary, setStudentSummary] = useState<LearningSummary | null>(null);
 
   useEffect(() => {
@@ -176,7 +177,7 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
       const courseList: any[] = Array.isArray(courseRes?.data) ? courseRes.data : (courseRes?.data?.data ?? []);
       const mapped = courseList.map((c: any) => ({
         id: c.id,
-        name: c.courseName + (c.curriculumName && c.curriculumName !== c.courseName ? ` (${c.curriculumName})` : ''),
+        name: c.courseName,
       }));
       setCourses(mapped);
       if (mapped.length > 0) setCourseId(mapped[0].id);
@@ -204,11 +205,12 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
   }, [load, classGroupId]);
 
   useEffect(() => {
-    if (!selectedStudentId) { setStudentCourses([]); setStudentSummary(null); return; }
+    if (!selectedStudentId) { setStudentCourses([]); setAllStudentCourses([]); setStudentSummary(null); return; }
     Promise.all([
       analyticsService.getStudentCourses(selectedStudentId, studentYear, studentSemester).catch(() => []),
       analyticsService.getStudentSummary(selectedStudentId, studentYear, studentSemester).catch(() => null),
-    ]).then(([c, s]) => { setStudentCourses(c); setStudentSummary(s); });
+      analyticsService.getAllStudentCourses(selectedStudentId).catch(() => []),
+    ]).then(([c, s, all]) => { setStudentCourses(c); setStudentSummary(s); setAllStudentCourses(all); });
   }, [selectedStudentId, studentYear, studentSemester]);
 
   const handleEtl = async () => {
@@ -354,6 +356,9 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
           const classAvg = stats.reduce((s, c) => s + Number(c.avgScore ?? 0), 0) / (stats.length || 1);
           const diff = avg - classAvg;
           const getName = (key: number) => courses.find(c => c.id === key)?.name ?? `과목 ${key}`;
+          const allRelGrades = allStudentCourses.filter(c => c.gradeLevel && /^[1-9]$/.test(c.gradeLevel));
+          const avgGrade = allRelGrades.length > 0 ? allRelGrades.reduce((s, c) => s + Number(c.gradeLevel), 0) / allRelGrades.length : null;
+          const relGrades = studentCourses.filter(c => c.gradeLevel && /^[1-9]$/.test(c.gradeLevel));
           const radarData = {
             labels: studentCourses.map(c => getName(c.courseKey)),
             datasets: [{
@@ -380,30 +385,41 @@ function ClassAnalyticsView({ isAdmin }: { isAdmin: boolean }) {
                     return <p style={{ fontSize: '12px', color: '#94a3b8' }}>{classGroupName} · {stu?.studentNumber}번 · {g}학년 {studentSemester}학기</p>;
                   })()}
                 </div>
-                {studentSummary?.overallClassRank && (
-                  <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                    <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>반 석차</p>
-                    <p style={{ fontSize: '20px', fontWeight: 700, color: '#1e5a99' }}>{studentSummary.overallClassRank}위</p>
-                  </div>
-                )}
+                <div style={{ marginLeft: 'auto', textAlign: 'right', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  {avgGrade != null && (
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>평균 등급</p>
+                      <p style={{ fontSize: '20px', fontWeight: 700, color: '#1e5a99' }}>{avgGrade.toFixed(1)}등급</p>
+                    </div>
+                  )}
+                  {studentSummary?.overallYearRank != null && (
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>학년 석차</p>
+                      <p style={{ fontSize: '20px', fontWeight: 700, color: '#1e5a99' }}>{studentSummary.overallYearRank}위</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', alignItems: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', alignItems: 'stretch' }}>
                 {/* 레이더 차트 */}
                 <div>
                   <Radar data={radarData} options={{ scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }, plugins: { legend: { display: false } } }} />
                 </div>
 
                 {/* 분석 패널 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   {[
-                    { label: '원점수 평균', value: `${avg.toFixed(1)}점`, color: '#1e5a99', sub: '전 과목 평균' },
-                    { label: '반 평균 대비', value: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}점`, color: diff >= 0 ? '#2e7d32' : '#c62828', sub: `반 평균 ${classAvg.toFixed(1)}점` },
+                    { label: '원점수 평균', value: `${avg.toFixed(1)}점`, color: '#1a2332', sub: '전 과목 평균' },
+                    { label: '반 평균 대비', value: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}점`, color: '#1a2332', sub: `반 평균 ${classAvg.toFixed(1)}점` },
+                    ...(studentSummary?.overallClassRank != null ? [{ label: '반 석차', value: `${studentSummary.overallClassRank}위`, color: '#1a2332', sub: '현재 학기 기준' }] : []),
+                    ...(studentSummary?.overallYearRank != null ? [{ label: '학년 석차', value: `${studentSummary.overallYearRank}위`, color: '#1a2332', sub: '동 학년 전체 기준' }] : []),
+                    ...(avgGrade != null ? [{ label: '평균 등급', value: `${avgGrade.toFixed(1)}등급`, color: '#1a2332', sub: `상대평가 ${relGrades.length}과목 기준` }] : []),
                     { label: '우수 과목', value: `${getName(best.courseKey)}`, color: '#1a2332', sub: `${best.avgScore?.toFixed(1)}점 · 반 평균 ${best.classAvgScore?.toFixed(1) ?? '-'}점` },
-                    { label: '보완 권장 과목', value: `${getName(worst.courseKey)}`, color: '#c62828', sub: `${worst.avgScore?.toFixed(1)}점 · 반 평균 ${worst.classAvgScore?.toFixed(1) ?? '-'}점` },
+                    { label: '보완 권장 과목', value: `${getName(worst.courseKey)}`, color: '#1a2332', sub: `${worst.avgScore?.toFixed(1)}점 · 반 평균 ${worst.classAvgScore?.toFixed(1) ?? '-'}점` },
                     ...(studentSummary?.attendanceRate != null ? [{ label: '출석률', value: `${studentSummary.attendanceRate.toFixed(1)}%`, color: '#1a2332', sub: `결석 ${studentSummary.absentCount ?? 0}회 · 지각 ${studentSummary.lateCount ?? 0}회` }] : []),
-                  ].map(item => (
-                    <div key={item.label} style={{ padding: '8px 14px', background: '#f8fafc', borderRadius: '8px', borderLeft: `4px solid ${item.color}` }}>
+                  ].map((item, i) => (
+                    <div key={item.label} style={{ padding: '10px 14px', background: i % 2 === 0 ? '#ffffff' : '#f1f5f9', borderRadius: '8px' }}>
                       <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '2px' }}>{item.label}</p>
                       <p style={{ fontSize: '15px', fontWeight: 700, color: item.color }}>{item.value}</p>
                       {item.sub && <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '1px' }}>{item.sub}</p>}
@@ -473,11 +489,7 @@ export function AnalyticsDashboardPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '24px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>
-          ANALYTICS
-        </p>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', letterSpacing: '-0.02em' }}>학급 분석</h1>
+      <div style={{ marginBottom: '24px' }}>        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', letterSpacing: '-0.02em' }}>학급 분석</h1>
       </div>
 
       {isStudentView ? (

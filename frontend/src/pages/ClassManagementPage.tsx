@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import client from '../api/client';
@@ -72,7 +73,8 @@ function TransferTab({ classGroupId }: { classGroupId: number }) {
 }
 
 export function ClassManagementPage() {
-  const [tab, setTab] = useState<Tab>('students');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>((searchParams.get('tab') as Tab) ?? 'students');
   const [classGroupId, setClassGroupId] = useState<number>(0);
   const [classGroupName, setClassGroupName] = useState('');
   const [schoolName, setSchoolName] = useState('');
@@ -169,9 +171,12 @@ export function ClassManagementPage() {
 
   const saveStudent = async () => {
     if (!editStudent) return;
+    const newNum = Number(editForm.studentNumber);
+    const duplicate = students.find(s => s.id !== editStudent.id && s.studentNumber === newNum);
+    if (duplicate) { alert(`${newNum}번은 이미 ${duplicate.name} 학생이 사용 중입니다.`); return; }
     try {
       await client.patch(`/students/${editStudent.id}`, {
-        name: editForm.name, studentNumber: Number(editForm.studentNumber),
+        name: editForm.name, studentNumber: newNum,
       });
       setStudents(prev => prev.map(s => s.id === editStudent.id
         ? { ...s, name: editForm.name, studentNumber: Number(editForm.studentNumber) }
@@ -255,7 +260,6 @@ export function ClassManagementPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>CLASS MANAGEMENT</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
           학급 관리 {classGroupName && <span style={{ fontSize: '16px', fontWeight: 500, color: '#94a3b8', marginLeft: '10px' }}>{classGroupName}</span>}
         </h1>
@@ -275,23 +279,33 @@ export function ClassManagementPage() {
             <div>
               <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>총 {students.length}명</p>
               {loading ? <p style={{ color: '#94a3b8' }}>불러오는 중...</p> : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead><tr>{['번호', '이름', '피드백', '상담', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
-                  <tbody>
-                    {students.map(s => (
-                      <tr key={s.id}>
-                        <td style={{ ...tdStyle, color: '#94a3b8', width: '60px' }}>{String(s.studentNumber).padStart(2, '0')}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
-                        <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
-                        <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
-                        <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
-                          <Button size="sm" variant="secondary" onClick={() => openEdit(s)}>수정</Button>
-                          <Button size="sm" variant="secondary" onClick={() => openParentModal(s)}>학부모</Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
+                  {[students.slice(0, Math.ceil(students.length / 2)), students.slice(Math.ceil(students.length / 2))].map((half, hi) => (
+                    <table key={hi} style={{ width: 'auto', minWidth: '100%', borderCollapse: 'collapse' }}>
+                      <thead><tr>
+                        <th style={{ ...thStyle, width: '44px' }}>번호</th>
+                        <th style={{ ...thStyle, width: '90px' }}>이름</th>
+                        <th style={{ ...thStyle, width: '64px' }}>피드백</th>
+                        <th style={{ ...thStyle, width: '64px' }}>상담</th>
+                        <th style={{ ...thStyle, width: '150px' }}></th>
+                      </tr></thead>
+                      <tbody>
+                        {half.map(s => (
+                          <tr key={s.id}>
+                            <td style={{ ...tdStyle, color: '#94a3b8' }}>{String(s.studentNumber).padStart(2, '0')}</td>
+                            <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
+                            <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
+                            <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
+                            <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
+                              <Button size="sm" variant="secondary" onClick={() => openEdit(s)}>수정</Button>
+                              <Button size="sm" variant="secondary" onClick={() => openParentModal(s)}>학부모</Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -319,7 +333,7 @@ export function ClassManagementPage() {
                           </span>
                         </td>
                         <td style={tdStyle}>
-                          <span style={{ fontWeight: 600, color: allEnrolled ? '#2e7d32' : '#e65100' }}>
+                          <span style={{ fontWeight: 600, color: '#1a2332' }}>
                             {enrolled.length}/{students.length}명
                           </span>
                         </td>

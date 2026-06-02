@@ -82,7 +82,7 @@ export function StudentDashboard({ user }: Props) {
 
   return (
     <div>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '22px 28px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderLeft: '4px solid #1e5a99' }}>
+      <div style={{ background: '#fff', borderRadius: '14px', padding: '22px 28px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '20px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
         <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#1e5a99', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
           {user.name[0]}
         </div>
@@ -110,7 +110,6 @@ export function StudentDashboard({ user }: Props) {
           { label: '상담 횟수', value: summary?.counselingCount != null ? `${summary.counselingCount}회` : '—', color: '#3b82f6', sub: '이번 학기' },
         ].map((s) => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '10px', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: `3px solid ${s.color}` }}>
-            <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px', letterSpacing: '0.02em' }}>{s.label.toUpperCase()}</p>
             <p style={{ fontSize: '26px', fontWeight: 700, color: '#1a2332', marginBottom: '4px' }}>{s.value}</p>
             <p style={{ fontSize: '12px', color: '#94a3b8' }}>{s.sub}</p>
           </div>

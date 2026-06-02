@@ -111,7 +111,6 @@ export function CounselingPage() {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>COUNSELING</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>상담 내역 관리</h1>
       </div>
 

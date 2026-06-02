@@ -88,7 +88,6 @@ export function NotificationPage() {
     <div>
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>NOTIFICATIONS</p>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>알림</h1>
         </div>
         {unreadList.length > 0 && (

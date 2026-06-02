@@ -49,7 +49,6 @@ export function ParentDashboard({ user }: Props) {
     return (
       <div>
         <div style={{ marginBottom: '28px' }}>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>DASHBOARD</p>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>안녕하세요, {user.name}님</h1>
         </div>
         <p style={{ color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
@@ -60,11 +59,10 @@ export function ParentDashboard({ user }: Props) {
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>DASHBOARD</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>안녕하세요, {user.name}님</h1>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '20px 24px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '24px', borderLeft: '4px solid var(--primary-blue)' }}>
+      <div style={{ background: '#fff', borderRadius: '14px', padding: '20px 24px', marginBottom: '24px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '24px' }}>
         {child ? (
           <>
             <div>

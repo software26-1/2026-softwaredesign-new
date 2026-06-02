@@ -55,11 +55,12 @@ export function AdminDashboard({ user }: Props) {
   return (
     <div>
       {/* 헤더 배너 */}
-      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%)', borderRadius: '14px', padding: '28px 32px', marginBottom: '24px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '6px' }}>{today}</p>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px' }}>안녕하세요, {user.name} 관리자님</h1>
-          <p style={{ fontSize: '13px', opacity: 0.8 }}>{stats.schoolName}</p>
+      <div style={{ background: 'linear-gradient(135deg, #0a1f4e 0%, #1B3A7A 55%, #2563a8 100%)', borderRadius: '14px', padding: '20px 28px', marginBottom: '20px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', right: '200px', top: '-30px', width: '140px', height: '140px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }}/>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ fontSize: '12px', opacity: 0.65, marginBottom: '5px', letterSpacing: '0.02em' }}>{today}</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px', letterSpacing: '-0.02em' }}>안녕하세요, {user.name} 관리자님</h1>
+          <p style={{ fontSize: '13px', opacity: 0.75 }}>{stats.schoolName}</p>
         </div>
         <button onClick={handleEtl} disabled={etlRunning}
           style={{ padding: '9px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: '#fff', color: '#1e3a5f', border: 'none', cursor: etlRunning ? 'default' : 'pointer', fontFamily: "'Noto Sans KR', sans-serif", opacity: etlRunning ? 0.7 : 1 }}>
@@ -74,10 +75,9 @@ export function AdminDashboard({ user }: Props) {
           { label: '승인 대기', value: `${stats.pending}명`, sub: stats.pending > 0 ? '처리 필요' : '모두 처리됨', alert: stats.pending > 0 },
           { label: '학급 수', value: `${stats.classGroups}개`, sub: '등록된 학급' },
         ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '22px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderLeft: `4px solid ${s.alert ? '#e65100' : '#1e5a99'}` }}>
-            <p style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500, marginBottom: '8px' }}>{s.label}</p>
-            <p style={{ fontSize: '26px', fontWeight: 700, color: s.alert ? '#e65100' : '#1a2332', marginBottom: '4px' }}>{s.value}</p>
-            <p style={{ fontSize: '12px', color: s.alert ? '#f39c12' : '#94a3b8' }}>{s.sub}</p>
+          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <p style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500, marginBottom: '10px' }}>{s.label}</p>
+            <p style={{ fontSize: '26px', fontWeight: 700, color: s.alert ? '#dc2626' : '#1a2332' }}>{s.value}</p>
           </div>
         ))}
       </div>

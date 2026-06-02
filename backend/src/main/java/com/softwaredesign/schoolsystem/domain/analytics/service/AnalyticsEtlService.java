@@ -116,6 +116,23 @@ public class AnalyticsEtlService {
     // Step 2: per student+course+term grade facts
     // ============================================================
     private int rebuildStudentCourseTermFacts() {
+        // Remove stale facts whose source enrollment/grade no longer exists
+        em.createNativeQuery("""
+                DELETE FROM analytics.fact_student_course_term f
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM public.grade g
+                    JOIN public.enrollment e ON e.id = g.enrollment_id AND e.is_deleted = false
+                    JOIN public.course c     ON c.id = e.course_id AND c.is_deleted = false
+                    JOIN public.student s    ON s.id = e.student_id AND s.is_deleted = false
+                    WHERE g.is_deleted = false
+                      AND e.student_id = f.student_key
+                      AND c.id         = f.course_key
+                      AND c.academic_year = f.year
+                      AND c.semester   = f.semester
+                )
+                """).executeUpdate();
+
         return em.createNativeQuery("""
                 INSERT INTO analytics.fact_student_course_term
                     (student_key, course_key, year, semester, avg_score,
@@ -335,6 +352,20 @@ public class AnalyticsEtlService {
     // Step 4: per class+course+term stats
     // ============================================================
     private int rebuildClassCourseStats() {
+        // Remove stale class-course stats that have no remaining grade facts
+        em.createNativeQuery("""
+                DELETE FROM analytics.fact_class_course_stats s
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM analytics.fact_student_course_term f
+                    JOIN analytics.dim_student ds ON ds.student_key = f.student_key
+                    WHERE ds.class_group_id = s.class_group_id
+                      AND f.course_key = s.course_key
+                      AND f.year       = s.year
+                      AND f.semester   = s.semester
+                )
+                """).executeUpdate();
+
         return em.createNativeQuery("""
                 INSERT INTO analytics.fact_class_course_stats
                     (class_group_id, course_key, year, semester, student_count,
