@@ -43,11 +43,18 @@ export function ChildAttendancePage() {
 
   return (
     <div>
+      <style>{`
+        .ca-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+        @media (max-width: 768px) {
+          .ca-stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>자녀 출결{childName && ` · ${childName}`}</h1>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
+      <div className="ca-stats-grid">
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
           <div key={key} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '6px' }}>{label}</p>
@@ -63,8 +70,8 @@ export function ChildAttendancePage() {
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>출결 내역이 없습니다.</p>
         </div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
                 {['날짜', '출결 상태', '사유'].map(h => <th key={h} style={{ padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>)}

@@ -53,8 +53,8 @@ export function MyFeedbackPage() {
         <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
           {visible.map((f, i) => (
             <div key={f.id} style={{ padding: '20px 24px', borderBottom: i < visible.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: typeBg[f.category] ?? '#f5f5f5', color: typeColor[f.category] ?? '#666' }}>
                     {TYPE_LABELS[f.category] ?? f.category}
                   </span>

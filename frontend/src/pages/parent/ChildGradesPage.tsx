@@ -44,7 +44,7 @@ export function ChildGradesPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
             자녀 성적 조회{child ? ` — ${child.studentName ?? child.name}` : ''}
@@ -70,7 +70,7 @@ export function ChildGradesPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
             {[
               { label: '평균', value: `${summary?.overallAvgScore?.toFixed(1) ?? '—'}점`, color: '#1e5a99' },
               { label: '반 석차', value: summary?.overallClassRank ? `${summary.overallClassRank}위` : '—', color: '#10b981' },
@@ -83,8 +83,8 @@ export function ChildGradesPage() {
             ))}
           </div>
 
-          <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
               <thead>
                 <tr>{['과목', '원점수', '과목평균', '성취도', '석차/수강', '내신등급'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
               </thead>

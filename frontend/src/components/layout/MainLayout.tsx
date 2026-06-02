@@ -29,20 +29,32 @@ function LayoutInner() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div style={{ minHeight: '100vh', background: isDark ? '#0f172a' : '#f5f7fa', transition: 'background 0.2s' }}>
-      <Header user={user} onLogout={logout} />
-      <Sidebar
-        role={user.role}
-        classGroupId={(user as any).classGroupId}
-        onChatbotToggle={() => setShowChatbot(p => !p)}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={toggleSidebar}
-      />
-      <main style={{ marginLeft: `${mainMargin}px`, marginTop: '60px', padding: '28px 120px', minHeight: 'calc(100vh - 60px)', transition: 'margin-left 0.22s ease', minWidth: 0, overflowX: 'hidden' }}>
-        <Outlet />
-      </main>
-      {showChatbot && <ChatbotPopup onClose={() => setShowChatbot(false)} />}
-    </div>
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .main-sidebar { display: none !important; }
+          .main-content { margin-left: 0 !important; padding: 16px !important; }
+          .header-school { display: none !important; }
+          .header-right-full { display: none !important; }
+        }
+      `}</style>
+      <div style={{ minHeight: '100vh', background: isDark ? '#0f172a' : '#f5f7fa', transition: 'background 0.2s' }}>
+        <Header user={user} onLogout={logout} />
+        <div className="main-sidebar">
+          <Sidebar
+            role={user.role}
+            classGroupId={(user as any).classGroupId}
+            onChatbotToggle={() => setShowChatbot(p => !p)}
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={toggleSidebar}
+          />
+        </div>
+        <main className="main-content" style={{ marginLeft: `${mainMargin}px`, marginTop: '60px', padding: '28px 120px', minHeight: 'calc(100vh - 60px)', transition: 'margin-left 0.22s ease', minWidth: 0, overflowX: 'hidden' }}>
+          <Outlet />
+        </main>
+        {showChatbot && <ChatbotPopup onClose={() => setShowChatbot(false)} />}
+      </div>
+    </>
   );
 }
 

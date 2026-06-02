@@ -48,8 +48,22 @@ export function StudentDashboard({ user }: Props) {
 
   return (
     <div>
-      {/* 배너 */}
-      <div style={{ display: 'flex', gap: '14px', marginBottom: '20px', alignItems: 'stretch', height: '270px' }}>
+      <style>{`
+        .sd-banner { display: flex; gap: 14px; margin-bottom: 20px; align-items: stretch; height: 270px; }
+        .sd-banner-hide-mobile { display: flex; }
+        .sd-mobile-greeting { display: none; }
+        .sd-bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 768px) {
+          .sd-banner { display: none; }
+          .sd-mobile-greeting { display: block; background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+          .sd-mobile-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+          .sd-mobile-stat-item { flex: 1; min-width: 90px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+          .sd-bottom-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
+      {/* 데스크탑 배너 */}
+      <div className="sd-banner">
         {/* 왼쪽 인사 */}
         <div style={{ borderRadius: '4px', flex: 2, position: 'relative', overflow: 'hidden' }}>
           <img src="/school_building.png" alt="" style={{ position: 'absolute', right: 0, top: 0, width: '60%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%' }} />
@@ -111,35 +125,59 @@ export function StudentDashboard({ user }: Props) {
         </div>
       </div>
 
+      {/* 모바일 인사 카드 */}
+      <div className="sd-mobile-greeting">
+        <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>{today}</p>
+        <p style={{ fontSize: '22px', fontWeight: 700, color: '#1B3A7A', marginBottom: '2px' }}>안녕하세요</p>
+        <p style={{ fontSize: '17px', fontWeight: 600, color: '#1a2332', marginBottom: '8px' }}>{user.name} 학생</p>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#fff', background: '#1B3A7A', padding: '3px 12px', borderRadius: '20px', display: 'inline-block' }}>
+          {classLabel || '학생'}
+        </span>
+        <div className="sd-mobile-stats">
+          {[
+            { label: '이번 학기 평균', value: avg === '—' ? '—' : `${avg}점` },
+            { label: '받은 피드백', value: `${feedbacks.length}건` },
+            { label: '상담 횟수', value: summary?.counselingCount != null ? `${summary.counselingCount}회` : '—' },
+          ].map(s => (
+            <div key={s.label} className="sd-mobile-stat-item">
+              <p style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '3px', fontWeight: 500 }}>{s.label}</p>
+              <p style={{ fontSize: '15px', fontWeight: 700, color: '#1a2332' }}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* 성적 + 피드백 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="sd-bottom-grid">
         <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
             <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
             <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>과목별 성적</h2>
             <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>{grade != null ? `${grade}학년 ` : ''}{SEMESTER}학기</span>
           </div>
-          <div style={{ minHeight: 'calc(100vh - 460px)', maxHeight: 'calc(100vh - 460px)', overflowY: 'auto' }}>
-          {courses.length === 0 ? (
-            <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>성적 데이터가 없습니다.</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead><tr style={{ background: '#f0f5ff' }}>
-                {['과목', '평균', '중간', '기말', '석차'].map(h => <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>)}
-              </tr></thead>
-              <tbody>
-                {courses.map(g => (
-                  <tr key={g.courseKey} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '11px 16px', fontWeight: 500, color: '#1e293b' }}>{g.courseName ?? `과목${g.courseKey}`}</td>
-                    <td style={{ padding: '11px 16px', fontWeight: 700, color: '#1B3A7A' }}>{g.avgScore?.toFixed(1) ?? '—'}</td>
-                    <td style={{ padding: '11px 16px', color: '#374151' }}>{g.midtermScore?.toFixed(1) ?? '—'}</td>
-                    <td style={{ padding: '11px 16px', color: '#374151' }}>{g.finalScore?.toFixed(1) ?? '—'}</td>
-                    <td style={{ padding: '11px 16px', color: '#94a3b8' }}>{g.classRank != null ? `${g.classRank}위` : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ minHeight: 'calc(100vh - 460px)', maxHeight: 'calc(100vh - 460px)', overflowY: 'auto' }}>
+            {courses.length === 0 ? (
+              <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>성적 데이터가 없습니다.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead><tr style={{ background: '#f0f5ff' }}>
+                  {['과목', '평균', '중간', '기말', '석차'].map(h => <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {courses.map(g => (
+                    <tr key={g.courseKey} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '11px 16px', fontWeight: 500, color: '#1e293b' }}>{g.courseName ?? `과목${g.courseKey}`}</td>
+                      <td style={{ padding: '11px 16px', fontWeight: 700, color: '#1B3A7A' }}>{g.avgScore?.toFixed(1) ?? '—'}</td>
+                      <td style={{ padding: '11px 16px', color: '#374151' }}>{g.midtermScore?.toFixed(1) ?? '—'}</td>
+                      <td style={{ padding: '11px 16px', color: '#374151' }}>{g.finalScore?.toFixed(1) ?? '—'}</td>
+                      <td style={{ padding: '11px 16px', color: '#94a3b8' }}>{g.classRank != null ? `${g.classRank}위` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            </div>
           </div>
         </div>
 
@@ -153,7 +191,7 @@ export function StudentDashboard({ user }: Props) {
               <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>피드백이 없습니다.</p>
             ) : feedbacks.slice(0, 5).map(f => (
               <div key={f.id} style={{ padding: '14px 18px', borderBottom: '1px solid #f8fafc' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)} · {f.teacherName} 선생님</span>
                   <span style={{ fontSize: '11px', fontWeight: 600, background: '#f0f5fb', color: '#1e5a99', padding: '2px 8px', borderRadius: '4px' }}>{FEEDBACK_CAT_LABELS[f.category] ?? f.category}</span>
                 </div>

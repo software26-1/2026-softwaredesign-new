@@ -54,11 +54,18 @@ export function MyGradesPage() {
 
   return (
     <div>
+      <style>{`
+        .mg-chart-table-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; align-items: start; }
+        @media (max-width: 768px) {
+          .mg-chart-table-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>내 성적 조회</h1>
         </div>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
           {Array.from({ length: curGrade }, (_, i) => i + 1).map(g => (
             <button key={g} onClick={() => setSelGrade(g)} style={filterBtn(selGrade === g)}>{g}학년</button>
           ))}
@@ -94,15 +101,15 @@ export function MyGradesPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '20px', alignItems: 'start' }}>
-            {/* 레이더 차트: 내 평균 vs 반 평균 */}
+          <div className="mg-chart-table-grid">
+            {/* 레이더 차트 */}
             <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px 24px' }}>
               <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '12px' }}>과목별 성적 분포</h2>
               <CourseRadarChart courses={sorted.slice(0, 8)} />
             </div>
 
             {/* 성적 상세표 */}
-            <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'auto' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
                 <thead>
                   <tr>
