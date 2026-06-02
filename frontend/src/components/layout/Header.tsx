@@ -84,6 +84,15 @@ export function Header({ user, onLogout }: HeaderProps) {
   const popupSub     = isDark ? '#94a3b8' : '#64748b';
 
   return (
+    <>
+    <style>{`
+      @media (max-width: 768px) {
+        .header-school-info { display: none !important; }
+        .header-logo-text { display: none !important; }
+        .header-btn { display: none !important; }
+        .header-user-name { display: none !important; }
+      }
+    `}</style>
     <header style={{
       background: headerBg,
       borderBottom: `1px solid ${headerBorder}`,
@@ -105,7 +114,7 @@ export function Header({ user, onLogout }: HeaderProps) {
           style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
         >
           <AppBadge />
-          <div>
+          <div className="header-logo-text">
             <div style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#f1f5f9' : '#1B3A7A', lineHeight: 1.2, fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.02em' }}>
               학생부
             </div>
@@ -115,19 +124,19 @@ export function Header({ user, onLogout }: HeaderProps) {
           </div>
         </div>
         {user.schoolName && (
-          <>
+          <div className="header-school-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ width: '1px', height: '20px', background: isDark ? '#374151' : '#e2e8f0' }} />
             <span style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#94a3b8' : '#64748b', fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.01em' }}>
               {user.schoolName}
             </span>
-          </>
+          </div>
         )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {/* 유저 정보 pill */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isDark ? '#1f2937' : '#f8fafc', padding: '6px 14px', borderRadius: '24px', border: `1px solid ${isDark ? '#374151' : '#e8ecf0'}`, lineHeight: 1 }}>
-          <span style={{ fontSize: '13px', color: nameColor, fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif", lineHeight: 1 }}>{user.name}</span>
+          <span className="header-user-name" style={{ fontSize: '13px', color: nameColor, fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif", lineHeight: 1 }}>{user.name}</span>
           <span style={{ fontSize: '11px', fontWeight: 600, color: roleBg[user.role] ?? '#1e5a99', background: isDark ? '#1f2937' : `${roleBg[user.role]}15`, padding: '3px 9px', borderRadius: '20px', fontFamily: "'Noto Sans KR', sans-serif", border: `1px solid ${roleBg[user.role]}40`, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
             {roleLabel[user.role] ?? user.role}
           </span>
@@ -184,15 +193,16 @@ export function Header({ user, onLogout }: HeaderProps) {
           )}
         </div>
 
-        <button onClick={() => navigate('/mypage')}
+        <button className="header-btn" onClick={() => navigate('/mypage')}
           style={{ padding: '4px 12px', background: 'transparent', color: btnColor, border: `1px solid ${btnBorder}`, borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 500 }}>
           마이페이지
         </button>
-        <button onClick={handleLogout}
+        <button className="header-btn" onClick={handleLogout}
           style={{ padding: '4px 12px', background: 'transparent', color: btnColor, border: `1px solid ${btnBorder}`, borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 500, transition: 'all 0.15s' }}>
           로그아웃
         </button>
       </div>
     </header>
+    </>
   );
 }
