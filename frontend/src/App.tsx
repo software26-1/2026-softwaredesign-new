@@ -58,10 +58,10 @@ function App() {
           <Route path="/class-management" element={<RoleGuard roles={['TEACHER']} requireHomeroom><ClassManagementPage /></RoleGuard>} />
           <Route path="/students/search" element={<RoleGuard roles={['TEACHER']}><StudentSearchPage /></RoleGuard>} />
           <Route path="/grades" element={<RoleGuard roles={['TEACHER']}><GradeManagementPage /></RoleGuard>} />
-          <Route path="/attendance" element={<RoleGuard roles={['TEACHER']}><AttendancePage /></RoleGuard>} />
+          <Route path="/attendance" element={<RoleGuard roles={['TEACHER']} requireHomeroom><AttendancePage /></RoleGuard>} />
           <Route path="/feedback" element={<RoleGuard roles={['TEACHER']}><FeedbackPage /></RoleGuard>} />
           <Route path="/counseling" element={<RoleGuard roles={['TEACHER']}><CounselingPage /></RoleGuard>} />
-          <Route path="/student-records" element={<RoleGuard roles={['TEACHER']}><StudentRecordPage /></RoleGuard>} />
+          <Route path="/student-records" element={<RoleGuard roles={['TEACHER']} requireHomeroom><StudentRecordPage /></RoleGuard>} />
           <Route path="/reports" element={<RoleGuard roles={['TEACHER']}><ReportPage /></RoleGuard>} />
           {/* 학생 전용 */}
           <Route path="/my-grades" element={<RoleGuard roles={['STUDENT']}><MyGradesPage /></RoleGuard>} />

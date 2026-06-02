@@ -99,19 +99,29 @@ export function Header({ user, onLogout }: HeaderProps) {
       transition: 'background 0.2s, border-color 0.2s',
     }}>
       {/* 로고 */}
-      <div
-        onClick={() => navigate('/dashboard')}
-        style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-      >
-        <AppBadge />
-        <div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#f1f5f9' : '#1B3A7A', lineHeight: 1.2, fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.02em' }}>
-            학생부
-          </div>
-          <div style={{ fontSize: '10px', fontWeight: 500, color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.2, fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.01em' }}>
-            관리시스템
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div
+          onClick={() => navigate('/dashboard')}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+        >
+          <AppBadge />
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#f1f5f9' : '#1B3A7A', lineHeight: 1.2, fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.02em' }}>
+              학생부
+            </div>
+            <div style={{ fontSize: '10px', fontWeight: 500, color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.2, fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.01em' }}>
+              관리시스템
+            </div>
           </div>
         </div>
+        {user.schoolName && (
+          <>
+            <div style={{ width: '1px', height: '20px', background: isDark ? '#374151' : '#e2e8f0' }} />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#94a3b8' : '#64748b', fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.01em' }}>
+              {user.schoolName}
+            </span>
+          </>
+        )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

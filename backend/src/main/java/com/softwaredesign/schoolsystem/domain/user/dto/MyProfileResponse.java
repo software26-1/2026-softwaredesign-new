@@ -55,8 +55,8 @@ public class MyProfileResponse {
         return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber, null, null, curriculumId, position);
     }
 
-    public static MyProfileResponse fromTeacher(User user, Long curriculumId, String position) {
-        return new MyProfileResponse(user, null, null, null, null, null, null, null, curriculumId, position);
+    public static MyProfileResponse fromTeacher(User user, Long schoolId, Long curriculumId, String position) {
+        return new MyProfileResponse(user, schoolId, null, null, null, null, null, null, curriculumId, position);
     }
 
     public static MyProfileResponse fromStudent(User user, Long studentId) {

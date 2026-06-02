@@ -56,7 +56,11 @@ export function AttendancePage() {
   }, [classGroupId]);
 
   useEffect(() => {
-    if (!classGroupId || !date) return;
+    if (!classGroupId || !date || students.length === 0) return;
+    // 날짜 변경 시 항상 PRESENT로 리셋 후 해당 날짜 데이터 로드
+    const initial: Record<number, AttendanceRecord> = {};
+    students.forEach(s => { initial[s.id] = { studentId: s.id, status: 'PRESENT' }; });
+    setAttendance(initial);
     client.get(`/attendances?class_group_id=${classGroupId}&date=${date}`)
       .then((r: any) => {
         const list = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
@@ -68,7 +72,7 @@ export function AttendancePage() {
           setAttendance(prev => ({ ...prev, ...loaded }));
         }
       });
-  }, [classGroupId, date]);
+  }, [classGroupId, date, students]);
 
   const summary = Object.values(attendance).reduce((acc, v) => {
     acc[v.status] = (acc[v.status] ?? 0) + 1;
@@ -200,7 +204,7 @@ export function AttendancePage() {
       {pageTab === 'input' && <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {(Object.entries(STATUS_LABELS) as [AttendanceStatus, string][]).map(([status, label]) => (
-          <div key={status} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: `3px solid ${statusStyle[status].color}` }}>
+          <div key={status} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',  }}>
             <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '6px' }}>{label}</p>
             <p style={{ fontSize: '24px', fontWeight: 700, color: statusStyle[status].color }}>{summary[status] ?? 0}명</p>
           </div>

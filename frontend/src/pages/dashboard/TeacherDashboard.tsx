@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import type { User, Teacher } from '../../types/user';
 import { analyticsService } from '../../services/analyticsService';
 import type { ClassCourseStats, AtRiskStudent } from '../../types/analytics';
@@ -10,23 +12,29 @@ const YEAR = new Date().getFullYear();
 const SEMESTER = new Date().getMonth() < 7 ? 1 : 2;
 
 export function TeacherDashboard({ user }: Props) {
+  const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const [teacher, setTeacher] = useState<Teacher>(user as Teacher);
   const [students, setStudents] = useState<any[]>([]);
   const [classCourses, setClassCourses] = useState<ClassCourseStats[]>([]);
   const [atRisk, setAtRisk] = useState<AtRiskStudent[]>([]);
   const [courseMap, setCourseMap] = useState<Record<number, string>>({});
   const [unreadCount, setUnreadCount] = useState(0);
+  const [schoolName, setSchoolName] = useState<string | null>(null);
+  const [totalStudents, setTotalStudents] = useState<number | null>(null);
+  const [totalClasses, setTotalClasses] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
       const r = await client.get<any>('/users/me').catch(() => null);
       const profile = r?.data?.data ?? r?.data ?? null;
       const cg = profile?.classGroupId ?? (user as any).classGroupId ?? null;
+      const schoolId = profile?.schoolId ?? (user as any).schoolId ?? null;
 
       if (profile) {
         const updated = { ...user, ...profile };
         setTeacher(updated as Teacher);
-        localStorage.setItem('user', JSON.stringify(updated));
+        updateUser(profile);
       }
 
       if (cg) {
@@ -41,6 +49,23 @@ export function TeacherDashboard({ user }: Props) {
             const list: any[] = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
             setCourseMap(Object.fromEntries(list.map((c: any) => [c.id, c.courseName])));
           }).catch(() => {});
+      } else {
+        // 담임 아닌 교사: 학교 정보 + 전체 학생수
+        if (schoolId) {
+          client.get<any>('/schools').then(res => {
+            const list: any[] = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+            const school = list.find((s: any) => s.id === schoolId);
+            if (school) setSchoolName(school.schoolName ?? school.name ?? null);
+          }).catch(() => {});
+        }
+        client.get<any>('/students').then(res => {
+          const list: any[] = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+          setTotalStudents(list.length);
+        }).catch(() => {});
+        client.get<any>('/class-groups').then(res => {
+          const list: any[] = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+          setTotalClasses(list.length);
+        }).catch(() => {});
       }
     };
     load();
@@ -78,7 +103,7 @@ export function TeacherDashboard({ user }: Props) {
             <div style={{ display: 'flex', gap: '8px' }}>
               {[
                 { label: '담당 학급', value: classGroupName ?? '-' },
-                { label: '학생 수', value: `${students.length}명` },
+                { label: '학생 수', value: classGroupName ? `${students.length}명` : '-' },
                 { label: '미확인 알림', value: unreadCount > 0 ? `${unreadCount}개` : '없음', highlight: unreadCount > 0 },
               ].map(s => (
                 <div key={s.label} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderRadius: '10px', width: '110px', border: '1px solid #d1d9e0' }}>
@@ -126,31 +151,80 @@ export function TeacherDashboard({ user }: Props) {
       {/* 2열: 명단(좌) + 현황(우) */}
       <div style={{ display: 'grid', gridTemplateColumns: classCourses.length > 0 ? '1fr 1.5fr' : '1fr', gap: '16px' }}>
 
-        {/* 학생 명단 */}
-        <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
-            <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
-            <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>
-              {classGroupName ? `${classGroupName} 학생 명단` : '학생 명단'}
-            </h2>
+        {classGroupName ? (
+          /* 담임: 학생 명단 */
+          <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
+              <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>{classGroupName} 학생 명단</h2>
+            </div>
+            {students.length === 0 ? (
+              <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>학생이 없습니다.</p>
+            ) : (
+              <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
+                {[...students].sort((a, b) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)).map((s: any) => (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', borderRadius: '8px', cursor: 'default' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f0f5ff')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    <span style={{ fontSize: '10px', color: '#cbd5e1', fontWeight: 600, width: '18px', flexShrink: 0 }}>{s.studentNumber}</span>
+                    <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 500 }}>{s.name ?? '—'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          {students.length === 0 ? (
-            <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-              {classGroupName ? '학생이 없습니다.' : '담당 학급이 지정되면 학생 명단이 표시됩니다.'}
-            </p>
-          ) : (
-            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
-              {[...students].sort((a, b) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)).map((s: any) => (
-                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', borderRadius: '8px', cursor: 'default' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f0f5ff')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <span style={{ fontSize: '10px', color: '#cbd5e1', fontWeight: 600, width: '18px', flexShrink: 0 }}>{s.studentNumber}</span>
-                  <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 500 }}>{s.name ?? '—'}</span>
+        ) : (
+          /* 교과 담당: 학교 정보 */
+          <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
+              <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>학교 현황</h2>
+            </div>
+            <div style={{ padding: '24px 20px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              {[
+                { label: '학교명', value: schoolName ?? '-' },
+                { label: '전체 학생', value: totalStudents != null ? `${totalStudents}명` : '-' },
+                { label: '전체 학급', value: totalClasses != null ? `${totalClasses}개` : '-' },
+              ].map(item => (
+                <div key={item.label} style={{ flex: 1, minWidth: '120px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e8ecf0' }}>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '8px', fontWeight: 500 }}>{item.label}</p>
+                  <p style={{ fontSize: '20px', fontWeight: 700, color: '#1B3A7A', letterSpacing: '-0.02em' }}>{item.value}</p>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* 비담임: 바로가기 */}
+        {!classGroupName && (
+          <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden', marginTop: '16px' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
+              <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#F4A000', flexShrink: 0 }}/>
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>바로가기</h2>
+            </div>
+            <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              {[
+                { label: '학생 검색', desc: '학생 성적·피드백·상담 조회', path: '/students/search' },
+                { label: '성적 관리', desc: '과목별 성적 입력 및 수정', path: '/grades' },
+                { label: '피드백 작성', desc: '학생 피드백 작성 및 목록', path: '/feedback' },
+                { label: '상담 내역', desc: '상담 등록 및 내역 조회', path: '/counseling' },
+                { label: '보고서 생성', desc: '학생부 보고서 출력', path: '/reports' },
+                { label: '알림', desc: '미확인 알림 확인', path: '/notifications' },
+              ].map(item => (
+                <div
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  style={{ padding: '18px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e8ecf0', cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = '#f0f5ff'; (e.currentTarget as HTMLDivElement).style.borderColor = '#1B3A7A'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = '#f8fafc'; (e.currentTarget as HTMLDivElement).style.borderColor = '#e8ecf0'; }}
+                >
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#1B3A7A', marginBottom: '6px', letterSpacing: '-0.01em' }}>{item.label}</p>
+                  <p style={{ fontSize: '12px', color: '#94a3b8' }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 학급 과목별 현황 */}
         {classCourses.length > 0 && (

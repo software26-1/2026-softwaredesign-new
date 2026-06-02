@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
-import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { studentRecordService } from '../services/studentRecordService';
-import { studentService } from '../services/studentService';
 import { analyticsService } from '../services/analyticsService';
+import client from '../api/client';
 import type { Student } from '../types/student';
 import type { LearningSummary } from '../types/analytics';
 
@@ -22,7 +21,9 @@ const YEAR = new Date().getFullYear();
 
 export function StudentRecordPage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [pick, setPick] = useState({ grade: '', classNumber: '', studentId: '' });
+  const [nameSearch, setNameSearch] = useState('');
+  const [selectedId, setSelectedId] = useState('');
+  const [classGroupId, setClassGroupId] = useState<number | null>(null);
   const [year, setYear] = useState(YEAR);
   const [semester, setSemester] = useState(new Date().getMonth() < 7 ? 1 : 2);
   const [record, setRecord] = useState<RecordData | null>(null);
@@ -33,10 +34,19 @@ export function StudentRecordPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const selectedId = pick.studentId;
-
   useEffect(() => {
-    studentService.search({}).then(setStudents).catch(() => setStudents([]));
+    client.get<any>('/users/me').then(r => {
+      const profile = r.data?.data ?? r.data;
+      const cg = profile?.classGroupId;
+      if (cg) {
+        setClassGroupId(cg);
+        client.get<any>(`/students?class_group_id=${cg}`)
+          .then(r2 => {
+            const list = Array.isArray(r2.data) ? r2.data : (r2.data?.data ?? []);
+            setStudents(list.sort((a: any, b: any) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)));
+          }).catch(() => setStudents([]));
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -44,6 +54,10 @@ export function StudentRecordPage() {
     analyticsService.getStudentSummary(Number(selectedId), year, semester)
       .then(setSummary).catch(() => setSummary(null));
   }, [selectedId, year, semester]);
+
+  const filteredStudents = nameSearch.trim()
+    ? students.filter(s => s.name?.includes(nameSearch.trim()))
+    : students;
 
   useEffect(() => {
     if (!selectedId) { setRecord(null); return; }
@@ -117,8 +131,25 @@ export function StudentRecordPage() {
       <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>학생부 작성</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <StudentFilterSelect students={students} value={pick} onChange={setPick} />
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>이름 검색</label>
+              <input
+                placeholder="학생 이름 입력"
+                value={nameSearch}
+                onChange={e => setNameSearch(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ flex: 2 }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학생 선택</label>
+              <select style={inputStyle} value={selectedId} onChange={e => setSelectedId(e.target.value)}>
+                <option value="">학생을 선택하세요</option>
+                {filteredStudents.map(s => (
+                  <option key={s.id} value={s.id}>{s.studentNumber}번 {s.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>

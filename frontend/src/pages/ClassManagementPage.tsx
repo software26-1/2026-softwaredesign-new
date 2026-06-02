@@ -13,61 +13,391 @@ const inputStyle: React.CSSProperties = { padding: '7px 10px', border: '1px soli
 
 type Tab = 'students' | 'courses' | 'approvals' | 'transfer';
 
-function TransferTab({ classGroupId }: { classGroupId: number }) {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [msg, setMsg] = useState('');
+type MoveType = 'transfer' | 'class-change';
 
-  useEffect(() => {
+interface MoveModal {
+  student: any;
+  step: 'choose' | 'transfer-school' | 'transfer-detail' | 'class-change';
+}
+
+function TransferTab({ classGroupId, students, schoolId }: {
+  classGroupId: number;
+  students: any[];
+  schoolId: number;
+}) {
+  // 내 반으로 들어오는 CLASS_CHANGE 대기 목록
+  const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+  const [msg, setMsg] = useState('');
+  const [msgOk, setMsgOk] = useState(true);
+
+  // 이동 모달 상태
+  const [moveModal, setMoveModal] = useState<MoveModal | null>(null);
+
+  // 전학 관련
+  const [schoolSearch, setSchoolSearch] = useState('');
+  const [schoolResults, setSchoolResults] = useState<any[]>([]);
+  const [selectedSchool, setSelectedSchool] = useState<any | null>(null);
+  const [transferDetail, setTransferDetail] = useState('');
+  const [schoolSearching, setSchoolSearching] = useState(false);
+
+  // 학급 이동 관련
+  const [classGroups, setClassGroups] = useState<any[]>([]);
+  const [selectedClassGroup, setSelectedClassGroup] = useState<any | null>(null);
+  const [classGroupsLoading, setClassGroupsLoading] = useState(false);
+
+  const showMsg = (text: string, ok = true) => {
+    setMsg(text); setMsgOk(ok);
+    setTimeout(() => setMsg(''), 4000);
+  };
+
+  const loadIncoming = () => {
     client.get<any[]>('/approval-requests/class')
       .then(r => {
         const all = Array.isArray(r.data) ? r.data : [];
-        setRequests(all.filter((a: any) =>
-          a.requestType === 'CLASS_CHANGE' || a.requestType === 'STUDENT_TRANSFER'
-        ));
-      }).catch(() => setRequests([]));
-  }, [classGroupId]);
+        setIncomingRequests(all.filter((a: any) => a.requestType === 'CLASS_CHANGE'));
+      }).catch(() => setIncomingRequests([]));
+  };
 
-  const process = async (id: number, approve: boolean) => {
+  useEffect(() => { loadIncoming(); }, [classGroupId]);
+
+  const processIncoming = async (id: number, approve: boolean) => {
     try {
       await client.post(`/approval-requests/${id}/process-class?approve=${approve}`);
-      setRequests(prev => prev.filter(r => r.id !== id));
-      setMsg(approve ? '승인 완료' : '거절 완료');
-      setTimeout(() => setMsg(''), 3000);
-    } catch { setMsg('처리 실패'); }
+      loadIncoming();
+      showMsg(approve ? '승인 완료. 학생 반이 변경되었습니다.' : '거절 완료.', approve);
+    } catch { showMsg('처리에 실패했습니다.', false); }
+  };
+
+  const openMoveModal = (student: any) => {
+    setMoveModal({ student, step: 'choose' });
+    setSchoolSearch(''); setSchoolResults([]); setSelectedSchool(null); setTransferDetail('');
+    setSelectedClassGroup(null); setClassGroups([]);
+  };
+
+  const closeMoveModal = () => setMoveModal(null);
+
+  // 학교 검색
+  const searchSchools = async () => {
+    if (!schoolSearch.trim()) return;
+    setSchoolSearching(true);
+    try {
+      const r = await client.get<any[]>('/schools');
+      const list = Array.isArray(r.data) ? r.data : [];
+      setSchoolResults(list.filter((s: any) =>
+        s.schoolName?.includes(schoolSearch.trim())
+      ));
+    } catch { setSchoolResults([]); }
+    finally { setSchoolSearching(false); }
+  };
+
+  // 같은 학교 반 목록 불러오기
+  const loadClassGroups = async () => {
+    if (!schoolId) return;
+    setClassGroupsLoading(true);
+    try {
+      const r = await client.get<any[]>(`/schools/${schoolId}/class-groups`);
+      const list = Array.isArray(r.data) ? r.data : [];
+      // 현재 반 제외
+      setClassGroups(list.filter((cg: any) => cg.id !== classGroupId).sort((a: any, b: any) => (a.grade - b.grade) || (a.classNumber - b.classNumber)));
+    } catch { setClassGroups([]); }
+    finally { setClassGroupsLoading(false); }
+  };
+
+  // 전학 신청 제출
+  const submitTransfer = async () => {
+    if (!moveModal || !selectedSchool) return;
+    try {
+      await client.post(
+        `/approval-requests/student-transfer?studentId=${moveModal.student.id}&toSchoolId=${selectedSchool.id}&detail=${encodeURIComponent(transferDetail)}`
+      );
+      showMsg(`${moveModal.student.name} 전학 신청이 완료되었습니다. 양쪽 학교 관리자의 승인을 기다립니다.`);
+      closeMoveModal();
+    } catch (e: any) {
+      showMsg(e?.response?.data?.message ?? '전학 신청에 실패했습니다.', false);
+    }
+  };
+
+  // 학급 이동 신청 제출
+  const submitClassChange = async () => {
+    if (!moveModal || !selectedClassGroup) return;
+    try {
+      await client.post(
+        `/approval-requests/class-change?studentId=${moveModal.student.id}&toClassGroupId=${selectedClassGroup.id}`
+      );
+      showMsg(`${moveModal.student.name} 학급 이동 신청이 완료되었습니다. 목적지 반 담임의 승인을 기다립니다.`);
+      loadIncoming();
+      closeMoveModal();
+    } catch (e: any) {
+      showMsg(e?.response?.data?.message ?? '학급 이동 신청에 실패했습니다.', false);
+    }
+  };
+
+  const sectionBox: React.CSSProperties = {
+    background: '#f8fafc', borderRadius: '10px', padding: '16px 20px',
+    marginBottom: '20px', border: '1px solid #e8ecf0',
+  };
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px',
+  };
+
+  // 모달 내용 렌더
+  const renderModalContent = () => {
+    if (!moveModal) return null;
+    const { student, step } = moveModal;
+
+    if (step === 'choose') {
+      return (
+        <div>
+          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
+            <strong style={{ color: '#1e293b' }}>{student.name}</strong> 학생의 이동 유형을 선택하세요.
+          </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => setMoveModal({ student, step: 'transfer-school' })}
+              style={{
+                flex: 1, padding: '20px 16px', border: '2px solid #e2e8f0', borderRadius: '10px',
+                background: '#fff', cursor: 'pointer', textAlign: 'left', fontFamily: "'Noto Sans KR', sans-serif",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#1B3A7A'; (e.currentTarget as HTMLElement).style.background = '#f0f4ff'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+            >
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#1B3A7A', marginBottom: '6px' }}>전학</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>다른 학교로 전학 신청<br/>양쪽 학교 관리자 승인 필요</div>
+            </button>
+            <button
+              onClick={() => { setMoveModal({ student, step: 'class-change' }); loadClassGroups(); }}
+              style={{
+                flex: 1, padding: '20px 16px', border: '2px solid #e2e8f0', borderRadius: '10px',
+                background: '#fff', cursor: 'pointer', textAlign: 'left', fontFamily: "'Noto Sans KR', sans-serif",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#F4A000'; (e.currentTarget as HTMLElement).style.background = '#fffbf0'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+            >
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#F4A000', marginBottom: '6px' }}>학급 이동</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>같은 학교 내 다른 반으로<br/>목적지 담임교사 승인 필요</div>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (step === 'transfer-school') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <p style={{ fontSize: '13px', color: '#64748b' }}>
+            <strong style={{ color: '#1e293b' }}>{student.name}</strong> 학생이 전학 갈 학교를 검색하세요.
+          </p>
+          <div>
+            <label style={labelStyle}>학교 검색</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                value={schoolSearch}
+                onChange={e => setSchoolSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && searchSchools()}
+                placeholder="학교 이름 입력"
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <Button size="sm" onClick={searchSchools}>{schoolSearching ? '...' : '검색'}</Button>
+            </div>
+          </div>
+          {schoolResults.length > 0 && (
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', maxHeight: '180px', overflowY: 'auto' }}>
+              {schoolResults.map((s: any) => (
+                <div
+                  key={s.id}
+                  onClick={() => { setSelectedSchool(s); setMoveModal({ student, step: 'transfer-detail' }); }}
+                  style={{
+                    padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: selectedSchool?.id === s.id ? '#ebf4ff' : '#fff',
+                  }}
+                  onMouseEnter={e => { if (selectedSchool?.id !== s.id) (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
+                  onMouseLeave={e => { if (selectedSchool?.id !== s.id) (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: '13px', color: '#1a2332' }}>{s.schoolName}</span>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>{s.schoolType === 'MIDDLE' ? '중학교' : '고등학교'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <Button size="sm" variant="secondary" onClick={closeMoveModal}>취소</Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (step === 'transfer-detail') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ background: '#ebf4ff', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#1e5a99' }}>
+            목적지 학교: <strong>{selectedSchool?.schoolName}</strong>
+          </div>
+          <div>
+            <label style={labelStyle}>전학 사유 (선택)</label>
+            <textarea
+              value={transferDetail}
+              onChange={e => setTransferDetail(e.target.value)}
+              placeholder="전학 사유를 입력하세요"
+              rows={3}
+              style={{ ...inputStyle, width: '100%', resize: 'vertical', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <Button size="sm" variant="secondary" onClick={() => setMoveModal({ student, step: 'transfer-school' })}>이전</Button>
+            <Button size="sm" onClick={submitTransfer}>전학 신청</Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (step === 'class-change') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <p style={{ fontSize: '13px', color: '#64748b' }}>
+            <strong style={{ color: '#1e293b' }}>{student.name}</strong> 학생이 이동할 반을 선택하세요.
+          </p>
+          {classGroupsLoading ? (
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>반 목록 불러오는 중...</p>
+          ) : classGroups.length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>같은 학교에 이동 가능한 반이 없습니다.</p>
+          ) : (
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', maxHeight: '220px', overflowY: 'auto' }}>
+              {classGroups.map((cg: any) => (
+                <div
+                  key={cg.id}
+                  onClick={() => setSelectedClassGroup(cg)}
+                  style={{
+                    padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: selectedClassGroup?.id === cg.id ? '#fffbf0' : '#fff',
+                    borderLeft: selectedClassGroup?.id === cg.id ? '3px solid #F4A000' : '3px solid transparent',
+                  }}
+                  onMouseEnter={e => { if (selectedClassGroup?.id !== cg.id) (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
+                  onMouseLeave={e => { if (selectedClassGroup?.id !== cg.id) (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: '13px', color: '#1a2332' }}>
+                    {cg.grade}학년 {cg.classNumber}반
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    {cg.teacherName ? `담임: ${cg.teacherName}` : '담임 미지정'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <Button size="sm" variant="secondary" onClick={closeMoveModal}>취소</Button>
+            <Button size="sm" onClick={submitClassChange} disabled={!selectedClassGroup}>이동 신청</Button>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const modalTitle = () => {
+    if (!moveModal) return '';
+    const { step } = moveModal;
+    if (step === 'choose') return '학생 이동 유형 선택';
+    if (step === 'transfer-school') return '전학 - 목적지 학교 검색';
+    if (step === 'transfer-detail') return '전학 - 신청 확인';
+    if (step === 'class-change') return '학급 이동 - 목적지 반 선택';
+    return '';
   };
 
   return (
     <div>
       <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>
-        학급 이동·전학 신청 처리 — 학교 간 전학은 학교 관리자 계정에서 처리, 학급 이동은 담임이 직접 승인
+        전학은 양쪽 학교 관리자 승인이 필요하며, 학급 이동은 목적지 반 담임교사의 승인이 필요합니다.
       </p>
-      {msg && <div style={{ padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '12px', background: '#e8f5e9', color: '#2e7d32' }}>{msg}</div>}
-      {requests.length === 0 ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
-          <p style={{ fontSize: '14px', marginBottom: '8px' }}>대기 중인 전학·학급 이동 신청이 없습니다.</p>
+
+      {msg && (
+        <div style={{
+          padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px',
+          background: msgOk ? '#e8f5e9' : '#fdecea', color: msgOk ? '#2e7d32' : '#c62828',
+        }}>{msg}</div>
+      )}
+
+      {/* 내 반 학생 목록 - 학생 클릭시 이동 신청 */}
+      <div style={sectionBox}>
+        <p style={{ fontSize: '13px', fontWeight: 600, color: '#1a2332', marginBottom: '12px' }}>
+          내 반 학생 이동 신청
+          <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: '8px', fontSize: '12px' }}>
+            학생을 클릭하면 전학 또는 학급 이동을 신청할 수 있습니다.
+          </span>
+        </p>
+        {students.length === 0 ? (
+          <p style={{ fontSize: '13px', color: '#94a3b8' }}>반에 배정된 학생이 없습니다.</p>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {students.map((s: any) => (
+              <button
+                key={s.id}
+                onClick={() => openMoveModal(s)}
+                style={{
+                  padding: '8px 14px', border: '1px solid #e2e8f0', borderRadius: '8px',
+                  background: '#fff', cursor: 'pointer', fontSize: '13px', color: '#1e293b',
+                  fontFamily: "'Noto Sans KR', sans-serif", display: 'flex', alignItems: 'center', gap: '6px',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#1B3A7A'; (e.currentTarget as HTMLElement).style.background = '#f0f4ff'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+              >
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>{String(s.studentNumber).padStart(2, '0')}</span>
+                <span style={{ fontWeight: 600 }}>{s.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 내 반으로 들어오는 CLASS_CHANGE 대기 목록 */}
+      <p style={{ fontSize: '13px', fontWeight: 600, color: '#1a2332', marginBottom: '10px' }}>
+        대기 중인 학급 이동 승인 요청
+        <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: '8px', fontSize: '12px' }}>
+          다른 반에서 내 반으로 이동 신청한 학생 목록
+        </span>
+      </p>
+      {incomingRequests.length === 0 ? (
+        <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e8ecf0' }}>
+          대기 중인 학급 이동 신청이 없습니다.
         </div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr>{['유형', '이름', '신청 내용', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+          <thead>
+            <tr>{['학생 이름', '이동 내용', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+          </thead>
           <tbody>
-            {requests.map(r => (
-              <tr key={r.id}>
-                <td style={tdStyle}>
-                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: '#fff3e0', color: '#e65100' }}>
-                    {r.requestType === 'STUDENT_TRANSFER' ? '전학' : '학급 이동'}
-                  </span>
-                </td>
-                <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{r.requesterName}</td>
-                <td style={{ ...tdStyle, color: '#64748b', fontSize: '12px' }}>{r.requestDetail}</td>
-                <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
-                  <Button size="sm" onClick={() => process(r.id, true)}>승인</Button>
-                  <Button size="sm" variant="secondary" onClick={() => process(r.id, false)}>거절</Button>
-                </td>
-              </tr>
-            ))}
+            {incomingRequests.map(r => {
+              const detail = r.requestDetail ?? '';
+              const toGrade = detail.match(/학년:(\d+)/)?.[1];
+              const toClass = detail.match(/반:(\d+)/)?.[1];
+              const toSchoolName = detail.match(/학교:([^|]+)/)?.[1];
+              const detailText = toGrade && toClass
+                ? `→ ${toSchoolName ? toSchoolName + ' ' : ''}${toGrade}학년 ${toClass}반`
+                : detail;
+              return (
+                <tr key={r.id}>
+                  <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{r.requesterName}</td>
+                  <td style={{ ...tdStyle, color: '#64748b', fontSize: '12px' }}>{detailText}</td>
+                  <td style={{ ...tdStyle }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <Button size="sm" onClick={() => processIncoming(r.id, true)}>승인</Button>
+                      <Button size="sm" variant="secondary" onClick={() => processIncoming(r.id, false)}>거절</Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
+
+      {/* 이동 신청 모달 */}
+      <Modal isOpen={!!moveModal} title={modalTitle()} onClose={closeMoveModal} width={480}>
+        {renderModalContent()}
+      </Modal>
     </div>
   );
 }
@@ -78,6 +408,7 @@ export function ClassManagementPage() {
   const [classGroupId, setClassGroupId] = useState<number>(0);
   const [classGroupName, setClassGroupName] = useState('');
   const [schoolName, setSchoolName] = useState('');
+  const [schoolId, setSchoolId] = useState<number>(0);
   const [students, setStudents] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [enrollmentMap, setEnrollmentMap] = useState<Record<number, { enrollmentId: number; studentId: number }[]>>({});
@@ -111,6 +442,7 @@ export function ClassManagementPage() {
         setClassGroupName(profile.classGroupName ?? '');
       }
       if (profile?.schoolName) setSchoolName(profile.schoolName);
+      if (profile?.schoolId) setSchoolId(profile.schoolId);
     }).catch(() => {});
   }, []);
 
@@ -270,7 +602,7 @@ export function ClassManagementPage() {
           <TabBtn id="students" label="학생 명단" />
           <TabBtn id="courses" label="과목 배정" />
           <TabBtn id="approvals" label={`가입 승인${approvals.length > 0 ? ` (${approvals.length})` : ''}`} />
-          <TabBtn id="transfer" label="전학 관리" />
+          <TabBtn id="transfer" label="학생 이동" />
         </div>
 
         <div style={{ padding: '24px' }}>
@@ -390,9 +722,9 @@ export function ClassManagementPage() {
             </div>
           )}
 
-          {/* 전학 관리 */}
+          {/* 학생 이동 */}
           {tab === 'transfer' && (
-            <TransferTab classGroupId={classGroupId} />
+            <TransferTab classGroupId={classGroupId} students={students} schoolId={schoolId} />
           )}
         </div>
       </div>

@@ -49,15 +49,13 @@ public class StudentRecordService {
         Student targetStudent = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
 
-        // 담임(본인 반) 또는 해당 학생이 수강하는 교과의 담당 교사만 학생부 작성/수정 가능
+        // 담임(본인 반)만 학생부 작성/수정 가능
         boolean isHomeroom = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
                 .map(cg -> targetStudent.getClassGroup() != null
                         && targetStudent.getClassGroup().getId().equals(cg.getId()))
                 .orElse(false);
-        boolean isSubjectTeacher = enrollmentRepository
-                .existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(studentId, teacher.getId());
-        if (!isHomeroom && !isSubjectTeacher) {
-            throw new AccessDeniedException("담임 또는 해당 학생을 가르치는 교과 교사만 학생부를 작성할 수 있습니다.");
+        if (!isHomeroom) {
+            throw new AccessDeniedException("담임 교사만 자신의 반 학생 학생부를 작성할 수 있습니다.");
         }
 
         int year = request.getAcademicYear() != null ? request.getAcademicYear() : java.time.Year.now().getValue();
@@ -87,10 +85,8 @@ public class StudentRecordService {
                 .map(cg -> targetStudent.getClassGroup() != null
                         && targetStudent.getClassGroup().getId().equals(cg.getId()))
                 .orElse(false);
-        boolean isSubjectTeacher = enrollmentRepository
-                .existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(studentId, teacher.getId());
-        if (!isHomeroom && !isSubjectTeacher) {
-            throw new AccessDeniedException("담임 또는 해당 학생을 가르치는 교과 교사만 학생부를 삭제할 수 있습니다.");
+        if (!isHomeroom) {
+            throw new AccessDeniedException("담임 교사만 자신의 반 학생 학생부를 삭제할 수 있습니다.");
         }
 
         studentRecordRepository.findByStudentId(studentId)

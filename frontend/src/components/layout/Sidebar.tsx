@@ -41,7 +41,7 @@ type NavItem = { path: string; label: string; icon: IconKey; subItems?: SubItem[
 const teacherNav: NavItem[] = [
   { path: '/dashboard',       label: '홈',          icon: 'home'     },
   { path: '/analytics',       label: '학급 분석',   icon: 'chart'    },
-  { path: '/class-management',label: '학급 관리',   icon: 'users',   subItems: [{ label: '학생 명단', tab: 'students' }, { label: '과목 배정', tab: 'courses' }, { label: '가입 승인', tab: 'approvals' }, { label: '전학 관리', tab: 'transfer' }] },
+  { path: '/class-management',label: '학급 관리',   icon: 'users',   subItems: [{ label: '학생 명단', tab: 'students' }, { label: '과목 배정', tab: 'courses' }, { label: '가입 승인', tab: 'approvals' }, { label: '학생 이동', tab: 'transfer' }] },
   { path: '/students/search', label: '학생 검색',   icon: 'search',  subItems: [{ label: '성적', tab: 'grade' }, { label: '피드백', tab: 'feedback' }, { label: '상담', tab: 'counseling' }, { label: '학생부', tab: 'record' }] },
   { path: '/grades',          label: '성적 관리',   icon: 'clip'     },
   { path: '/attendance',      label: '출결 관리',   icon: 'cal',     subItems: [{ label: '출결 입력', tab: 'input' }, { label: '출결 현황', tab: 'history' }] },
@@ -102,7 +102,12 @@ export function Sidebar({ role, classGroupId, onChatbotToggle, isCollapsed = fal
 
   let navItems = navByRole[role] ?? teacherNav;
   if (role === 'TEACHER' && !classGroupId) {
-    navItems = navItems.filter(item => item.path !== '/analytics' && item.path !== '/class-management');
+    navItems = navItems.filter(item =>
+      item.path !== '/analytics' &&
+      item.path !== '/class-management' &&
+      item.path !== '/attendance' &&
+      item.path !== '/student-records'
+    );
   }
 
   const bg           = isDark ? '#111827' : '#ffffff';

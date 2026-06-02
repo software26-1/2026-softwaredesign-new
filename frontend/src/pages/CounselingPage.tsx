@@ -88,7 +88,7 @@ export function CounselingPage() {
       (!search.studentName || c.studentName?.includes(search.studentName)) &&
       (!search.startDate || (c.counseledAt ?? '').slice(0, 10) >= search.startDate) &&
       (!search.endDate || (c.counseledAt ?? '').slice(0, 10) <= search.endDate);
-  });
+  }).sort((a, b) => (b.counseledAt ?? '').localeCompare(a.counseledAt ?? ''));
 
   const searchClassNumbers = search.grade
     ? [...new Set(students.filter(s => s.grade === Number(search.grade)).map(s => s.classNumber))].filter(Boolean).sort((a, b) => a - b)

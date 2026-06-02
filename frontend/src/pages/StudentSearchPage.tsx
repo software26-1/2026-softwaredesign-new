@@ -37,7 +37,10 @@ export function StudentSearchPage() {
   const [filters, setFilters] = useState({ grade: '', classNumber: '', name: '' });
   const [allClassGroups, setAllClassGroups] = useState<{ id: number; grade: number; classNumber: number }[]>([]);
   const [results, setResults] = useState<StudentDetail[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
   const [selected, setSelected] = useState<StudentDetail | null>(null);
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'grade' | 'feedback' | 'counseling' | 'record'>((searchParams.get('tab') as 'grade' | 'feedback' | 'counseling' | 'record') ?? 'grade');
@@ -87,10 +90,6 @@ export function StudentSearchPage() {
         const list: any[] = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
         setCourseMap(Object.fromEntries(list.map((c: any) => [c.id, c.courseName])));
       }).catch(() => {});
-    studentService.search({})
-      .then(res => setResults(res))
-      .catch(() => setResults([]))
-      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -99,8 +98,12 @@ export function StudentSearchPage() {
 
   const fetchStudents = (params: { grade?: number; classNumber?: number; name?: string }) => {
     setLoading(true);
+    setSearched(true);
+    setPage(1);
     studentService.search(params)
-      .then(res => setResults(res))
+      .then(res => setResults([...res].sort((a, b) =>
+        (a.grade - b.grade) || (a.classNumber - b.classNumber) || (a.studentNumber - b.studentNumber)
+      )))
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
   };
@@ -239,32 +242,54 @@ export function StudentSearchPage() {
       <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>검색 결과</h2>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>총 {results.length}명</span>
+          {searched && <span style={{ fontSize: '12px', color: '#94a3b8' }}>총 {results.length}명</span>}
         </div>
-        {loading ? (
+        {!searched ? (
+          <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 조건을 입력하고 검색 버튼을 눌러주세요.</p>
+        ) : loading ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>{['학년/반/번호','이름','피드백','상담 건수',''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-            </thead>
-            <tbody>
-              {results.length === 0 && (
-                <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 결과가 없습니다.</td></tr>
-              )}
-              {results.map((s) => (
-                <tr key={s.id}>
-                  <td style={{ ...tdStyle, color: '#64748b' }}>{s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2,'0')}</td>
-                  <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
-                  <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
-                  <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
-                  <td style={tdStyle}>
-                    <Button size="sm" onClick={() => handleSelectStudent(s)}>상세보기</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>{['학년/반/번호','이름','피드백','상담 건수',''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {results.length === 0 && (
+                  <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 결과가 없습니다.</td></tr>
+                )}
+                {results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((s) => (
+                  <tr key={s.id}>
+                    <td style={{ ...tdStyle, color: '#64748b' }}>{s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2,'0')}</td>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
+                    <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
+                    <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
+                    <td style={tdStyle}>
+                      <Button size="sm" onClick={() => handleSelectStudent(s)}>상세보기</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {results.length > PAGE_SIZE && (
+              <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', borderTop: '1px solid #f1f5f9' }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e2e8f0', background: page === 1 ? '#f8fafc' : '#fff', color: page === 1 ? '#cbd5e1' : '#1B3A7A', cursor: page === 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 500 }}>
+                  이전
+                </button>
+                {Array.from({ length: Math.ceil(results.length / PAGE_SIZE) }, (_, i) => i + 1).map(p => (
+                  <button key={p} onClick={() => setPage(p)}
+                    style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid', borderColor: p === page ? '#1B3A7A' : '#e2e8f0', background: p === page ? '#1B3A7A' : '#fff', color: p === page ? '#fff' : '#64748b', cursor: 'pointer', fontSize: '13px', fontWeight: p === page ? 700 : 400 }}>
+                    {p}
+                  </button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(Math.ceil(results.length / PAGE_SIZE), p + 1))} disabled={page === Math.ceil(results.length / PAGE_SIZE)}
+                  style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e2e8f0', background: page === Math.ceil(results.length / PAGE_SIZE) ? '#f8fafc' : '#fff', color: page === Math.ceil(results.length / PAGE_SIZE) ? '#cbd5e1' : '#1B3A7A', cursor: page === Math.ceil(results.length / PAGE_SIZE) ? 'default' : 'pointer', fontSize: '13px', fontWeight: 500 }}>
+                  다음
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

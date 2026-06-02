@@ -236,7 +236,8 @@ public class ApprovalRequestService {
         String cgIdStr = "classGroupId:" + cg.getId();
         return approvalRequestRepository.findByStatus(ApprovalStatus.PENDING).stream()
                 .filter(a -> a.getRequestType() == RequestType.STUDENT_REGISTRATION
-                        || a.getRequestType() == RequestType.PARENT_REGISTRATION)
+                        || a.getRequestType() == RequestType.PARENT_REGISTRATION
+                        || a.getRequestType() == RequestType.CLASS_CHANGE)
                 .filter(a -> a.getRequestDetail() != null && a.getRequestDetail().contains(cgIdStr))
                 .map(ApprovalResponse::from)
                 .toList();
@@ -280,8 +281,95 @@ public class ApprovalRequestService {
                             .ifPresent(s -> parentStudentRepository.save(
                                     ParentStudent.createParentStudent(s, p, Relationship.GUARDIAN)));
                 });
+            } else if (req.getRequestType() == RequestType.CLASS_CHANGE) {
+                String detail = req.getRequestDetail();
+                long studentId = parseDetailLong(detail, "studentId");
+                long toClassGroupId = parseDetailLong(detail, "classGroupId");
+                ClassGroup targetCg = toClassGroupId > 0
+                        ? classGroupRepository.findById(toClassGroupId).orElse(cg)
+                        : cg;
+                studentRepository.findById(studentId).ifPresent(s -> s.updateStudent(targetCg, s.getStudentNumber()));
             }
         }
+        return ApprovalResponse.from(req);
+    }
+
+    // 담임교사가 자기 반 학생을 다른 반으로 이동 신청 (source teacher submits)
+    @Transactional
+    public ApprovalResponse submitClassChange(Long teacherUserId, Long studentId, Long toClassGroupId) {
+        Teacher teacher = teacherRepository.findByUserId(teacherUserId)
+                .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
+        ClassGroup fromCg = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .orElseThrow(() -> new AccessDeniedException("담임 학급이 지정되지 않았습니다."));
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+
+        // 해당 학생이 교사의 반 소속인지 검증
+        if (student.getClassGroup() == null || !student.getClassGroup().getId().equals(fromCg.getId())) {
+            throw new AccessDeniedException("해당 학생은 담임 학급 소속이 아닙니다.");
+        }
+
+        ClassGroup toCg = classGroupRepository.findById(toClassGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("목적지 학급을 찾을 수 없습니다."));
+
+        // 같은 학교 내 이동인지 검증
+        if (fromCg.getSchool() == null || !fromCg.getSchool().getId().equals(toCg.getSchool().getId())) {
+            throw new IllegalArgumentException("같은 학교 내 학급 이동만 가능합니다.");
+        }
+
+        // detail: classGroupId = 목적지 반 ID (processClassRegistration에서 참조)
+        String detail = String.format("학교:%s|학년:%d|반:%d|studentId:%d|classGroupId:%d",
+                toCg.getSchool() != null ? toCg.getSchool().getSchoolName() : "",
+                toCg.getGrade(), toCg.getClassNumber(), studentId, toClassGroupId);
+        ApprovalRequest req = ApprovalRequest.create(student.getUser(), RequestType.CLASS_CHANGE, detail);
+        approvalRequestRepository.save(req);
+
+        // 목적지 반 담임교사에게 알림
+        if (toCg.getHomeroomTeacher() != null && toCg.getHomeroomTeacher().getUser() != null) {
+            notificationService.notify(
+                    toCg.getHomeroomTeacher().getUser().getId(),
+                    NotificationEventType.APPROVAL,
+                    "학급 이동 승인 요청",
+                    student.getUser().getName() + " 학생의 " + fromCg.getGrade() + "학년 " + fromCg.getClassNumber()
+                            + "반 → " + toCg.getGrade() + "학년 " + toCg.getClassNumber()
+                            + "반 이동 신청이 접수되었습니다.");
+        }
+
+        return ApprovalResponse.from(req);
+    }
+
+    // 담임교사가 학생 전학 신청 제출 (source teacher on behalf of student)
+    @Transactional
+    public ApprovalResponse submitStudentTransfer(Long teacherUserId, Long studentId, Long toSchoolId, String detail) {
+        Teacher teacher = teacherRepository.findByUserId(teacherUserId)
+                .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
+        ClassGroup cg = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .orElseThrow(() -> new AccessDeniedException("담임 학급이 지정되지 않았습니다."));
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+
+        // 해당 학생이 교사의 반 소속인지 검증
+        if (student.getClassGroup() == null || !student.getClassGroup().getId().equals(cg.getId())) {
+            throw new AccessDeniedException("해당 학생은 담임 학급 소속이 아닙니다.");
+        }
+
+        School fromSchool = cg.getSchool();
+        if (fromSchool == null) {
+            throw new IllegalArgumentException("교사의 학교 정보를 찾을 수 없습니다.");
+        }
+        School toSchool = schoolRepository.findById(toSchoolId)
+                .orElseThrow(() -> new IllegalArgumentException("목적지 학교를 찾을 수 없습니다."));
+
+        // requester_id = 학생의 userId
+        ApprovalRequest req = ApprovalRequest.createTransfer(
+                student.getUser(), RequestType.STUDENT_TRANSFER, detail, fromSchool, toSchool);
+        approvalRequestRepository.save(req);
+
+        // 양쪽 학교 admin에게 알림
+        String who = student.getUser().getName() + " 학생";
+        notifySchoolAdmin(fromSchool, "전학 신청", who + "의 전학 신청이 접수되었습니다. 승인 여부를 처리해 주세요.");
+        notifySchoolAdmin(toSchool, "전학 수락 요청", who + "의 전학 수락 요청이 접수되었습니다. 승인 여부를 처리해 주세요.");
+
         return ApprovalResponse.from(req);
     }
 
@@ -292,6 +380,15 @@ public class ApprovalRequestService {
             }
         } catch (Exception ignored) {}
         return 0;
+    }
+
+    private long parseDetailLong(String detail, String key) {
+        try {
+            for (String part : detail.split("\\|")) {
+                if (part.startsWith(key + ":")) return Long.parseLong(part.split(":")[1]);
+            }
+        } catch (Exception ignored) {}
+        return 0L;
     }
 
     private void notifySchoolAdmin(School school, String title, String message) {

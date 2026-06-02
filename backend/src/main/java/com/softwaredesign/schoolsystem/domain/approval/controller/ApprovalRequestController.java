@@ -91,6 +91,29 @@ public class ApprovalRequestController {
         return ResponseEntity.ok(approvalRequestService.getClassRegistrations(authUser.id()));
     }
 
+    // 담임 교사: 학급 이동 신청 제출 (자기 반 학생 → 같은 학교 내 다른 반)
+    @PostMapping("/class-change")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApprovalResponse> submitClassChange(
+            @RequestParam Long studentId,
+            @RequestParam Long toClassGroupId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(approvalRequestService.submitClassChange(authUser.id(), studentId, toClassGroupId));
+    }
+
+    // 담임 교사: 학생 전학 신청 제출 (자기 반 학생 → 다른 학교로)
+    @PostMapping("/student-transfer")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApprovalResponse> submitStudentTransfer(
+            @RequestParam Long studentId,
+            @RequestParam Long toSchoolId,
+            @RequestParam(value = "detail", defaultValue = "") String detail,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(approvalRequestService.submitStudentTransfer(authUser.id(), studentId, toSchoolId, detail));
+    }
+
     // 담임 교사: 학생/학부모 가입 승인 처리
     @PostMapping("/{requestId}/process-class")
     @PreAuthorize("hasRole('TEACHER')")

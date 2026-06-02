@@ -34,7 +34,7 @@ public class UserProfileService {
                         .map(cg -> MyProfileResponse.from(user,
                                 cg.getSchool() != null ? cg.getSchool().getId() : null,
                                 cg.getId(), cg.getGrade(), cg.getClassNumber(), curriculumId, position))
-                        .orElse(MyProfileResponse.fromTeacher(user, curriculumId, position));
+                        .orElse(MyProfileResponse.fromTeacher(user, teacher.getSchool() != null ? teacher.getSchool().getId() : null, curriculumId, position));
             }).orElse(MyProfileResponse.from(user));
         }
         if (user.getRole() == UserRole.STUDENT) {
