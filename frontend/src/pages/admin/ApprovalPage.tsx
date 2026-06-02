@@ -38,7 +38,7 @@ const thStyle: React.CSSProperties = {
   padding: '11px 20px', textAlign: 'left', fontWeight: 600,
   color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc',
 };
-const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
+const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px', verticalAlign: 'middle' };
 
 export function ApprovalPage() {
   const [searchParams] = useSearchParams();
@@ -141,12 +141,12 @@ export function ApprovalPage() {
         ) : items.length === 0 ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>대기 중인 신청이 없습니다.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
                 {tab === 'join'
                   ? ['이름', '이메일', '신청일', ''].map(h => <th key={h} style={thStyle}>{h}</th>)
-                  : ['신청자', '현재 학교', '이동 학교', '내 학교 승인', '상태', ''].map(h => <th key={h} style={thStyle}>{h}</th>)
+                  : [['신청자','15%'],['현재 학교','18%'],['이동 학교','18%'],['내 학교 승인','15%'],['상태','14%'],['','20%']].map(([h,w]) => <th key={h} style={{...thStyle, width: w}}>{h}</th>)
                 }
               </tr>
             </thead>
@@ -180,23 +180,11 @@ export function ApprovalPage() {
                       <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{item.requesterName}</td>
                       <td style={{ ...tdStyle, color: '#64748b' }}>{item.fromSchoolName ?? '—'}</td>
                       <td style={{ ...tdStyle, color: '#1e5a99', fontWeight: 600 }}>{item.toSchoolName ?? '—'}</td>
-                      <td style={tdStyle}>
-                        <span style={{
-                          display: 'inline-block', padding: '3px 10px', borderRadius: '20px',
-                          fontSize: '11px', fontWeight: 700,
-                          ...(STATUS_STYLE[item.fromSchoolStatus ?? 'PENDING']),
-                        }}>
-                          {STATUS_MAP[item.fromSchoolStatus ?? 'PENDING']}
-                        </span>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_STYLE[item.fromSchoolStatus ?? 'PENDING']?.color ?? '#64748b' }}>
+                        {STATUS_MAP[item.fromSchoolStatus ?? 'PENDING']}
                       </td>
-                      <td style={tdStyle}>
-                        <span style={{
-                          display: 'inline-block', padding: '3px 10px', borderRadius: '20px',
-                          fontSize: '11px', fontWeight: 700,
-                          ...(STATUS_STYLE[item.status]),
-                        }}>
-                          {STATUS_MAP[item.status]}
-                        </span>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_STYLE[item.status]?.color ?? '#64748b' }}>
+                        {STATUS_MAP[item.status]}
                       </td>
                       <td style={tdStyle}>
                         {item.fromSchoolStatus !== 'APPROVED' && item.fromSchoolStatus !== 'REJECTED' && (

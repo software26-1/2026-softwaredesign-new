@@ -78,17 +78,17 @@ export function MyGradesPage() {
       ) : (
         <>
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #1e5a99', minWidth: '140px' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', minWidth: '140px' }}>
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>전체 평균</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{avg}점</p>
             </div>
             {summary?.overallClassRank != null && (
-              <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #10b981', minWidth: '140px' }}>
+              <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', minWidth: '140px' }}>
                 <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>반 석차</p>
                 <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{summary.overallClassRank}위</p>
               </div>
             )}
-            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: '3px solid #2471b8', minWidth: '140px' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', minWidth: '140px' }}>
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>수강 과목</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{courses.length}개</p>
             </div>

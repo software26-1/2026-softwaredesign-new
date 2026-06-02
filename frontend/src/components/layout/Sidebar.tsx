@@ -75,7 +75,7 @@ const adminNav: NavItem[] = [
   { path: '/admin/users',      label: '교사 관리', icon: 'users'    },
   { path: '/admin/schools',    label: '학교 관리', icon: 'building' },
   { path: '/admin/courses',    label: '과목 관리', icon: 'book'     },
-  { path: '/admin/approvals',  label: '승인 대기', icon: 'check',   subItems: [{ label: '가입 신청', tab: 'join' }, { label: '교원 전학', tab: 'teacher_transfer' }, { label: '학생 전학', tab: 'student_transfer' }] },
+  { path: '/admin/approvals',  label: '승인 대기', icon: 'check',   subItems: [{ label: '가입 신청', tab: 'join' }, { label: '교원 전근', tab: 'teacher_transfer' }, { label: '학생 전학', tab: 'student_transfer' }] },
   { path: '/notifications',    label: '알림',      icon: 'bell'     },
 ];
 

@@ -146,7 +146,6 @@ export function NotificationPage() {
                 padding: '16px 24px',
                 borderBottom: idx < paginated.length - 1 ? '1px solid #f1f5f9' : 'none',
                 background: n.isRead ? '#fff' : '#fafcff',
-                borderLeft: n.isRead ? '3px solid transparent' : '3px solid #1e5a99',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px',
               }}>
               {/* 왼쪽: 타입 배지 + 제목 + 내용 */}

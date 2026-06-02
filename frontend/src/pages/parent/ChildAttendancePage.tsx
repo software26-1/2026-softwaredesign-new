@@ -49,7 +49,7 @@ export function ChildAttendancePage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
-          <div key={key} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: `3px solid ${statusStyle[key]?.color ?? '#94a3b8'}` }}>
+          <div key={key} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '6px' }}>{label}</p>
             <p style={{ fontSize: '24px', fontWeight: 700, color: statusStyle[key]?.color ?? '#1a2332' }}>{summary[key] ?? 0}</p>
           </div>
