@@ -13,7 +13,7 @@ const inputStyle: React.CSSProperties = { padding: '7px 10px', border: '1px soli
 
 type Tab = 'students' | 'courses' | 'approvals' | 'transfer';
 
-type MoveType = 'transfer' | 'class-change';
+
 
 interface MoveModal {
   student: any;

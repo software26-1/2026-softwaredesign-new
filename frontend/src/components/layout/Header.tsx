@@ -126,11 +126,11 @@ export function Header({ user, onLogout, onMobileMenuToggle }: HeaderProps) {
             </div>
           </div>
         </div>
-        {user.schoolName && (
+        {(user as any).schoolName && (
           <div className="header-school-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ width: '1px', height: '20px', background: isDark ? '#374151' : '#e2e8f0' }} />
             <span style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#94a3b8' : '#64748b', fontFamily: "'Noto Sans KR', sans-serif", letterSpacing: '-0.01em' }}>
-              {user.schoolName}
+              {(user as any).schoolName}
             </span>
           </div>
         )}
