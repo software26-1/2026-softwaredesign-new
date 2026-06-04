@@ -4,17 +4,18 @@ export interface Counseling {
   studentName?: string;
   teacherId: number;
   teacherName?: string;
-  counselDate: string;
-  mainContent: string;
+  counseledAt: string;
+  content: string;
   nextPlan: string;
-  isShared: boolean;
+  shared: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CounselingCreateRequest {
   studentId: number;
-  counselDate: string;
-  mainContent: string;
+  counseledAt: string;
+  content: string;
   nextPlan: string;
   isShared: boolean;
 }

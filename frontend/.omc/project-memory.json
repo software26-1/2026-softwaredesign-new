@@ -1,0 +1,381 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1780381935310,
+  "projectRoot": "/Users/gangminseo/Desktop/소설/frontend",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "8.0.4",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npx tsc --noEmit 2>&1 && echo \"OK\"",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc -b && vite build",
+      "lint": "eslint .",
+      "preview": "vite preview"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 3,
+      "lastAccessed": 1780381935288,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg",
+        "index.html"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 10,
+      "lastAccessed": 1780381935288,
+      "keyFiles": [
+        "classroom.png",
+        "favicon.svg",
+        "icons.svg",
+        "mascot.png",
+        "mascot2.png"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1780381935291,
+      "keyFiles": [
+        "App.tsx",
+        "index.css",
+        "main.tsx"
+      ]
+    },
+    "dist/assets": {
+      "path": "dist/assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1780381935291,
+      "keyFiles": [
+        "index-CgIiK8a5.js",
+        "index-eswcYttZ.css"
+      ]
+    },
+    "src/api": {
+      "path": "src/api",
+      "purpose": "API routes",
+      "fileCount": 1,
+      "lastAccessed": 1780381935291,
+      "keyFiles": [
+        "client.ts"
+      ]
+    },
+    "src/assets": {
+      "path": "src/assets",
+      "purpose": "Static assets",
+      "fileCount": 3,
+      "lastAccessed": 1780381935291,
+      "keyFiles": [
+        "hero.png",
+        "react.svg",
+        "vite.svg"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 1,
+      "lastAccessed": 1780381935291,
+      "keyFiles": [
+        "AnalyticsChatbot.tsx"
+      ]
+    },
+    "src/data": {
+      "path": "src/data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1780381935291,
+      "keyFiles": [
+        "schools.ts"
+      ]
+    },
+    "src/pages": {
+      "path": "src/pages",
+      "purpose": "Page components",
+      "fileCount": 18,
+      "lastAccessed": 1780381935292,
+      "keyFiles": [
+        "AdminLoginPage.tsx",
+        "AnalyticsDashboardPage.tsx",
+        "AttendancePage.tsx"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/components/layout/Sidebar.tsx",
+      "accessCount": 24,
+      "lastAccessed": 1780492180335,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/AnalyticsDashboardPage.tsx",
+      "accessCount": 19,
+      "lastAccessed": 1780492891433,
+      "type": "file"
+    },
+    {
+      "path": "src/components/layout/Header.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1780491689988,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/dashboard/TeacherDashboard.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1780494718799,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/ClassManagementPage.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1780493425576,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/parent/ChildFeedbackPage.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1780492005961,
+      "type": "file"
+    },
+    {
+      "path": "src/components/common/StudentRecordView.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780491222508,
+      "type": "file"
+    },
+    {
+      "path": "src/components/layout/MainLayout.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780492110266,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/AttendancePage.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780494725597,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/StudentRecordPage.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780494726923,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/student/MyFeedbackPage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1780491220730,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/student/MyGradesPage.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780491011692,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/NotificationPage.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780491032493,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/MyPage.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780491468350,
+      "type": "file"
+    },
+    {
+      "path": "src/components/charts/ClassAverageBarChart.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780382667311,
+      "type": "file"
+    },
+    {
+      "path": "src/components/charts/ScoreDistributionBar.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780382672356,
+      "type": "file"
+    },
+    {
+      "path": "src/types/analytics.ts",
+      "accessCount": 2,
+      "lastAccessed": 1780387211341,
+      "type": "file"
+    },
+    {
+      "path": "src/services/analyticsService.ts",
+      "accessCount": 2,
+      "lastAccessed": 1780388269932,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/OAuthCallbackPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780490520331,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/student/MyAttendancePage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780490552053,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/parent/ChildGradesPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780491257869,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/parent/ChildAttendancePage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780491976054,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/GradeManagementPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780492381327,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/FeedbackPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780492501781,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/CounselingPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780492559400,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/StudentSearchPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780492735502,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/ReportPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780492790094,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/UserManagementPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780493032849,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/SchoolManagementPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780493101149,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/CourseManagementPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780493157735,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/ApprovalPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780493202295,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/student/MyRecordsPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780490492745,
+      "type": "file"
+    },
+    {
+      "path": "src/components/common/TermFilter.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780491208381,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/dashboard/AdminDashboard.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780492326925,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/admin/AdminDashboard.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780493262893,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

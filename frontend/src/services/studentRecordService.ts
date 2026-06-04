@@ -11,6 +11,8 @@ export interface StudentRecord {
 }
 
 export interface StudentRecordUpsertBody {
+  academicYear?: number;
+  semester?: number;
   achievements?: string;
   extracurricular?: string;
   volunteerHours?: number;
@@ -31,5 +33,9 @@ export const studentRecordService = {
       params: { student_id: studentId },
     });
     return res.data;
+  },
+
+  async remove(studentId: number): Promise<void> {
+    await client.delete('/student-records', { params: { student_id: studentId } });
   },
 };

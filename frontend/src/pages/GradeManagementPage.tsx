@@ -3,8 +3,8 @@ import { Button } from '../components/common/Button';
 import { gradeService } from '../services/gradeService';
 import type { Course, GradeSummary } from '../types/grade';
 
-type ExamType = 'MIDTERM' | 'FINAL' | 'TASK';
-const EXAM_LABELS: Record<ExamType, string> = { MIDTERM: '중간고사', FINAL: '기말고사', TASK: '수행평가' };
+type ExamType = 'MIDTERM' | 'FINAL' | 'ASSIGNMENT';
+const EXAM_LABELS: Record<ExamType, string> = { MIDTERM: '중간고사', FINAL: '기말고사', ASSIGNMENT: '수행평가' };
 
 const achieveBg: Record<string, string> = { 'A+': '#e8f5e9', A: '#ebf4ff', 'B+': '#f3e5f5', B: '#fff3e0', C: '#fdecea' };
 const achieveColor: Record<string, string> = { 'A+': '#2e7d32', A: '#1e5a99', 'B+': '#6a1b9a', B: '#e65100', C: '#c62828' };
@@ -26,18 +26,20 @@ export function GradeManagementPage() {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [semester, setSemester] = useState(1);
+  const [gradeFilter, setGradeFilter] = useState(0);
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseId, setCourseId] = useState('');
   const [examType, setExamType] = useState<ExamType>('MIDTERM');
   const [enrollments, setEnrollments] = useState<GradeSummary[]>([]);
   const [scores, setScores] = useState<Record<number, number | ''>>({});
+  const [gradeIds, setGradeIds] = useState<Record<number, number>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    gradeService.getCourses()
+    gradeService.getCourses(year, semester)
       .then(setCourses)
       .catch(() => setCourses([]));
   }, [year, semester]);
@@ -46,13 +48,24 @@ export function GradeManagementPage() {
     if (!courseId) { setEnrollments([]); setScores({}); return; }
     setLoading(true);
     gradeService.getEnrollments(Number(courseId))
-      .then(data => {
+      .then(async data => {
         setEnrollments(data);
-        setScores(Object.fromEntries(data.map(e => [e.studentId, ''])));
+        const gradeResults = await Promise.all(
+          data.map(e => gradeService.getGradesByEnrollment(e.id).catch(() => []))
+        );
+        const preloaded: Record<number, number | ''> = {};
+        const ids: Record<number, number> = {};
+        data.forEach((e, i) => {
+          const existing = gradeResults[i].find((g: any) => g.gradeType === examType);
+          preloaded[e.studentId] = existing ? existing.score : '';
+          if (existing?.id) ids[e.studentId] = existing.id;
+        });
+        setScores(preloaded);
+        setGradeIds(ids);
       })
       .catch(() => setEnrollments([]))
       .finally(() => setLoading(false));
-  }, [courseId]);
+  }, [courseId, examType]);
 
   const filledScores = enrollments.map(e => scores[e.studentId]).filter(v => v !== '') as number[];
   const avg = filledScores.length ? filledScores.reduce((a, b) => a + b, 0) / filledScores.length : 0;
@@ -66,9 +79,13 @@ export function GradeManagementPage() {
     setSaving(true); setError('');
     try {
       const entries = enrollments.filter(e => scores[e.studentId] !== '');
-      await Promise.all(entries.map(e =>
-        gradeService.saveGrade({ studentId: e.studentId, enrollmentId: e.id, score: scores[e.studentId] as number, gradeType: examType })
-      ));
+      await Promise.all(entries.map(e => {
+        const existingId = gradeIds[e.studentId];
+        if (existingId) {
+          return gradeService.updateGrade(existingId, { score: scores[e.studentId] as number });
+        }
+        return gradeService.saveGrade({ studentId: e.studentId, enrollmentId: e.id, score: scores[e.studentId] as number, gradeType: examType });
+      }));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch {
@@ -82,14 +99,21 @@ export function GradeManagementPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .grade-filter-grid { grid-template-columns: 1fr 1fr !important; }
+          .grade-table-wrap { overflow-x: auto; }
+          .grade-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px', fontWeight: 500 }}>GRADE MANAGEMENT</p>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>성적 관리</h1>
       </div>
 
       <div style={{ background: '#fff', borderRadius: '10px', padding: '20px 24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <p style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '14px' }}>과목 선택</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+        <div className="grade-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년도</label>
             <select style={{ ...selectStyle, width: '100%' }} value={year} onChange={e => setYear(Number(e.target.value))}>
@@ -104,16 +128,33 @@ export function GradeManagementPage() {
             </select>
           </div>
           <div>
+            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년</label>
+            <select style={{ ...selectStyle, width: '100%' }} value={gradeFilter} onChange={e => { setGradeFilter(Number(e.target.value)); setCourseId(''); }}>
+              <option value={0}>전체</option>
+              <option value={1}>1학년</option>
+              <option value={2}>2학년</option>
+              <option value={3}>3학년</option>
+            </select>
+          </div>
+          <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>개설 과목</label>
             <select style={{ ...selectStyle, width: '100%' }} value={courseId} onChange={e => setCourseId(e.target.value)}>
               <option value="">선택하세요</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.courseName}{c.classGroupName ? ` — ${c.classGroupName}` : ''}</option>)}
+              {courses.filter(c => !gradeFilter || c.grade === gradeFilter || !c.grade).map(c => <option key={c.id} value={c.id}>{c.courseName}{c.grade ? ` (${c.grade}학년)` : ''}</option>)}
             </select>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>시험 구분</label>
             <select style={{ ...selectStyle, width: '100%' }} value={examType} onChange={e => setExamType(e.target.value as ExamType)}>
-              {Object.entries(EXAM_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              {Object.entries(EXAM_LABELS)
+                .filter(([v]) => {
+                  if (!selectedCourse) return true;
+                  if (v === 'MIDTERM') return (selectedCourse.midtermRatio ?? 100) > 0;
+                  if (v === 'FINAL') return (selectedCourse.finalRatio ?? 100) > 0;
+                  if (v === 'ASSIGNMENT') return (selectedCourse.taskRatio ?? 100) > 0;
+                  return true;
+                })
+                .map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </div>
         </div>
@@ -121,7 +162,7 @@ export function GradeManagementPage() {
 
       {courseId && (
         <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="grade-header-row" style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>
                 {selectedCourse?.courseName} — {EXAM_LABELS[examType]}
@@ -147,41 +188,43 @@ export function GradeManagementPage() {
           {loading ? (
             <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>{['번호', '이름', '원점수', '과목 평균', '표준편차', '성취도', '석차'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {enrollments.map(e => {
-                  const score = scores[e.studentId];
-                  const achievement = score !== '' ? calcAchievement(score as number, avg, std) : null;
-                  return (
-                    <tr key={e.studentId}>
-                      <td style={{ ...tdStyle, color: '#94a3b8' }}>{String(e.studentNumber).padStart(2, '0')}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{e.studentName}</td>
-                      <td style={tdStyle}>
-                        <input
-                          type="number" min={0} max={100}
-                          value={score}
-                          onChange={ev => setScores(prev => ({ ...prev, [e.studentId]: ev.target.value === '' ? '' : Number(ev.target.value) }))}
-                          style={{ width: '72px', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none', textAlign: 'center' }}
-                        />
-                      </td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{filledScores.length > 0 ? avg.toFixed(1) : '—'}</td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{filledScores.length > 1 ? std.toFixed(1) : '—'}</td>
-                      <td style={tdStyle}>
-                        {achievement ? (
-                          <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: achieveBg[achievement], color: achieveColor[achievement] }}>
-                            {achievement}
-                          </span>
-                        ) : '—'}
-                      </td>
-                      <td style={{ ...tdStyle, color: '#475569' }}>{score !== '' ? `${rankMap[e.studentId]}/${enrollments.length}` : '—'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="grade-table-wrap">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>{['번호', '이름', '원점수', '과목 평균', '표준편차', '성취도', '석차'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {enrollments.map(e => {
+                    const score = scores[e.studentId];
+                    const achievement = score !== '' ? calcAchievement(score as number, avg, std) : null;
+                    return (
+                      <tr key={e.studentId}>
+                        <td style={{ ...tdStyle, color: '#94a3b8' }}>{String(e.studentNumber).padStart(2, '0')}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{e.studentName}</td>
+                        <td style={tdStyle}>
+                          <input
+                            type="number" min={0} max={100}
+                            value={score}
+                            onChange={ev => setScores(prev => ({ ...prev, [e.studentId]: ev.target.value === '' ? '' : Number(ev.target.value) }))}
+                            style={{ width: '72px', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none', textAlign: 'center' }}
+                          />
+                        </td>
+                        <td style={{ ...tdStyle, color: '#64748b' }}>{filledScores.length > 0 ? avg.toFixed(1) : '—'}</td>
+                        <td style={{ ...tdStyle, color: '#64748b' }}>{filledScores.length > 1 ? std.toFixed(1) : '—'}</td>
+                        <td style={tdStyle}>
+                          {achievement ? (
+                            <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: achieveBg[achievement], color: achieveColor[achievement] }}>
+                              {achievement}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td style={{ ...tdStyle, color: '#475569' }}>{score !== '' ? `${rankMap[e.studentId]}/${enrollments.length}` : '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

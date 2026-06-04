@@ -13,8 +13,10 @@ export function ScoreDistributionBar({ distribution }: Props) {
       {
         label: '학생 수',
         data: distribution.map((d) => d.count),
-        backgroundColor: '#2471b8',
-        borderRadius: 4,
+        backgroundColor: '#F4A000',
+        borderRadius: 0,
+        barPercentage: 0.65,
+        categoryPercentage: 0.75,
       },
     ],
   };

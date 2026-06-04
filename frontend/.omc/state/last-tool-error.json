@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/gangminseo/Desktop/소설 && PGPW=schoolpw; docker exec school_postgres psql -U schooluser -d school_mgmt -tAqc \\\"SELECT id,name,student_number,class_group_id,school_id FROM student ...",
+  "error": "Exit code 2\n===courses (school 1)===\n===existing enrollments for student 75===\n===teacher user1 -> teacher id===",
+  "timestamp": "2026-06-01T12:20:09.984Z",
+  "retry_count": 1
+}
