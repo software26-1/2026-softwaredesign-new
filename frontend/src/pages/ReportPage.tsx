@@ -45,7 +45,7 @@ const SHARED_CSS = `
   .info-table td { font-size: 12px; padding: 7px 12px; border: 1px solid #333; }
 
   /* 섹션 헤더 */
-  .sec { font-size: 13px; font-weight: 800; color: #fff; background: #1e3a5f; padding: 5px 12px; margin: 20px 0 0; letter-spacing: 1px; }
+  .sec { font-size: 14px; font-weight: 700; color: #1e3a5f; border-left: 4px solid #1e3a5f; padding-left: 8px; margin: 20px 0 8px; }
 
   /* 일반 테이블 */
   table.data { width: 100%; border-collapse: collapse; margin-bottom: 0; border: 1px solid #333; }
@@ -58,7 +58,7 @@ const SHARED_CSS = `
   .text-box { border: 1px solid #333; min-height: 80px; padding: 10px 12px; font-size: 11.5px; line-height: 1.9; text-align: left; white-space: pre-wrap; background: #fafafa; }
 
   /* 서명 */
-  .seal-row { display: flex; justify-content: flex-end; gap: 16px; margin-top: 28px; }
+  .seal-row { display: flex; justify-content: flex-start; gap: 16px; margin-top: 28px; }
   .seal-item { text-align: center; font-size: 11px; font-weight: 600; }
   .seal-box { width: 60px; height: 60px; border: 1px solid #333; margin-top: 6px; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 10px; }
 
