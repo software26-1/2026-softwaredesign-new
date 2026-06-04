@@ -17,14 +17,22 @@ const statusStyle: Record<string, { bg: string; color: string }> = {
   SICK:        { bg: '#eff6ff', color: '#1d4ed8' },
 };
 
-export function MyAttendancePage() {
+export function ChildAttendancePage() {
   const [attendances, setAttendances] = useState<AttendanceItem[]>([]);
+  const [childName, setChildName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
-    client.get<any>('/attendances')
-      .then(r => setAttendances(Array.isArray(r.data) ? r.data : (r.data?.data ?? [])))
+    client.get<any>('/parents/me/students')
+      .then(r => {
+        const children = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
+        const child = children[0];
+        if (!child?.studentId) { setLoading(false); return; }
+        setChildName(child.studentName ?? '');
+        return client.get<any>(`/attendances?student_id=${child.studentId}`)
+          .then(rr => setAttendances(Array.isArray(rr.data) ? rr.data : (rr.data?.data ?? [])));
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -39,19 +47,15 @@ export function MyAttendancePage() {
   return (
     <div>
       <style>{`
-        .ma-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
-        @media (max-width: 768px) {
-          .ma-stats-grid { grid-template-columns: repeat(3, 1fr); }
-          .ma-row { flex-direction: column; gap: 4px; }
-          .ma-reason-col { font-size: 12px; }
-        }
+        .ca-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+        @media (max-width: 768px) { .ca-stats-grid { grid-template-columns: repeat(3, 1fr); } }
       `}</style>
 
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>출결 내역</h1>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>자녀 출결{childName && ` · ${childName}`}</h1>
       </div>
 
-      <div className="ma-stats-grid">
+      <div className="ca-stats-grid">
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
           <div key={key} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '6px' }}>{label}</p>

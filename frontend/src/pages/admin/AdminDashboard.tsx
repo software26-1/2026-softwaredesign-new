@@ -54,10 +54,21 @@ export function AdminDashboard({ user }: Props) {
 
   return (
     <div>
-      {/* 헤더 배너 - 교사 대시보드와 동일한 레이아웃 */}
-      <div style={{ display: 'flex', gap: '14px', marginBottom: '20px', alignItems: 'stretch', height: '270px' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .admin-banner { flex-direction: column !important; height: auto !important; }
+          .admin-banner-photo { display: none !important; }
+          .admin-banner-greeting { flex: unset !important; width: 100% !important; }
+          .admin-banner-stats { flex-wrap: wrap !important; }
+          .admin-shortcut-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .admin-menu-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      {/* 헤더 배너 */}
+      <div className="admin-banner" style={{ display: 'flex', gap: '14px', marginBottom: '20px', alignItems: 'stretch', height: '270px' }}>
         {/* 왼쪽: 인사 박스 */}
-        <div style={{ borderRadius: '4px', flex: 2, position: 'relative', overflow: 'hidden' }}>
+        <div className="admin-banner-greeting" style={{ borderRadius: '4px', flex: 2, position: 'relative', overflow: 'hidden' }}>
           <img src="/school_building.png" alt="" style={{ position: 'absolute', right: 0, top: 0, width: '60%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', display: 'block' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #ffffff 35%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.5) 72%, rgba(255,255,255,0.15) 100%)' }}/>
           <div style={{ position: 'relative', zIndex: 1, padding: '24px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
@@ -65,7 +76,7 @@ export function AdminDashboard({ user }: Props) {
               <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.02em' }}>{today}</p>
               <p style={{ fontSize: '36px', fontWeight: 700, color: '#1B3A7A', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '2px' }}>안녕하세요</p>
               <p style={{ fontSize: '26px', fontWeight: 600, color: '#1a2332', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '8px' }}>{user.name} 관리자님</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '11px', fontWeight: 700, color: '#fff', background: '#1B3A7A', padding: '3px 12px', borderRadius: '20px', whiteSpace: 'nowrap', fontFamily: "'Noto Sans KR', sans-serif" }}>
                   {stats.schoolName}
                 </span>
@@ -75,7 +86,7 @@ export function AdminDashboard({ user }: Props) {
                 </button>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="admin-banner-stats" style={{ display: 'flex', gap: '8px' }}>
               {[
                 { label: '전체 교사', value: `${stats.teachers}명` },
                 { label: '승인 대기', value: stats.pending > 0 ? `${stats.pending}명` : '없음', highlight: stats.pending > 0 },
@@ -90,8 +101,8 @@ export function AdminDashboard({ user }: Props) {
           </div>
         </div>
 
-        {/* 가운데: 큰 사진 카드 */}
-        <div style={{ flex: 1.3, borderRadius: '4px', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 16px rgba(27,58,122,0.2)' }}>
+        {/* 가운데/오른쪽 사진 */}
+        <div className="admin-banner-photo" style={{ flex: 1.3, borderRadius: '4px', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 16px rgba(27,58,122,0.2)' }}>
           <img src="/classroom.png" alt="교실" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(10,31,78,0.82) 0%, rgba(10,31,78,0.5) 50%, rgba(10,31,78,0.1) 100%)' }}/>
           <div style={{ position: 'absolute', top: '22px', left: '24px', color: '#fff' }}>
@@ -102,8 +113,7 @@ export function AdminDashboard({ user }: Props) {
           </div>
         </div>
 
-        {/* 오른쪽: 2개 쌓기 */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="admin-banner-photo" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ flex: 1, borderRadius: '4px', overflow: 'hidden', position: 'relative', boxShadow: '0 2px 10px rgba(27,58,122,0.12)' }}>
             <img src="/school.jpeg" alt="학교" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,31,78,0.85) 0%, rgba(10,31,78,0.3) 60%, transparent 100%)' }}/>
@@ -130,7 +140,7 @@ export function AdminDashboard({ user }: Props) {
             <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
             <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>바로가기</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
+          <div className="admin-shortcut-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
             {[
               { label: '교사 관리', desc: '목록 · 직책 수정', path: '/admin/users' },
               { label: '학교 관리', desc: '학급 추가 · 담임 배정', path: '/admin/schools' },
@@ -151,7 +161,6 @@ export function AdminDashboard({ user }: Props) {
             ))}
           </div>
         </div>
-
       </div>
 
       {/* 메뉴 안내 */}
@@ -160,7 +169,7 @@ export function AdminDashboard({ user }: Props) {
           <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#F4A000', flexShrink: 0 }}/>
           <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>메뉴 안내</h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="admin-menu-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             { title: '교사 관리', items: ['교사 목록 조회 (담임/교과담당/비교과 필터)', '교사 직책 수정', '교사 비활성화/활성화'] },
             { title: '학교 관리', items: ['학급 추가/삭제', '담임 교사 배정', '전학 학생 학급 배정'] },
