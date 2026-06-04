@@ -4,6 +4,7 @@ import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,6 +20,9 @@ public class StudentResponse {
     private final Integer classNumber;
     private final int studentNumber;
     private final LocalDateTime createdAt;
+    private final BigDecimal recentGradeScore;
+    private final Long feedbackCount;
+    private final Long counselingCount;
 
     public static StudentResponse from(Student student) {
         return new StudentResponse(
@@ -31,7 +35,26 @@ public class StudentResponse {
                 student.getClassGroup() != null ? student.getClassGroup().getGrade() : null,
                 student.getClassGroup() != null ? student.getClassGroup().getClassNumber() : null,
                 student.getStudentNumber(),
-                student.getCreatedAt()
+                student.getCreatedAt(),
+                null, null, null
+        );
+    }
+
+    public static StudentResponse from(Student student, BigDecimal recentGradeScore, long feedbackCount, long counselingCount) {
+        return new StudentResponse(
+                student.getId(),
+                student.getUser().getId(),
+                student.getUser().getName(),
+                student.getSchool() != null ? student.getSchool().getId() : null,
+                student.getSchool() != null ? student.getSchool().getSchoolName() : null,
+                student.getClassGroup() != null ? student.getClassGroup().getId() : null,
+                student.getClassGroup() != null ? student.getClassGroup().getGrade() : null,
+                student.getClassGroup() != null ? student.getClassGroup().getClassNumber() : null,
+                student.getStudentNumber(),
+                student.getCreatedAt(),
+                recentGradeScore,
+                feedbackCount,
+                counselingCount
         );
     }
 }

@@ -8,6 +8,7 @@ import com.softwaredesign.schoolsystem.domain.analytics.dto.StudentCourseTermRes
 import com.softwaredesign.schoolsystem.domain.analytics.entity.FactClassCourseStats;
 import com.softwaredesign.schoolsystem.domain.analytics.entity.FactStudentCourseTerm;
 import com.softwaredesign.schoolsystem.domain.analytics.entity.FactStudentLearningSummary;
+import com.softwaredesign.schoolsystem.domain.analytics.repository.DimCourseRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactClassCourseStatsRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentCourseTermRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentLearningSummaryRepository;
@@ -38,6 +39,8 @@ class AnalyticsQueryServiceTest {
     private FactStudentCourseTermRepository courseTermRepository;
     @Mock
     private FactClassCourseStatsRepository classCourseStatsRepository;
+    @Mock
+    private DimCourseRepository dimCourseRepository;
 
     @InjectMocks
     private AnalyticsQueryService analyticsQueryService;

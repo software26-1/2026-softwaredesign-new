@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StudentRecordCreateOrUpdateRequest {
 
+    private Integer academicYear;
+
+    private Integer semester;
+
     private String achievements;
 
     private String extracurricular;

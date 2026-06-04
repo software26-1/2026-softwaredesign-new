@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"echo \\\"===clear old grades for student 75 (clean ETL)===\\\"\\ndocker exec school_postgres psql -U postgres -d school_mgmt -tAqc \\\"UPDATE grade SET is_deleted=true WHERE student_id=75;\\\"\\nech...",
+  "error": "Exit code 1\n===clear old grades for student 75 (clean ETL)===\nold notif count user84:\nERROR:  column \"user_id\" does not exist\nLINE 1: SELECT count(*) FROM notification WHERE user_id=84;\n                                                ^",
+  "timestamp": "2026-06-01T12:22:18.703Z",
+  "retry_count": 1
+}

@@ -11,6 +11,7 @@ public record LearningSummaryResponse(
         Integer semester,
         BigDecimal overallAvgScore,
         Integer overallClassRank,
+        Integer overallYearRank,
         BigDecimal attendanceRate,
         Integer absentCount,
         Integer lateCount,
@@ -30,6 +31,7 @@ public record LearningSummaryResponse(
                 e.getSemester(),
                 e.getOverallAvgScore(),
                 e.getOverallClassRank(),
+                null,
                 e.getAttendanceRate(),
                 e.getAbsentCount(),
                 e.getLateCount(),
@@ -41,6 +43,16 @@ public record LearningSummaryResponse(
                 e.getScoreTrend(),
                 e.getRiskFlag(),
                 e.getLastRefreshedAt()
+        );
+    }
+
+    public static LearningSummaryResponse withYearRank(LearningSummaryResponse r, Integer yearRank) {
+        return new LearningSummaryResponse(
+                r.studentKey(), r.year(), r.semester(),
+                r.overallAvgScore(), r.overallClassRank(), yearRank,
+                r.attendanceRate(), r.absentCount(), r.lateCount(), r.earlyLeaveCount(),
+                r.feedbackTotal(), r.positiveFeedback(), r.negativeFeedback(),
+                r.counselingCount(), r.scoreTrend(), r.riskFlag(), r.lastRefreshedAt()
         );
     }
 }

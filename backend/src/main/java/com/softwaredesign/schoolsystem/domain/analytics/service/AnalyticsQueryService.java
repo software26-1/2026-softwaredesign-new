@@ -2,9 +2,13 @@ package com.softwaredesign.schoolsystem.domain.analytics.service;
 
 import com.softwaredesign.schoolsystem.domain.analytics.dto.*;
 import com.softwaredesign.schoolsystem.domain.analytics.entity.FactStudentCourseTerm;
+import com.softwaredesign.schoolsystem.domain.analytics.entity.DimCourse;
+import com.softwaredesign.schoolsystem.domain.analytics.repository.DimCourseRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactClassCourseStatsRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentCourseTermRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentLearningSummaryRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,25 +16,72 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AnalyticsQueryService {
 
+    @PersistenceContext
+    private EntityManager em;
+
     private final FactStudentLearningSummaryRepository learningSummaryRepository;
     private final FactStudentCourseTermRepository courseTermRepository;
     private final FactClassCourseStatsRepository classCourseStatsRepository;
+    private final DimCourseRepository dimCourseRepository;
+
+    private Map<Long, String> courseNameMap() {
+        return dimCourseRepository.findAll().stream()
+                .filter(c -> c.getCourseName() != null)
+                .collect(Collectors.toMap(DimCourse::getCourseKey, DimCourse::getCourseName, (a, b) -> a));
+    }
 
     public LearningSummaryResponse getStudentSummary(Long studentId, Integer year, Integer semester) {
-        return learningSummaryRepository.findByStudentKeyAndYearAndSemester(studentId, year, semester)
+        LearningSummaryResponse base = learningSummaryRepository.findByStudentKeyAndYearAndSemester(studentId, year, semester)
                 .map(LearningSummaryResponse::from)
                 .orElseThrow(() -> new IllegalArgumentException("학습 요약 정보를 찾을 수 없습니다."));
+        Integer yearRank = computeYearRank(studentId, year, semester);
+        return LearningSummaryResponse.withYearRank(base, yearRank);
+    }
+
+    private Integer computeYearRank(Long studentId, Integer year, Integer semester) {
+        try {
+            List<?> rows = em.createNativeQuery("""
+                    SELECT ranked.rnk FROM (
+                        SELECT f.student_key,
+                               RANK() OVER (
+                                   PARTITION BY ds.grade_level, f.year, f.semester
+                                   ORDER BY f.overall_avg_score DESC NULLS LAST
+                               ) AS rnk
+                        FROM analytics.fact_student_learning_summary f
+                        JOIN analytics.dim_student ds ON ds.student_key = f.student_key
+                        WHERE f.year = :year AND f.semester = :semester
+                    ) ranked
+                    WHERE ranked.student_key = :studentId
+                    """)
+                    .setParameter("year", year)
+                    .setParameter("semester", semester)
+                    .setParameter("studentId", studentId)
+                    .getResultList();
+            if (rows.isEmpty() || rows.get(0) == null) return null;
+            return ((Number) rows.get(0)).intValue();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public List<StudentCourseTermResponse> getStudentCourses(Long studentId, Integer year, Integer semester) {
+        Map<Long, String> names = courseNameMap();
         return courseTermRepository.findByStudentKeyAndYearAndSemester(studentId, year, semester)
-                .stream().map(StudentCourseTermResponse::from).toList();
+                .stream().map(e -> StudentCourseTermResponse.from(e, names.get(e.getCourseKey()))).toList();
+    }
+
+    public List<StudentCourseTermResponse> getAllStudentCourses(Long studentId) {
+        Map<Long, String> names = courseNameMap();
+        return courseTermRepository.findByStudentKey(studentId)
+                .stream().map(e -> StudentCourseTermResponse.from(e, names.get(e.getCourseKey()))).toList();
     }
 
     public List<ScoreTrendPointResponse> getStudentTrend(Long studentId, Long courseId) {

@@ -25,6 +25,9 @@ public class Teacher extends BaseEntity {
     @Column(length = 20)
     private String position;  // HOMEROOM, SUBJECT, NON_SUBJECT
 
+    @Column(name = "curriculum_id")
+    private Long curriculumId;
+
     @Column(nullable = false)
     private boolean isDeleted = false;
 
@@ -41,6 +44,10 @@ public class Teacher extends BaseEntity {
 
     public void updatePosition(String position) {
         this.position = position;
+    }
+
+    public void updateCurriculum(Long curriculumId) {
+        this.curriculumId = curriculumId;
     }
 
     public void softDelete() {

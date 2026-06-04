@@ -30,6 +30,9 @@ public class Grade extends BaseEntity {
     @Column(precision = 5, scale = 2)
     private BigDecimal score;
 
+    @Column(name = "max_score", precision = 5, scale = 2, nullable = false)
+    private BigDecimal maxScore;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private GradeType gradeType;
@@ -39,6 +42,7 @@ public class Grade extends BaseEntity {
         grade.student = student;
         grade.enrollment = enrollment;
         grade.score = score;
+        grade.maxScore = new BigDecimal("100.00");
         grade.gradeType = gradeType;
         return grade;
     }

@@ -15,13 +15,10 @@ public class CourseCreateRequest {
     @NotNull(message = "교과 ID는 필수입니다.")
     private Long curriculumId;
 
-    @NotNull(message = "교사 ID는 필수입니다.")
     private Long teacherId;
 
-    @NotNull(message = "학교 ID는 필수입니다.")
     private Long schoolId;
 
-    @NotNull(message = "과목 유형은 필수입니다.")
     private CourseType courseType;
 
     @NotBlank(message = "과목명은 필수입니다.")
@@ -43,4 +40,8 @@ public class CourseCreateRequest {
 
     @NotNull(message = "과제 비율은 필수입니다.")
     private Integer taskRatio;
+
+    private Integer grade;
+
+    private String evaluationType;
 }

@@ -29,9 +29,10 @@ public class AttendanceController {
     @PostMapping
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<AttendanceResponse> createAttendance(
-            @Valid @RequestBody AttendanceCreateRequest request) {
+            @Valid @RequestBody AttendanceCreateRequest request,
+            @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attendanceService.createAttendance(request));
+                .body(attendanceService.createAttendance(request, authUser.id()));
     }
 
     @GetMapping
@@ -45,6 +46,9 @@ public class AttendanceController {
             @AuthenticationPrincipal AuthUser authUser) {
         if (classGroupId != null && date != null) {
             return ResponseEntity.ok(attendanceService.getByClassGroupAndDate(classGroupId, date));
+        }
+        if (classGroupId != null && from != null && to != null) {
+            return ResponseEntity.ok(attendanceService.getByClassGroupAndDateRange(classGroupId, from, to));
         }
         return ResponseEntity.ok(attendanceService.getByStudent(studentId, from, to, authUser));
     }
@@ -63,14 +67,17 @@ public class AttendanceController {
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<AttendanceResponse> updateAttendance(
             @PathVariable Long attendanceId,
-            @RequestBody AttendanceUpdateRequest request) {
-        return ResponseEntity.ok(attendanceService.updateAttendance(attendanceId, request));
+            @RequestBody AttendanceUpdateRequest request,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(attendanceService.updateAttendance(attendanceId, request, authUser.id()));
     }
 
     @DeleteMapping("/{attendanceId}")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<Map<String, String>> deleteAttendance(@PathVariable Long attendanceId) {
-        attendanceService.deleteAttendance(attendanceId);
+    public ResponseEntity<Map<String, String>> deleteAttendance(
+            @PathVariable Long attendanceId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        attendanceService.deleteAttendance(attendanceId, authUser.id());
         return ResponseEntity.ok(Map.of("message", "삭제 완료"));
     }
 }

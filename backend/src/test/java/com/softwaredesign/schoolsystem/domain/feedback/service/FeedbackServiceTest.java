@@ -6,9 +6,13 @@ import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackResponse;
 import com.softwaredesign.schoolsystem.domain.feedback.dto.FeedbackUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.feedback.entity.Feedback;
 import com.softwaredesign.schoolsystem.domain.feedback.entity.FeedbackType;
+import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
 import com.softwaredesign.schoolsystem.domain.feedback.repository.FeedbackRepository;
+import com.softwaredesign.schoolsystem.domain.school.entity.School;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
+import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
+import com.softwaredesign.schoolsystem.domain.school.service.StudentAccessGuard;
 import com.softwaredesign.schoolsystem.domain.student.entity.Parent;
 import com.softwaredesign.schoolsystem.domain.student.entity.ParentStudent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
@@ -48,6 +52,12 @@ class FeedbackServiceTest {
     @Mock
     private ParentStudentRepository parentStudentRepository;
     @Mock
+    private ClassGroupRepository classGroupRepository;
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+    @Mock
+    private StudentAccessGuard studentAccessGuard;
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
@@ -80,6 +90,12 @@ class FeedbackServiceTest {
         student = org.mockito.Mockito.mock(Student.class);
         lenient().when(student.getId()).thenReturn(STUDENT_ID);
         lenient().when(student.getUser()).thenReturn(studentUser);
+
+        // 같은 학교 격리 검증 통과용 (teacher/student 동일 학교)
+        School school = org.mockito.Mockito.mock(School.class);
+        lenient().when(school.getId()).thenReturn(1L);
+        lenient().when(teacher.getSchool()).thenReturn(school);
+        lenient().when(student.getSchool()).thenReturn(school);
     }
 
     private Feedback buildFeedback(boolean visibleToStudent, boolean visibleToParent) {
@@ -97,6 +113,9 @@ class FeedbackServiceTest {
         org.springframework.test.util.ReflectionTestUtils.setField(request, "content", "잘했어요");
         given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
+        // 성적(ACADEMIC) 피드백 권한: 해당 학생을 가르치는 교과 교사로 인정
+        given(enrollmentRepository.existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(STUDENT_ID, 1L))
+                .willReturn(true);
 
         // Act
         FeedbackResponse response = feedbackService.createFeedback(request, TEACHER_USER_ID);
@@ -228,6 +247,7 @@ class FeedbackServiceTest {
     void updateFeedback_success() {
         Feedback feedback = buildFeedback(true, true);
         given(feedbackRepository.findById(1L)).willReturn(Optional.of(feedback));
+        given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
         FeedbackUpdateRequest request = new FeedbackUpdateRequest();
         org.springframework.test.util.ReflectionTestUtils.setField(request, "content", "수정됨");
 
@@ -261,6 +281,7 @@ class FeedbackServiceTest {
     void deleteFeedback_success() {
         Feedback feedback = buildFeedback(true, true);
         given(feedbackRepository.findById(1L)).willReturn(Optional.of(feedback));
+        given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
 
         feedbackService.deleteFeedback(1L, TEACHER_USER_ID);
 

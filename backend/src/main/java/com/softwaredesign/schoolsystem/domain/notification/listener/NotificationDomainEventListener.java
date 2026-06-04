@@ -1,7 +1,9 @@
 package com.softwaredesign.schoolsystem.domain.notification.listener;
 
+import com.softwaredesign.schoolsystem.domain.analytics.event.AttendanceChangedEvent;
 import com.softwaredesign.schoolsystem.domain.analytics.event.FeedbackChangedEvent;
 import com.softwaredesign.schoolsystem.domain.analytics.event.GradeChangedEvent;
+import com.softwaredesign.schoolsystem.domain.analytics.event.StudentRecordChangedEvent;
 import com.softwaredesign.schoolsystem.domain.notification.entity.NotificationEventType;
 import com.softwaredesign.schoolsystem.domain.notification.event.ProfileSetupEvent;
 import com.softwaredesign.schoolsystem.domain.notification.service.NotificationService;
@@ -46,6 +48,10 @@ public class NotificationDomainEventListener {
     private static final String GRADE_MESSAGE = "성적 정보가 변경되었습니다. 확인해 주세요.";
     private static final String FEEDBACK_TITLE = "새로운 피드백이 등록되었습니다";
     private static final String FEEDBACK_MESSAGE = "선생님이 새로운 피드백을 남겼습니다. 확인해 주세요.";
+    private static final String ATTENDANCE_TITLE = "출결 정보가 업데이트되었습니다";
+    private static final String ATTENDANCE_MESSAGE = "출결 정보가 변경되었습니다. 확인해 주세요.";
+    private static final String RECORD_TITLE = "생활기록부가 업데이트되었습니다";
+    private static final String RECORD_MESSAGE = "학생부 기록이 변경되었습니다. 확인해 주세요.";
 
     private final NotificationService notificationService;
     private final StudentRepository studentRepository;
@@ -77,17 +83,34 @@ public class NotificationDomainEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onGradeChanged(GradeChangedEvent event) {
         notifyStudentAndParents(event.studentId(), NotificationEventType.GRADE_UPDATE,
-                GRADE_TITLE, GRADE_MESSAGE);
+                GRADE_TITLE, GRADE_MESSAGE, true, true);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onAttendanceChanged(AttendanceChangedEvent event) {
+        notifyStudentAndParents(event.studentId(), NotificationEventType.ATTENDANCE,
+                ATTENDANCE_TITLE, ATTENDANCE_MESSAGE, true, true);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onStudentRecordChanged(StudentRecordChangedEvent event) {
+        notifyStudentAndParents(event.studentId(), NotificationEventType.RECORD,
+                RECORD_TITLE, RECORD_MESSAGE, true, true);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onFeedbackChanged(FeedbackChangedEvent event) {
+        // 공개 설정에 따라 대상이 정해진다. 둘 다 비공개(수정/삭제 포함)면 알림 없음.
+        if (!event.notifyStudent() && !event.notifyParent()) {
+            return;
+        }
         notifyStudentAndParents(event.studentId(), NotificationEventType.FEEDBACK,
-                FEEDBACK_TITLE, FEEDBACK_MESSAGE);
+                FEEDBACK_TITLE, FEEDBACK_MESSAGE, event.notifyStudent(), event.notifyParent());
     }
 
     private void notifyStudentAndParents(Long studentId, NotificationEventType eventType,
-                                         String title, String message) {
+                                         String title, String message,
+                                         boolean toStudent, boolean toParent) {
         if (studentId == null) {
             return;
         }
@@ -98,15 +121,19 @@ public class NotificationDomainEventListener {
                 return;
             }
 
-            // Notify the student.
-            notificationService.notify(student.getUser().getId(), eventType, title, message);
+            // Notify the student only when visible to student.
+            if (toStudent) {
+                notificationService.notify(student.getUser().getId(), eventType, title, message);
+            }
 
-            // Notify each linked parent.
-            List<ParentStudent> links = parentStudentRepository.findAllByStudentIdAndIsDeletedFalse(studentId);
-            for (ParentStudent link : links) {
-                if (link.getParent() != null && link.getParent().getUser() != null) {
-                    notificationService.notify(link.getParent().getUser().getId(),
-                            eventType, title, message);
+            // Notify each linked parent only when visible to parent.
+            if (toParent) {
+                List<ParentStudent> links = parentStudentRepository.findAllByStudentIdAndIsDeletedFalse(studentId);
+                for (ParentStudent link : links) {
+                    if (link.getParent() != null && link.getParent().getUser() != null) {
+                        notificationService.notify(link.getParent().getUser().getId(),
+                                eventType, title, message);
+                    }
                 }
             }
         } catch (Exception e) {

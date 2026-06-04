@@ -41,12 +41,21 @@ public class Student extends BaseEntity {
     }
 
     public void updateStudent(ClassGroup classGroup, Integer studentNumber) {
-        if (classGroup != null) this.classGroup = classGroup;
+        if (classGroup != null) {
+            this.classGroup = classGroup;
+            // 학급이 배정되면 학교도 함께 채운다 (가입 승인 시 school_id 누락 방지)
+            if (classGroup.getSchool() != null) this.school = classGroup.getSchool();
+        }
         if (studentNumber != null) this.studentNumber = studentNumber;
     }
 
     public void assignSchool(School school) {
         this.school = school;
+    }
+
+    public void transferToSchool() {
+        this.classGroup = null;
+        this.studentNumber = 0;
     }
 
     public static Student createStudent(User user, School school, ClassGroup classGroup, int studentNumber) {

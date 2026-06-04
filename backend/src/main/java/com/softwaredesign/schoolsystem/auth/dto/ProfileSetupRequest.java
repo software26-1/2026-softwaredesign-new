@@ -22,4 +22,9 @@ public class ProfileSetupRequest {
     private String schoolName;
 
     private String position;
+    private Integer grade;
+    private Integer classNum;
+    private Integer studentNum;
+    private Integer homeroomGrade;
+    private Integer homeroomClassNum;
 }

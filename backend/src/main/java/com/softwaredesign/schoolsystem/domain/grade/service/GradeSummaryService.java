@@ -3,6 +3,7 @@ package com.softwaredesign.schoolsystem.domain.grade.service;
 import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.grade.dto.GradeSummaryResponse;
 import com.softwaredesign.schoolsystem.domain.grade.repository.GradeSummaryRepository;
+import com.softwaredesign.schoolsystem.domain.school.service.StudentAccessGuard;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
@@ -22,6 +23,7 @@ public class GradeSummaryService {
     private final StudentRepository studentRepository;
     private final ParentRepository parentRepository;
     private final ParentStudentRepository parentStudentRepository;
+    private final StudentAccessGuard studentAccessGuard;
 
     public List<GradeSummaryResponse> getByClassGroup(Long classGroupId, int year, int semester) {
         return gradeSummaryRepository.findByClassGroupIdAndYearAndSemester(classGroupId, year, semester)
@@ -36,19 +38,7 @@ public class GradeSummaryService {
     }
 
     private void validateAccess(Long studentId, AuthUser authUser) {
-        String role = authUser.role();
-        if ("STUDENT".equals(role)) {
-            Long myStudentId = studentRepository.findByUserIdAndIsDeletedFalse(authUser.id())
-                    .orElseThrow(() -> new AccessDeniedException("학생 정보를 찾을 수 없습니다."))
-                    .getId();
-            if (!myStudentId.equals(studentId)) {
-                throw new AccessDeniedException("본인의 성적 요약만 조회할 수 있습니다.");
-            }
-        } else if ("PARENT".equals(role)) {
-            parentRepository.findByUserIdAndIsDeletedFalse(authUser.id())
-                    .map(parent -> parentStudentRepository.findAllByParentIdAndIsDeletedFalse(parent.getId()))
-                    .filter(list -> list.stream().anyMatch(ps -> ps.getStudent().getId().equals(studentId)))
-                    .orElseThrow(() -> new AccessDeniedException("자녀의 성적 요약만 조회할 수 있습니다."));
-        }
+        // 학생/학부모는 본인·자녀만, 교사는 같은 학교 학생만(학교 격리), 관리자는 허용
+        studentAccessGuard.requireCanAccessStudent(authUser, studentId);
     }
 }

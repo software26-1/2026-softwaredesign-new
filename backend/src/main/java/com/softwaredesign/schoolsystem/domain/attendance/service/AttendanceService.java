@@ -9,7 +9,9 @@ import com.softwaredesign.schoolsystem.domain.attendance.entity.Attendance;
 import com.softwaredesign.schoolsystem.domain.attendance.entity.AttendanceStatus;
 import com.softwaredesign.schoolsystem.domain.attendance.repository.AttendanceRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
+import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.analytics.event.AttendanceChangedEvent;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
@@ -32,16 +34,19 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
     private final ClassGroupRepository classGroupRepository;
+    private final TeacherRepository teacherRepository;
     private final ParentRepository parentRepository;
     private final ParentStudentRepository parentStudentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public AttendanceResponse createAttendance(AttendanceCreateRequest request) {
+    public AttendanceResponse createAttendance(AttendanceCreateRequest request, Long userId) {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
         ClassGroup classGroup = classGroupRepository.findById(request.getClassGroupId())
                 .orElseThrow(() -> new IllegalArgumentException("학급을 찾을 수 없습니다."));
+
+        validateHomeroomOfStudent(userId, student);
 
         Attendance attendance = Attendance.createAttendance(
                 student, classGroup, request.getDate(), request.getStatus(), request.getReason());
@@ -65,6 +70,11 @@ public class AttendanceService {
                 .stream().map(AttendanceResponse::from).toList();
     }
 
+    public List<AttendanceResponse> getByClassGroupAndDateRange(Long classGroupId, LocalDate from, LocalDate to) {
+        return attendanceRepository.findByClassGroupIdAndDateBetween(classGroupId, from, to)
+                .stream().map(AttendanceResponse::from).toList();
+    }
+
     public AttendanceSummaryResponse getSummary(Long studentId, LocalDate from, LocalDate to, AuthUser authUser) {
         studentId = resolveStudentId(studentId, authUser);
         List<Attendance> list = attendanceRepository.findByStudentIdAndDateBetween(studentId, from, to);
@@ -81,21 +91,36 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceResponse updateAttendance(Long attendanceId, AttendanceUpdateRequest request) {
+    public AttendanceResponse updateAttendance(Long attendanceId, AttendanceUpdateRequest request, Long userId) {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new IllegalArgumentException("출결 정보를 찾을 수 없습니다."));
+        validateHomeroomOfStudent(userId, attendance.getStudent());
         attendance.updateAttendance(request.getStatus(), request.getReason());
         eventPublisher.publishEvent(new AttendanceChangedEvent(attendance.getStudent().getId()));
         return AttendanceResponse.from(attendance);
     }
 
     @Transactional
-    public void deleteAttendance(Long attendanceId) {
+    public void deleteAttendance(Long attendanceId, Long userId) {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new IllegalArgumentException("출결 정보를 찾을 수 없습니다."));
+        validateHomeroomOfStudent(userId, attendance.getStudent());
         Long studentId = attendance.getStudent().getId();
         attendanceRepository.delete(attendance);
         eventPublisher.publishEvent(new AttendanceChangedEvent(studentId));
+    }
+
+    private void validateHomeroomOfStudent(Long userId, Student student) {
+        Teacher teacher = teacherRepository.findByUserId(userId)
+                .orElseThrow(() -> new AccessDeniedException("교사를 찾을 수 없습니다."));
+        if (teacher.getPosition() == null || !teacher.getPosition().startsWith("HOMEROOM")) {
+            throw new AccessDeniedException("담임 교사만 출결을 관리할 수 있습니다.");
+        }
+        ClassGroup homeroomClass = classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
+                .orElseThrow(() -> new AccessDeniedException("담임 학급이 지정되지 않았습니다."));
+        if (student.getClassGroup() == null || !student.getClassGroup().getId().equals(homeroomClass.getId())) {
+            throw new AccessDeniedException("본인 반 학생의 출결만 관리할 수 있습니다.");
+        }
     }
 
     private Long resolveStudentId(Long requestedStudentId, AuthUser authUser) {

@@ -11,5 +11,7 @@ public interface FactStudentCourseTermRepository extends JpaRepository<FactStude
 
     List<FactStudentCourseTerm> findByStudentKeyAndCourseKeyOrderByYearAscSemesterAsc(Long studentKey, Long courseKey);
 
+    List<FactStudentCourseTerm> findByStudentKey(Long studentKey);
+
     List<FactStudentCourseTerm> findByCourseKeyAndYearAndSemester(Long courseKey, Integer year, Integer semester);
 }

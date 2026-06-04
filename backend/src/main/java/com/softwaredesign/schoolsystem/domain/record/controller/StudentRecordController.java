@@ -33,4 +33,13 @@ public class StudentRecordController {
             @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(studentRecordService.upsert(studentId, request, authUser.id()));
     }
+
+    @DeleteMapping
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<java.util.Map<String, String>> deleteStudentRecord(
+            @RequestParam(name = "student_id") Long studentId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        studentRecordService.deleteByStudent(studentId, authUser.id());
+        return ResponseEntity.ok(java.util.Map.of("message", "삭제 완료"));
+    }
 }
