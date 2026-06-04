@@ -31,40 +31,45 @@ const n1 = (v: any) => (v != null && !isNaN(Number(v))) ? Math.round(Number(v) *
 const SHARED_CSS = `
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: #fff; }
-  .paper { width: 740px; margin: 0 auto; background: #fff; color: #111; padding: 36px 44px; }
+  .paper { width: 740px; margin: 0 auto; background: #fff; color: #000; padding: 40px 50px; }
 
-  /* 보고서 헤더 */
-  .rpt-header { border-top: 3px solid #1e3a5f; border-bottom: 3px solid #1e3a5f; padding: 16px 0; margin-bottom: 20px; position: relative; }
-  .rpt-title { text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 6px; color: #1e3a5f; margin: 0 0 4px; }
-  .rpt-subtitle { text-align: center; font-size: 13px; color: #555; margin: 0; }
-  .rpt-stamp { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 56px; height: 56px; border: 2px solid #c0392b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #c0392b; font-size: 11px; font-weight: 700; text-align: center; line-height: 1.3; }
+  /* 보고서 최상단: 제목 왼쪽 + 도장 표 오른쪽 */
+  .rpt-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .rpt-title-block {}
+  .rpt-title { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #000; margin: 0 0 4px; line-height: 1.3; }
+  .rpt-subtitle { font-size: 12px; color: #444; margin: 6px 0 0; }
+
+  /* 도장 표 (우측 상단) */
+  .stamp-table { border-collapse: collapse; }
+  .stamp-table th { font-size: 11px; font-weight: 700; padding: 4px 10px; border: 1px solid #000; text-align: center; background: #fff; }
+  .stamp-table td { width: 52px; height: 44px; border: 1px solid #000; }
 
   /* 기본 정보 테이블 */
-  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; border: 1px solid #333; }
-  .info-table th { background: #eef2f7; font-size: 12px; font-weight: 700; padding: 7px 10px; border: 1px solid #333; width: 80px; text-align: center; color: #1e3a5f; }
-  .info-table td { font-size: 12px; padding: 7px 12px; border: 1px solid #333; }
+  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .info-table th { font-size: 12px; font-weight: 700; padding: 7px 10px; border: 1px solid #000; text-align: center; background: #fff; }
+  .info-table td { font-size: 12px; padding: 7px 12px; border: 1px solid #000; }
 
   /* 섹션 헤더 */
-  .sec { font-size: 14px; font-weight: 700; color: #1e3a5f; border-left: 4px solid #1e3a5f; padding-left: 8px; margin: 20px 0 8px; }
+  .sec { font-size: 13px; font-weight: 700; color: #000; margin: 18px 0 6px; }
 
   /* 일반 테이블 */
-  table.data { width: 100%; border-collapse: collapse; margin-bottom: 0; border: 1px solid #333; }
-  table.data th { background: #eef2f7; font-size: 11px; font-weight: 700; padding: 6px 5px; border: 1px solid #333; text-align: center; color: #1e3a5f; }
-  table.data td { font-size: 11px; padding: 5px 6px; border: 1px solid #333; text-align: center; vertical-align: top; }
+  table.data { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+  table.data th { font-size: 11px; font-weight: 700; padding: 6px 5px; border: 1px solid #000; text-align: center; background: #fff; }
+  table.data td { font-size: 11px; padding: 5px 6px; border: 1px solid #000; text-align: center; vertical-align: top; }
   table.data td.left { text-align: left; padding-left: 10px; }
-  table.data tr:nth-child(even) { background: #f9fbff; }
+  table.data .summary-row td { font-weight: 700; border-top: 2px solid #000; }
 
   /* 텍스트 박스 */
-  .text-box { border: 1px solid #333; min-height: 80px; padding: 10px 12px; font-size: 11.5px; line-height: 1.9; text-align: left; white-space: pre-wrap; background: #fafafa; }
+  .text-box { border: 1px solid #000; min-height: 80px; padding: 10px 12px; font-size: 11.5px; line-height: 1.9; text-align: left; white-space: pre-wrap; }
 
-  /* 서명 */
-  .seal-row { display: flex; justify-content: flex-start; gap: 16px; margin-top: 28px; }
-  .seal-item { text-align: center; font-size: 11px; font-weight: 600; }
-  .seal-box { width: 60px; height: 60px; border: 1px solid #333; margin-top: 6px; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 10px; }
+  /* 서명란 */
+  .seal-row { display: flex; justify-content: flex-start; gap: 0; margin-top: 28px; border-collapse: collapse; }
+  .seal-item { text-align: center; font-size: 11px; font-weight: 700; }
+  .seal-label { padding: 4px 14px; border: 1px solid #000; }
+  .seal-box { width: 64px; height: 52px; border: 1px solid #000; border-top: none; }
 
-  .foot { text-align: right; font-size: 11px; color: #666; margin-top: 10px; }
-  .no-data { text-align: center; color: #aaa; padding: 14px; font-size: 12px; }
-  .summary-row { background: #eef2f7 !important; font-weight: 700; }
+  .foot { text-align: center; font-size: 12px; color: #000; margin-top: 24px; line-height: 2; }
+  .no-data { text-align: center; color: #888; padding: 14px; font-size: 12px; }
 
   @page { size: A4; margin: 10mm 12mm; }
 `;
@@ -133,17 +138,20 @@ function buildSchoolRecord(
 
   const fbSummary = `성적 ${catCount('GRADE')} · 행동 ${catCount('BEHAVIOR')} · 출결 ${catCount('ATTENDANCE')} · 태도 ${catCount('ATTITUDE')} (총 ${feedbacks.length}건)`;
 
+  const stampTable = `<table class="stamp-table"><tr><th>담 임</th><th>부 장</th><th>교 감</th><th>교 장</th></tr><tr><td></td><td></td><td></td><td></td></tr></table>`;
   return `<div class="paper">
-    <div class="rpt-header">
-      <div class="rpt-title">${esc(year)}학년도 학생 종합 보고서</div>
-      <div class="rpt-subtitle">${esc(student.schoolName ?? '학교')}</div>
-      <div class="rpt-stamp">담임<br>확인</div>
+    <div class="rpt-top">
+      <div class="rpt-title-block">
+        <div class="rpt-title">${esc(year)}학년도<br>학생 종합 보고서</div>
+        <div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div>
+      </div>
+      ${stampTable}
     </div>
 
     <table class="info-table">
       <tr>
-        <th>성 명</th><td>${esc(student.name)}</td>
-        <th>학년/반/번호</th><td>${esc(student.grade)}학년 ${esc(student.classNumber)}반 ${String(student.studentNumber ?? '').padStart(2, '0')}번</td>
+        <th style="width:70px">성 명</th><td>${esc(student.name)}</td>
+        <th style="width:90px">학년 / 반 / 번호</th><td>${esc(student.grade)}학년 ${esc(student.classNumber)}반 ${String(student.studentNumber ?? '').padStart(2, '0')}번</td>
       </tr>
     </table>
 
@@ -193,12 +201,11 @@ function buildSchoolRecord(
     </table>
     ${feedbacks.length > 10 ? `<div style="font-size:11px;color:#888;text-align:right;padding:4px">외 ${feedbacks.length - 10}건 생략</div>` : ''}
 
-    <div class="seal-row">
-      <div class="seal-item">담임교사<div class="seal-box">(인)</div></div>
-      <div class="seal-item">교 감<div class="seal-box">(인)</div></div>
-      <div class="seal-item">교 장<div class="seal-box">(인)</div></div>
+    <div class="foot">
+      위와 같이 보고서를 제출합니다.<br><br>
+      ${new Date().getFullYear()}년&nbsp;&nbsp;&nbsp;${new Date().getMonth()+1}월&nbsp;&nbsp;&nbsp;${new Date().getDate()}일<br><br>
+      담임교사 : ________________ (인)
     </div>
-    <div class="foot">발급일: ${new Date().toLocaleDateString('ko-KR')}</div>
   </div>`;
 }
 
@@ -219,8 +226,8 @@ function buildGradeAnalysis(student: Student, year: number, courses1: StudentCou
     ? `<tr class="summary-row"><td>${label}</td><td>${n1(s.overallAvgScore)}</td><td>${s.overallClassRank ?? '-'}</td><td>${n1(s.attendanceRate)}%</td></tr>`
     : `<tr><td>${label}</td><td colspan="3" class="no-data">데이터 없음</td></tr>`;
   return `<div class="paper">
-    <div class="rpt-header"><div class="rpt-title">${esc(year)}학년도 성적 분석 보고서</div><div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div></div>
-    <table class="info-table"><tr><th>성 명</th><td>${esc(student.name)}</td><th>학년/반/번호</th><td>${esc(student.grade)}-${esc(student.classNumber)}-${String(student.studentNumber ?? '').padStart(2, '0')}</td></tr></table>
+    <div class="rpt-top"><div class="rpt-title-block"><div class="rpt-title">${esc(year)}학년도<br>성적 분석 보고서</div><div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div></div><table class="stamp-table"><tr><th>담 임</th><th>교 감</th><th>교 장</th></tr><tr><td></td><td></td><td></td></tr></table></div>
+    <table class="info-table"><tr><th style="width:70px">성 명</th><td>${esc(student.name)}</td><th style="width:90px">학년 / 반 / 번호</th><td>${esc(student.grade)}-${esc(student.classNumber)}-${String(student.studentNumber ?? '').padStart(2, '0')}</td></tr></table>
     <div class="sec">▶ 과목별 성적</div>
     <table class="data">
       <thead><tr><th rowspan="2" style="width:90px">과목</th><th colspan="4">1학기</th><th colspan="4">2학기</th></tr>
@@ -238,8 +245,8 @@ function buildCounselingReport(student: Student, year: number, counselings: Coun
     ? `<tr><td colspan="4" class="no-data">상담 기록 없음</td></tr>`
     : counselings.map(c => `<tr><td style="width:80px">${fmt(c.counseledAt)}</td><td style="width:80px">${esc(c.teacherName ?? '-')}</td><td class="left">${esc(c.content)}</td><td class="left">${esc(c.nextPlan)}</td></tr>`).join('');
   return `<div class="paper">
-    <div class="rpt-header"><div class="rpt-title">${esc(year)}학년도 상담 내역 보고서</div><div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div></div>
-    <table class="info-table"><tr><th>성 명</th><td>${esc(student.name)}</td><th>학년/반/번호</th><td>${esc(student.grade)}-${esc(student.classNumber)}-${String(student.studentNumber ?? '').padStart(2, '0')}</td></tr></table>
+    <div class="rpt-top"><div class="rpt-title-block"><div class="rpt-title">${esc(year)}학년도<br>상담 내역 보고서</div><div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div></div><table class="stamp-table"><tr><th>담 임</th><th>교 감</th><th>교 장</th></tr><tr><td></td><td></td><td></td></tr></table></div>
+    <table class="info-table"><tr><th style="width:70px">성 명</th><td>${esc(student.name)}</td><th style="width:90px">학년 / 반 / 번호</th><td>${esc(student.grade)}-${esc(student.classNumber)}-${String(student.studentNumber ?? '').padStart(2, '0')}</td></tr></table>
     <div class="sec">▶ 상담 이력 (총 ${counselings.length}건)</div>
     <table class="data"><thead><tr><th>날짜</th><th>상담교사</th><th>주요 내용</th><th>다음 상담 계획</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="foot">발급일: ${new Date().toLocaleDateString('ko-KR')}</div>
@@ -256,8 +263,8 @@ function buildFeedbackReport(student: Student, year: number, feedbacks: Feedback
     ? `<tr><td colspan="4" class="no-data">피드백 없음</td></tr>`
     : feedbacks.map(f => `<tr><td style="width:80px">${fmt(f.createdAt)}</td><td style="width:60px">${FeedbackCategoryLabel[f.category]}</td><td style="width:70px">${esc(f.teacherName ?? '-')}</td><td class="left">${esc(f.content)}</td></tr>`).join('');
   return `<div class="paper">
-    <div class="rpt-header"><div class="rpt-title">${esc(year)}학년도 피드백 요약 보고서</div><div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div></div>
-    <table class="info-table"><tr><th>성 명</th><td>${esc(student.name)}</td><th>학년/반/번호</th><td>${esc(student.grade)}-${esc(student.classNumber)}-${String(student.studentNumber ?? '').padStart(2, '0')}</td></tr></table>
+    <div class="rpt-top"><div class="rpt-title-block"><div class="rpt-title">${esc(year)}학년도<br>피드백 요약 보고서</div><div class="rpt-subtitle">${esc(student.schoolName ?? '')}</div></div><table class="stamp-table"><tr><th>담 임</th><th>교 감</th><th>교 장</th></tr><tr><td></td><td></td><td></td></tr></table></div>
+    <table class="info-table"><tr><th style="width:70px">성 명</th><td>${esc(student.name)}</td><th style="width:90px">학년 / 반 / 번호</th><td>${esc(student.grade)}-${esc(student.classNumber)}-${String(student.studentNumber ?? '').padStart(2, '0')}</td></tr></table>
     <div class="sec">▶ 유형별 통계 (총 ${feedbacks.length}건)</div>
     <table class="data" style="width:200px"><thead><tr><th>유형</th><th>건수</th></tr></thead><tbody>${summary}</tbody></table>
     <div class="sec" style="margin-top:16px">▶ 피드백 상세 목록</div>
