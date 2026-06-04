@@ -64,12 +64,7 @@ export function ChatbotPage() {
         setStudentId(id);
       } else if (user.role === 'TEACHER' || user.role === 'ADMIN') {
         try {
-          // 교사: 자신의 담당 반 학생만 조회
-          const meRes = await client.get<any>('/users/me').catch(() => null);
-          const profile = meRes?.data?.data ?? meRes?.data ?? null;
-          const classGroupId = profile?.classGroupId ?? null;
-          const params = classGroupId ? { class_group_id: classGroupId } : {};
-          const r = await client.get<any>('/students', { params });
+          const r = await client.get<any>('/students');
           const list = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
           setStudents(list.sort((a: any, b: any) =>
             (a.grade - b.grade) || (a.classNumber - b.classNumber) || (a.studentNumber - b.studentNumber)
