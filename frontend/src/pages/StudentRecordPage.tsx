@@ -23,7 +23,7 @@ export function StudentRecordPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [nameSearch, setNameSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');
-  const [classGroupId, setClassGroupId] = useState<number | null>(null);
+  const [, setClassGroupId] = useState<number | null>(null);
   const [year, setYear] = useState(YEAR);
   const [semester, setSemester] = useState(new Date().getMonth() < 7 ? 1 : 2);
   const [record, setRecord] = useState<RecordData | null>(null);

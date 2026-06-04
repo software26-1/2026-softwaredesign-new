@@ -17,7 +17,7 @@ export function TeacherDashboard({ user }: Props) {
   const [teacher, setTeacher] = useState<Teacher>(user as Teacher);
   const [students, setStudents] = useState<any[]>([]);
   const [classCourses, setClassCourses] = useState<ClassCourseStats[]>([]);
-  const [atRisk, setAtRisk] = useState<AtRiskStudent[]>([]);
+  const [, setAtRisk] = useState<AtRiskStudent[]>([]);
   const [courseMap, setCourseMap] = useState<Record<number, string>>({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [schoolName, setSchoolName] = useState<string | null>(null);
