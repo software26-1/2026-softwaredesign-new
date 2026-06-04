@@ -6,10 +6,13 @@ import com.softwaredesign.schoolsystem.domain.record.dto.StudentRecordResponse;
 import com.softwaredesign.schoolsystem.domain.record.entity.StudentRecord;
 import com.softwaredesign.schoolsystem.domain.academic.repository.EnrollmentRepository;
 import com.softwaredesign.schoolsystem.domain.record.repository.StudentRecordRepository;
+import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
+import com.softwaredesign.schoolsystem.domain.student.repository.ParentRepository;
+import com.softwaredesign.schoolsystem.domain.student.repository.ParentStudentRepository;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,18 +39,14 @@ import static org.mockito.Mockito.verify;
 @DisplayName("StudentRecordService 단위 테스트")
 class StudentRecordServiceTest {
 
-    @Mock
-    private StudentRecordRepository studentRecordRepository;
-    @Mock
-    private StudentRepository studentRepository;
-    @Mock
-    private TeacherRepository teacherRepository;
-    @Mock
-    private ClassGroupRepository classGroupRepository;
-    @Mock
-    private EnrollmentRepository enrollmentRepository;
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
+    @Mock private StudentRecordRepository studentRecordRepository;
+    @Mock private StudentRepository studentRepository;
+    @Mock private TeacherRepository teacherRepository;
+    @Mock private ClassGroupRepository classGroupRepository;
+    @Mock private ParentRepository parentRepository;
+    @Mock private ParentStudentRepository parentStudentRepository;
+    @Mock private EnrollmentRepository enrollmentRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private StudentRecordService studentRecordService;
@@ -55,25 +54,33 @@ class StudentRecordServiceTest {
     private static final Long TEACHER_USER_ID = 10L;
     private static final Long TEACHER_ID = 5L;
     private static final Long STUDENT_ID = 100L;
+    private static final Long CLASS_GROUP_ID = 1L;
 
     private Student student;
     private Teacher teacher;
+    private ClassGroup classGroup;
 
     @BeforeEach
     void setUp() {
         User studentUser = org.mockito.Mockito.mock(User.class);
         lenient().when(studentUser.getName()).thenReturn("이학생");
+
+        classGroup = org.mockito.Mockito.mock(ClassGroup.class);
+        lenient().when(classGroup.getId()).thenReturn(CLASS_GROUP_ID);
+
         student = org.mockito.Mockito.mock(Student.class);
         lenient().when(student.getId()).thenReturn(STUDENT_ID);
         lenient().when(student.getUser()).thenReturn(studentUser);
+        lenient().when(student.getClassGroup()).thenReturn(classGroup);
+
         teacher = org.mockito.Mockito.mock(Teacher.class);
         lenient().when(teacher.getId()).thenReturn(TEACHER_ID);
     }
 
-    /** 해당 학생을 가르치는 교과 교사로 인정되도록 스텁(담임/교과 권한 통과). */
-    private void givenSubjectTeacher() {
-        given(enrollmentRepository.existsByStudentIdAndCourse_Teacher_IdAndIsDeletedFalse(STUDENT_ID, TEACHER_ID))
-                .willReturn(true);
+    /** 담임 교사 권한 통과를 위한 스텁 */
+    private void givenHomeroomTeacher() {
+        given(classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(TEACHER_ID))
+                .willReturn(Optional.of(classGroup));
     }
 
     private StudentRecordCreateOrUpdateRequest request() {
@@ -91,8 +98,8 @@ class StudentRecordServiceTest {
         StudentRecord record = StudentRecord.createStudentRecord(student, 2026, 1);
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
 
-        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
-        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, teacher);
+        AuthUser authTeacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, authTeacher);
 
         assertThat(response.getStudentId()).isEqualTo(STUDENT_ID);
         assertThat(response.getStudentName()).isEqualTo("이학생");
@@ -103,8 +110,8 @@ class StudentRecordServiceTest {
     void getByStudent_notFound() {
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.empty());
 
-        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
-        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, teacher);
+        AuthUser authTeacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, authTeacher);
 
         assertThat(response).isNull();
     }
@@ -116,7 +123,7 @@ class StudentRecordServiceTest {
         given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
-        givenSubjectTeacher();
+        givenHomeroomTeacher();
 
         StudentRecordResponse response = studentRecordService.upsert(STUDENT_ID, request(), TEACHER_USER_ID);
 
@@ -133,7 +140,7 @@ class StudentRecordServiceTest {
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(studentRecordRepository.save(any(StudentRecord.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
-        givenSubjectTeacher();
+        givenHomeroomTeacher();
 
         StudentRecordResponse response = studentRecordService.upsert(STUDENT_ID, request(), TEACHER_USER_ID);
 
