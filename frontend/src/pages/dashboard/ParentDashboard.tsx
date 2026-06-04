@@ -34,6 +34,7 @@ export function ParentDashboard({ user }: Props) {
   const avg = courses.length > 0
     ? (courses.reduce((s, c) => s + (c.avgScore ?? 0), 0) / courses.length).toFixed(1)
     : '—';
+  const isMiddle = courses.length > 0 && courses.filter(c => c.gradeLevel != null).every(c => /^[A-Za-z]/.test(String(c.gradeLevel)));
 
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
@@ -154,14 +155,14 @@ export function ParentDashboard({ user }: Props) {
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead><tr style={{ background: '#f0f5ff' }}>
-                    {['과목', '평균', '석차'].map(h => <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>)}
+                    {['과목', '평균', ...(isMiddle ? [] : ['석차'])].map(h => <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {courses.map(g => (
                       <tr key={g.courseKey} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '11px 16px', fontWeight: 500, color: '#1e293b' }}>{g.courseName ?? `과목${g.courseKey}`}</td>
                         <td style={{ padding: '11px 16px', fontWeight: 700, color: '#1B3A7A' }}>{g.avgScore?.toFixed(1) ?? '—'}</td>
-                        <td style={{ padding: '11px 16px', color: '#94a3b8' }}>{g.classRank != null ? `${g.classRank}위` : '—'}</td>
+                        {!isMiddle && <td style={{ padding: '11px 16px', color: '#94a3b8' }}>{g.classRank != null ? `${g.classRank}위` : '—'}</td>}
                       </tr>
                     ))}
                   </tbody>

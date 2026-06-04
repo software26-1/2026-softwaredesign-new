@@ -16,6 +16,7 @@ public class MyProfileResponse {
     private final String status;
     private final Long schoolId;
     private final String schoolName;
+    private final String schoolType;
     private final LocalDateTime createdAt;
     private final Long classGroupId;
     private final String classGroupName;
@@ -26,7 +27,9 @@ public class MyProfileResponse {
     private final Long curriculumId;
     private final String position;
 
-    private MyProfileResponse(User user, Long schoolId, Long classGroupId, String classGroupName, Integer grade, Integer classNumber, Integer studentNumber, Long studentId, Long curriculumId, String position) {
+    private MyProfileResponse(User user, Long schoolId, Long classGroupId, String classGroupName,
+                               Integer grade, Integer classNumber, Integer studentNumber,
+                               Long studentId, Long curriculumId, String position, String schoolType) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
@@ -35,6 +38,7 @@ public class MyProfileResponse {
         this.status = user.getStatus().name();
         this.schoolId = schoolId;
         this.schoolName = user.getSchoolName();
+        this.schoolType = schoolType;
         this.createdAt = user.getCreatedAt();
         this.classGroupId = classGroupId;
         this.classGroupName = classGroupName;
@@ -47,25 +51,33 @@ public class MyProfileResponse {
     }
 
     public static MyProfileResponse from(User user) {
-        return new MyProfileResponse(user, null, null, null, null, null, null, null, null, null);
+        return new MyProfileResponse(user, null, null, null, null, null, null, null, null, null, null);
     }
 
-    public static MyProfileResponse from(User user, Long schoolId, Long classGroupId, Integer grade, Integer classNumber, Long curriculumId, String position) {
+    public static MyProfileResponse from(User user, Long schoolId, Long classGroupId,
+                                          Integer grade, Integer classNumber,
+                                          Long curriculumId, String position, String schoolType) {
         String name = grade != null && classNumber != null ? grade + "학년 " + classNumber + "반" : null;
-        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber, null, null, curriculumId, position);
+        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber,
+                null, null, curriculumId, position, schoolType);
     }
 
-    public static MyProfileResponse fromTeacher(User user, Long schoolId, Long curriculumId, String position) {
-        return new MyProfileResponse(user, schoolId, null, null, null, null, null, null, curriculumId, position);
+    public static MyProfileResponse fromTeacher(User user, Long schoolId,
+                                                 Long curriculumId, String position, String schoolType) {
+        return new MyProfileResponse(user, schoolId, null, null, null, null, null,
+                null, curriculumId, position, schoolType);
     }
 
     public static MyProfileResponse fromStudent(User user, Long studentId) {
-        return new MyProfileResponse(user, null, null, null, null, null, null, studentId, null, null);
+        return new MyProfileResponse(user, null, null, null, null, null, null,
+                studentId, null, null, null);
     }
 
-    public static MyProfileResponse fromStudent(User user, Long studentId, Long schoolId, Long classGroupId,
-                                                Integer grade, Integer classNumber, Integer studentNumber) {
+    public static MyProfileResponse fromStudent(User user, Long studentId, Long schoolId,
+                                                 Long classGroupId, Integer grade, Integer classNumber,
+                                                 Integer studentNumber, String schoolType) {
         String name = grade != null && classNumber != null ? grade + "학년 " + classNumber + "반" : null;
-        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber, studentNumber, studentId, null, null);
+        return new MyProfileResponse(user, schoolId, classGroupId, name, grade, classNumber,
+                studentNumber, studentId, null, null, schoolType);
     }
 }

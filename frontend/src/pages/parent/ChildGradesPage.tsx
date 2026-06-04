@@ -36,9 +36,12 @@ export function ChildGradesPage() {
       analyticsService.getStudentCourses(child.studentId, YEAR, semester).catch(() => []),
     ]).then(([s, c]) => {
       setSummary(s);
-      setCourses(Array.isArray(c) ? c : []);
+      const arr = Array.isArray(c) ? c : [];
+      setCourses(arr);
     }).finally(() => setLoading(false));
   }, [child, semester]);
+
+  const isMiddle = courses.length > 0 && courses.filter(c => c.gradeLevel != null).every(c => /^[A-Za-z]/.test(String(c.gradeLevel)));
 
   const filterBtn = (active: boolean): React.CSSProperties => ({ padding: '5px 12px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: '1px solid #d1d5db', fontFamily: "'Noto Sans KR', sans-serif", background: active ? '#1e5a99' : '#fff', color: active ? '#fff' : '#64748b' });
 
@@ -71,7 +74,7 @@ export function ChildGradesPage() {
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
             {[
               { label: '평균', value: `${summary?.overallAvgScore?.toFixed(1) ?? '—'}점`, color: '#1e5a99' },
-              { label: '반 석차', value: summary?.overallClassRank ? `${summary.overallClassRank}위` : '—', color: '#10b981' },
+              ...(!isMiddle ? [{ label: '반 석차', value: summary?.overallClassRank ? `${summary.overallClassRank}위` : '—', color: '#10b981' }] : []),
               { label: '출석률', value: summary?.attendanceRate ? `${summary.attendanceRate.toFixed(1)}%` : '—', color: '#f39c12' },
             ].map(s => (
               <div key={s.label} style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: `3px solid ${s.color}` }}>
@@ -84,19 +87,19 @@ export function ChildGradesPage() {
           <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
               <thead>
-                <tr>{['과목', '원점수', '과목평균', '성취도', '석차/수강', '내신등급'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                <tr>{['과목', '원점수', '과목평균', '성취도', ...(isMiddle ? [] : ['석차/수강', '내신등급'])].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {courses.map((c, i) => {
-                  const naesin = c.classRank && c.studentCount ? calcNaesin(c.classRank, c.studentCount) : null;
+                  const naesin = !isMiddle && c.classRank && c.studentCount ? calcNaesin(c.classRank, c.studentCount) : null;
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f8fafc' }}>
                       <td style={{ ...tdStyle, fontWeight: 600 }}>{c.courseName ?? '—'}</td>
                       <td style={{ ...tdStyle, fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '—'}</td>
                       <td style={tdStyle}>{c.avgScore?.toFixed(1) ?? '—'}</td>
                       <td style={tdStyle}><span style={{ background: '#ebf4ff', color: '#1e5a99', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>{c.achievementLevel ?? '—'}</span></td>
-                      <td style={tdStyle}>{c.classRank && c.studentCount ? `${c.classRank}/${c.studentCount}` : '—'}</td>
-                      <td style={{ ...tdStyle, fontWeight: naesin ? 700 : 400 }}>{naesin ? `${naesin}등급` : '—'}</td>
+                      {!isMiddle && <td style={tdStyle}>{c.classRank && c.studentCount ? `${c.classRank}/${c.studentCount}` : '—'}</td>}
+                      {!isMiddle && <td style={{ ...tdStyle, fontWeight: naesin ? 700 : 400 }}>{naesin ? `${naesin}등급` : '—'}</td>}
                     </tr>
                   );
                 })}

@@ -12,12 +12,13 @@ const filterBtn = (active: boolean): React.CSSProperties => ({ padding: '6px 14p
 
 export function MyGradesPage() {
   const [studentId, setStudentId] = useState<number | null>(null);
-  const [curGrade, setCurGrade] = useState<number>(1); // 학생의 현재 학년 (재학 학년도 = 올해)
-  const [selGrade, setSelGrade] = useState<number>(1); // 선택한 학년
+  const [curGrade, setCurGrade] = useState<number>(1);
+  const [selGrade, setSelGrade] = useState<number>(1);
   const [semester, setSemester] = useState<1 | 2>(1);
   const [summary, setSummary] = useState<LearningSummary | null>(null);
   const [courses, setCourses] = useState<StudentCourseTerm[]>([]);
   const [loading, setLoading] = useState(true);
+  const [schoolType, setSchoolType] = useState<string | null>(null);
 
   // 선택 학년 → 실제 학년도(연도). 현재 학년 = 올해 기준으로 역산.
   const year = YEAR - (curGrade - selGrade);
@@ -30,6 +31,7 @@ export function MyGradesPage() {
       const g = profile?.grade ?? 1;
       setCurGrade(g);
       setSelGrade(g);
+      setSchoolType(profile?.schoolType ?? null);
     }).catch(() => setLoading(false));
   }, []);
 
@@ -45,6 +47,7 @@ export function MyGradesPage() {
     }).finally(() => setLoading(false));
   }, [studentId, year, semester]);
 
+  const isMiddle = schoolType === 'MIDDLE';
   const sorted = [...courses].sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0));
   const avg = summary?.overallAvgScore != null
     ? summary.overallAvgScore.toFixed(1)
@@ -87,10 +90,12 @@ export function MyGradesPage() {
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>전체 평균</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{avg}점</p>
             </div>
-            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>반 석차</p>
-              <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{summary?.overallClassRank != null ? `${summary.overallClassRank}위` : '—'}</p>
-            </div>
+            {!isMiddle && (
+              <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>반 석차</p>
+                <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{summary?.overallClassRank != null ? `${summary.overallClassRank}위` : '—'}</p>
+              </div>
+            )}
             <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>수강 과목</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{courses.length}개</p>
@@ -112,7 +117,7 @@ export function MyGradesPage() {
                     <th style={{ ...thStyle, textAlign: 'left' }}>과목</th>
                     <th style={thStyle}>원점수</th>
                     <th style={thStyle}>반 평균</th>
-                    <th style={thStyle}>석차</th>
+                    {!isMiddle && <th style={thStyle}>석차</th>}
                     <th style={{ ...thStyle, borderRight: 'none' }}>등급</th>
                   </tr>
                 </thead>
@@ -124,7 +129,7 @@ export function MyGradesPage() {
                         <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>{c.courseName ?? `과목 ${c.courseKey}`}</td>
                         <td style={{ ...tdStyle, fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '—'}</td>
                         <td style={tdStyle}>{c.classAvgScore?.toFixed(1) ?? '—'}</td>
-                        <td style={tdStyle}>{c.classRank != null ? `${c.classRank}위` : '—'}</td>
+                        {!isMiddle && <td style={tdStyle}>{c.classRank != null ? `${c.classRank}위` : '—'}</td>}
                         <td style={{ ...tdStyle, borderRight: 'none' }}>
                           {c.gradeLevel != null ? (
                             <span style={{ display: 'inline-block', padding: '2px 9px', borderRadius: '10px', fontSize: '11px', fontWeight: 700, background: isLetter ? '#e8f5e9' : '#ebf4ff', color: isLetter ? '#2e7d32' : '#1e5a99' }}>

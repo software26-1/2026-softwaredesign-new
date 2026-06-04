@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/common/Button';
 import { gradeService } from '../services/gradeService';
+import client from '../api/client';
 import type { Course, GradeSummary } from '../types/grade';
 
 type ExamType = 'MIDTERM' | 'FINAL' | 'ASSIGNMENT';
@@ -37,6 +38,14 @@ export function GradeManagementPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [schoolType, setSchoolType] = useState<string | null>(null);
+
+  useEffect(() => {
+    client.get<any>('/users/me').then(r => {
+      const p = r.data?.data ?? r.data;
+      setSchoolType(p?.schoolType ?? null);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     gradeService.getCourses(year, semester)
@@ -182,7 +191,7 @@ export function GradeManagementPage() {
           {error && <div style={{ padding: '12px 24px', background: '#fdecea', borderBottom: '1px solid #f5c6c2', fontSize: '13px', color: '#c62828' }}>{error}</div>}
 
           <div style={{ padding: '12px 24px', background: '#eff6ff', borderBottom: '1px solid #dbeafe', fontSize: '13px', color: '#1e5a99' }}>
-            성적 입력 시 평균·표준편차·성취도·석차가 자동 계산됩니다.
+            성적 입력 시 평균·표준편차·성취도{schoolType !== 'MIDDLE' ? '·석차' : ''}가 자동 계산됩니다.
           </div>
 
           {loading ? (
@@ -191,7 +200,7 @@ export function GradeManagementPage() {
             <div className="grade-table-wrap">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>{['번호', '이름', '원점수', '과목 평균', '표준편차', '성취도', '석차'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                  <tr>{['번호', '이름', '원점수', '과목 평균', '표준편차', '성취도', ...(schoolType !== 'MIDDLE' ? ['석차'] : [])].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {enrollments.map(e => {
@@ -218,7 +227,7 @@ export function GradeManagementPage() {
                             </span>
                           ) : '—'}
                         </td>
-                        <td style={{ ...tdStyle, color: '#475569' }}>{score !== '' ? `${rankMap[e.studentId]}/${enrollments.length}` : '—'}</td>
+                        {schoolType !== 'MIDDLE' && <td style={{ ...tdStyle, color: '#475569' }}>{score !== '' ? `${rankMap[e.studentId]}/${enrollments.length}` : '—'}</td>}
                       </tr>
                     );
                   })}

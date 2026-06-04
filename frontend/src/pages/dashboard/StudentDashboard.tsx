@@ -19,6 +19,7 @@ export function StudentDashboard({ user }: Props) {
   const [studentId, setStudentId] = useState<number | null>(null);
   const [grade, setGrade] = useState<number | null>(null);
   const [classNumber, setClassNumber] = useState<number | null>(null);
+  const [schoolType, setSchoolType] = useState<string | null>(null);
 
   useEffect(() => {
     client.get<any>('/users/me')
@@ -27,6 +28,7 @@ export function StudentDashboard({ user }: Props) {
         setStudentId(profile?.studentId ?? null);
         setGrade(profile?.grade ?? null);
         setClassNumber(profile?.classNumber ?? null);
+        setSchoolType(profile?.schoolType ?? null);
       }).catch(() => {});
   }, [user.id]);
 
@@ -162,7 +164,7 @@ export function StudentDashboard({ user }: Props) {
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead><tr style={{ background: '#f0f5ff' }}>
-                  {['과목', '평균', '중간', '기말', '석차'].map(h => <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>)}
+                  {['과목', '평균', '중간', '기말', ...(schoolType !== 'MIDDLE' ? ['석차'] : [])].map(h => <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>)}
                 </tr></thead>
                 <tbody>
                   {courses.map(g => (
@@ -171,7 +173,7 @@ export function StudentDashboard({ user }: Props) {
                       <td style={{ padding: '11px 16px', fontWeight: 700, color: '#1B3A7A' }}>{g.avgScore?.toFixed(1) ?? '—'}</td>
                       <td style={{ padding: '11px 16px', color: '#374151' }}>{g.midtermScore?.toFixed(1) ?? '—'}</td>
                       <td style={{ padding: '11px 16px', color: '#374151' }}>{g.finalScore?.toFixed(1) ?? '—'}</td>
-                      <td style={{ padding: '11px 16px', color: '#94a3b8' }}>{g.classRank != null ? `${g.classRank}위` : '—'}</td>
+                      {schoolType !== 'MIDDLE' && <td style={{ padding: '11px 16px', color: '#94a3b8' }}>{g.classRank != null ? `${g.classRank}위` : '—'}</td>}
                     </tr>
                   ))}
                 </tbody>

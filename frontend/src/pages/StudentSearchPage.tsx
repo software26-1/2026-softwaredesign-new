@@ -364,10 +364,13 @@ export function StudentSearchPage() {
                     </div>
                     <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>과목별 성적 ({term.year} {effSem}학기)</p>
                     <div className="ss-grade-table-wrap">
+                      {(() => {
+                        const isModalMiddle = modalCourses.length > 0 && modalCourses.filter(c => c.gradeLevel != null).every(c => /^[A-Za-z]/.test(String(c.gradeLevel)));
+                        return (
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                         <thead>
                           <tr style={{ background: '#f8fafc' }}>
-                            {['과목', '원점수', '반 평균', '석차', '등급'].map(h => (
+                            {['과목', '원점수', '반 평균', ...(isModalMiddle ? [] : ['석차']), '등급'].map(h => (
                               <th key={h} style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '11px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                             ))}
                           </tr>
@@ -380,7 +383,7 @@ export function StudentSearchPage() {
                                 <td style={{ padding: '7px 10px', fontWeight: 600 }}>{courseName(c.courseKey, c.courseName)}</td>
                                 <td style={{ padding: '7px 10px', fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '-'}</td>
                                 <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classAvgScore?.toFixed(1) ?? '-'}</td>
-                                <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classRank != null ? `${c.classRank}위` : '-'}</td>
+                                {!isModalMiddle && <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classRank != null ? `${c.classRank}위` : '-'}</td>}
                                 <td style={{ padding: '7px 10px' }}>
                                   {c.gradeLevel ? (
                                     <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: isLetter ? '#e8f5e9' : '#ebf4ff', color: isLetter ? '#2e7d32' : '#1e5a99' }}>
@@ -393,6 +396,8 @@ export function StudentSearchPage() {
                           })}
                         </tbody>
                       </table>
+                        );
+                      })()}
                     </div>
                   </>
                 ) : (

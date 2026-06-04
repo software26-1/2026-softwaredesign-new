@@ -31,10 +31,19 @@ public class UserProfileService {
                 Long curriculumId = teacher.getCurriculumId();
                 String position = teacher.getPosition();
                 return classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(teacher.getId())
-                        .map(cg -> MyProfileResponse.from(user,
-                                cg.getSchool() != null ? cg.getSchool().getId() : null,
-                                cg.getId(), cg.getGrade(), cg.getClassNumber(), curriculumId, position))
-                        .orElse(MyProfileResponse.fromTeacher(user, teacher.getSchool() != null ? teacher.getSchool().getId() : null, curriculumId, position));
+                        .map(cg -> {
+                            String schoolType = cg.getSchool() != null ? cg.getSchool().getSchoolType().name() : null;
+                            return MyProfileResponse.from(user,
+                                    cg.getSchool() != null ? cg.getSchool().getId() : null,
+                                    cg.getId(), cg.getGrade(), cg.getClassNumber(),
+                                    curriculumId, position, schoolType);
+                        })
+                        .orElseGet(() -> {
+                            String schoolType = teacher.getSchool() != null ? teacher.getSchool().getSchoolType().name() : null;
+                            return MyProfileResponse.fromTeacher(user,
+                                    teacher.getSchool() != null ? teacher.getSchool().getId() : null,
+                                    curriculumId, position, schoolType);
+                        });
             }).orElse(MyProfileResponse.from(user));
         }
         if (user.getRole() == UserRole.STUDENT) {
@@ -44,9 +53,11 @@ public class UserProfileService {
                         if (cg == null) {
                             return MyProfileResponse.fromStudent(user, s.getId());
                         }
+                        String schoolType = cg.getSchool() != null ? cg.getSchool().getSchoolType().name() : null;
                         return MyProfileResponse.fromStudent(user, s.getId(),
                                 cg.getSchool() != null ? cg.getSchool().getId() : null,
-                                cg.getId(), cg.getGrade(), cg.getClassNumber(), s.getStudentNumber());
+                                cg.getId(), cg.getGrade(), cg.getClassNumber(),
+                                s.getStudentNumber(), schoolType);
                     })
                     .orElse(MyProfileResponse.from(user));
         }
