@@ -20,6 +20,7 @@ const statusStyle: Record<string, { bg: string; color: string }> = {
 export function MyAttendancePage() {
   const [attendances, setAttendances] = useState<AttendanceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
     client.get<any>('/attendances')
@@ -33,12 +34,16 @@ export function MyAttendancePage() {
     return acc;
   }, {} as Record<string, number>);
 
+  const sorted = [...attendances].sort((a, b) => b.date?.localeCompare(a.date ?? '') ?? 0);
+
   return (
     <div>
       <style>{`
         .ma-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
         @media (max-width: 768px) {
           .ma-stats-grid { grid-template-columns: repeat(3, 1fr); }
+          .ma-row { flex-direction: column; gap: 4px; }
+          .ma-reason-col { font-size: 12px; }
         }
       `}</style>
 
@@ -62,27 +67,35 @@ export function MyAttendancePage() {
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>출결 내역이 없습니다.</p>
         </div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                {['날짜', '출결 상태', '사유'].map(h => <th key={h} style={{ padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {[...attendances].sort((a, b) => b.date?.localeCompare(a.date ?? '') ?? 0).map(a => (
-                <tr key={a.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '12px 20px', fontSize: '13px', color: '#64748b' }}>{a.date?.slice(0, 10)}</td>
-                  <td style={{ padding: '12px 20px' }}>
-                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, ...(statusStyle[a.status] ?? { bg: '#f1f5f9', color: '#475569' }) }}>
-                      {STATUS_LABELS[a.status] ?? a.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 20px', fontSize: '13px', color: '#94a3b8' }}>{a.reason || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+          {sorted.map((a, idx) => {
+            const isExpanded = expandedId === a.id;
+            const reason = a.reason || '';
+            const truncated = reason.length > 20 ? reason.slice(0, 20) + '...' : reason;
+            return (
+              <div key={a.id} style={{ borderBottom: idx < sorted.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '13px', color: '#64748b', minWidth: '84px' }}>{a.date?.slice(0, 10)}</span>
+                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: statusStyle[a.status]?.bg ?? '#f1f5f9', color: statusStyle[a.status]?.color ?? '#475569', minWidth: '44px', textAlign: 'center' }}>
+                    {STATUS_LABELS[a.status] ?? a.status}
+                  </span>
+                  <span style={{ flex: 1, fontSize: '13px', color: '#94a3b8' }}>
+                    {reason.length > 20 ? (
+                      <>
+                        {isExpanded ? reason : truncated}
+                        <button
+                          onClick={() => setExpandedId(isExpanded ? null : a.id)}
+                          style={{ marginLeft: '6px', fontSize: '11px', color: '#1e5a99', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Noto Sans KR', sans-serif" }}
+                        >
+                          {isExpanded ? '접기' : '더보기'}
+                        </button>
+                      </>
+                    ) : (reason || '—')}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

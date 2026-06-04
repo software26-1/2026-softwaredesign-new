@@ -61,10 +61,8 @@ export function MyGradesPage() {
         }
       `}</style>
 
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>내 성적 조회</h1>
-        </div>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', marginBottom: '12px' }}>내 성적 조회</h1>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
           {Array.from({ length: curGrade }, (_, i) => i + 1).map(g => (
             <button key={g} onClick={() => setSelGrade(g)} style={filterBtn(selGrade === g)}>{g}학년</button>
@@ -84,18 +82,16 @@ export function MyGradesPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', minWidth: '140px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>전체 평균</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{avg}점</p>
             </div>
-            {summary?.overallClassRank != null && (
-              <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', minWidth: '140px' }}>
-                <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>반 석차</p>
-                <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{summary.overallClassRank}위</p>
-              </div>
-            )}
-            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', minWidth: '140px' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>반 석차</p>
+              <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{summary?.overallClassRank != null ? `${summary.overallClassRank}위` : '—'}</p>
+            </div>
+            <div style={{ background: '#fff', borderRadius: '10px', padding: '16px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}>수강 과목</p>
               <p style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>{courses.length}개</p>
             </div>

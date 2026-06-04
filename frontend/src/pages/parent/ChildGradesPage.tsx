@@ -44,12 +44,10 @@ export function ChildGradesPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
-            자녀 성적 조회{child ? ` — ${child.studentName ?? child.name}` : ''}
-          </h1>
-        </div>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', marginBottom: '12px' }}>
+          자녀 성적 조회{child ? ` — ${child.studentName ?? child.name}` : ''}
+        </h1>
         <div style={{ display: 'flex', gap: '4px' }}>
           {([1, 2] as const).map(s => (
             <button key={s} onClick={() => setSemester(s)} style={filterBtn(semester === s)}>{s}학기</button>

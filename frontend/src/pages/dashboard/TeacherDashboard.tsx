@@ -50,7 +50,6 @@ export function TeacherDashboard({ user }: Props) {
             setCourseMap(Object.fromEntries(list.map((c: any) => [c.id, c.courseName])));
           }).catch(() => {});
       } else {
-        // 담임 아닌 교사: 학교 정보 + 전체 학생수
         if (schoolId) {
           client.get<any>('/schools').then(res => {
             const list: any[] = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
@@ -75,38 +74,50 @@ export function TeacherDashboard({ user }: Props) {
     }).catch(() => {});
   }, []);
 
-  const riskCount = atRisk.filter(s => s.riskFlag).length;
   const classGroupName = (teacher as any).classGroupName;
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
-
   return (
     <div>
-      {/* 헤더 배너 + 통계 통합 */}
-      <div style={{ display: 'flex', gap: '14px', marginBottom: '20px', alignItems: 'stretch', height: '270px' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .teacher-banner { flex-direction: column !important; height: auto !important; }
+          .teacher-banner-photo { display: none !important; }
+          .teacher-banner-greeting { flex: unset !important; width: 100% !important; }
+          .teacher-banner-stats { flex-wrap: wrap !important; }
+          .teacher-banner-stat-card { width: 80px !important; }
+          .teacher-lower-grid { grid-template-columns: 1fr !important; }
+          .teacher-student-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .teacher-shortcut-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .teacher-course-table-wrap { overflow-x: auto; }
+          .teacher-greeting-title { font-size: 24px !important; }
+          .teacher-greeting-name { font-size: 18px !important; }
+          .teacher-banner-stat-card { background: #fff !important; width: auto !important; flex: 1 !important; }
+        }
+      `}</style>
+
+      {/* 헤더 배너 */}
+      <div className="teacher-banner" style={{ display: 'flex', gap: '14px', marginBottom: '20px', alignItems: 'stretch', height: '270px' }}>
         {/* 왼쪽: 인사 박스 */}
-        <div style={{ borderRadius: '4px', flex: 2, position: 'relative', overflow: 'hidden' }}>
-          {/* 배경 이미지 - 오른쪽에 하늘만 보이게 */}
+        <div className="teacher-banner-greeting" style={{ borderRadius: '4px', flex: 2, position: 'relative', overflow: 'hidden' }}>
           <img src="/school_building.png" alt="" style={{ position: 'absolute', right: 0, top: 0, width: '60%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', display: 'block' }} />
-          {/* 왼→오 그라데이션 (텍스트 가독성 + 건물 숨김) */}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #ffffff 35%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.5) 72%, rgba(255,255,255,0.15) 100%)' }}/>
-          {/* 텍스트 콘텐츠 */}
-          <div style={{ position: 'relative', zIndex: 1, padding: '24px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ position: 'relative', zIndex: 1, padding: '24px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
             <div>
               <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.02em' }}>{today}</p>
-              <p style={{ fontSize: '36px', fontWeight: 700, color: '#1B3A7A', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '2px' }}>안녕하세요</p>
-              <p style={{ fontSize: '26px', fontWeight: 600, color: '#1a2332', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '10px' }}>{user.name} 선생님</p>
+              <p className="teacher-greeting-title" style={{ fontSize: '36px', fontWeight: 700, color: '#1B3A7A', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '2px' }}>안녕하세요</p>
+              <p className="teacher-greeting-name" style={{ fontSize: '26px', fontWeight: 600, color: '#1a2332', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '10px' }}>{user.name} 선생님</p>
               <span style={{ fontSize: '11px', fontWeight: 700, color: '#fff', background: '#1B3A7A', padding: '3px 12px', borderRadius: '20px', whiteSpace: 'nowrap', fontFamily: "'Noto Sans KR', sans-serif", display: 'inline-block' }}>
                 {classGroupName ? `${classGroupName} 담임` : '교과 담당'}
               </span>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="teacher-banner-stats" style={{ display: 'flex', gap: '8px' }}>
               {[
                 { label: '담당 학급', value: classGroupName ?? '-' },
                 { label: '학생 수', value: classGroupName ? `${students.length}명` : '-' },
                 { label: '미확인 알림', value: unreadCount > 0 ? `${unreadCount}개` : '없음', highlight: unreadCount > 0 },
               ].map(s => (
-                <div key={s.label} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderRadius: '10px', width: '110px', border: '1px solid #d1d9e0' }}>
+                <div key={s.label} className="teacher-banner-stat-card" style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderRadius: '10px', width: '110px', border: '1px solid #d1d9e0' }}>
                   <p style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '5px', fontWeight: 500, whiteSpace: 'nowrap' }}>{s.label}</p>
                   <p style={{ fontSize: '16px', fontWeight: 700, color: (s as any).highlight ? '#1B3A7A' : '#1a2332', letterSpacing: '-0.02em' }}>{s.value}</p>
                 </div>
@@ -115,8 +126,8 @@ export function TeacherDashboard({ user }: Props) {
           </div>
         </div>
 
-        {/* 가운데: 큰 사진 카드 */}
-        <div style={{ flex: 1.3, borderRadius: '4px', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 16px rgba(27,58,122,0.2)' }}>
+        {/* 가운데/오른쪽 사진 카드 */}
+        <div className="teacher-banner-photo" style={{ flex: 1.3, borderRadius: '4px', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 16px rgba(27,58,122,0.2)' }}>
           <img src="/classroom.png" alt="교실" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(10,31,78,0.82) 0%, rgba(10,31,78,0.5) 50%, rgba(10,31,78,0.1) 100%)' }}/>
           <div style={{ position: 'absolute', top: '22px', left: '24px', color: '#fff' }}>
@@ -127,8 +138,7 @@ export function TeacherDashboard({ user }: Props) {
           </div>
         </div>
 
-        {/* 오른쪽: 2개 쌓기 */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="teacher-banner-photo" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ flex: 1, borderRadius: '4px', overflow: 'hidden', position: 'relative', boxShadow: '0 2px 10px rgba(27,58,122,0.12)' }}>
             <img src="/school.jpeg" alt="학교" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,31,78,0.85) 0%, rgba(10,31,78,0.3) 60%, transparent 100%)' }}/>
@@ -148,11 +158,10 @@ export function TeacherDashboard({ user }: Props) {
         </div>
       </div>
 
-      {/* 2열: 명단(좌) + 현황(우) */}
-      <div style={{ display: 'grid', gridTemplateColumns: classCourses.length > 0 ? '1fr 1.5fr' : '1fr', gap: '16px' }}>
+      {/* 하단 2열 */}
+      <div className="teacher-lower-grid" style={{ display: 'grid', gridTemplateColumns: classCourses.length > 0 ? '1fr 1.5fr' : '1fr', gap: '16px' }}>
 
         {classGroupName ? (
-          /* 담임: 학생 명단 */
           <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
               <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
@@ -161,7 +170,7 @@ export function TeacherDashboard({ user }: Props) {
             {students.length === 0 ? (
               <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>학생이 없습니다.</p>
             ) : (
-              <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
+              <div className="teacher-student-grid" style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
                 {[...students].sort((a, b) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0)).map((s: any) => (
                   <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', borderRadius: '8px', cursor: 'default' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#f0f5ff')}
@@ -174,7 +183,6 @@ export function TeacherDashboard({ user }: Props) {
             )}
           </div>
         ) : (
-          /* 교과 담당: 학교 정보 */
           <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
               <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#1B3A7A', flexShrink: 0 }}/>
@@ -195,14 +203,13 @@ export function TeacherDashboard({ user }: Props) {
           </div>
         )}
 
-        {/* 비담임: 바로가기 */}
         {!classGroupName && (
           <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden', marginTop: '16px' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
               <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#F4A000', flexShrink: 0 }}/>
               <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>바로가기</h2>
             </div>
-            <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div className="teacher-shortcut-grid" style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
               {[
                 { label: '학생 검색', desc: '학생 성적·피드백·상담 조회', path: '/students/search' },
                 { label: '성적 관리', desc: '과목별 성적 입력 및 수정', path: '/grades' },
@@ -226,35 +233,34 @@ export function TeacherDashboard({ user }: Props) {
           </div>
         )}
 
-        {/* 학급 과목별 현황 */}
         {classCourses.length > 0 && (
           <div style={{ background: '#fff', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
               <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: '#F4A000', flexShrink: 0 }}/>
               <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>학급 과목별 현황</h2>
             </div>
-            <div style={{ maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                <tr style={{ background: '#f0f5ff' }}>
-                  {['과목', '수강', '평균', '최고', '최저', '표준편차'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {classCourses.map((row, i) => (
-                  <tr key={row.courseKey} style={{ background: i % 2 === 0 ? '#fff' : '#f8faff', borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '11px 14px', fontWeight: 600, color: '#1a2332' }}>{courseMap[row.courseKey] ?? row.courseName ?? row.courseKey}</td>
-                    <td style={{ padding: '11px 14px', color: '#64748b' }}>{row.studentCount ?? '—'}명</td>
-                    <td style={{ padding: '11px 14px', fontWeight: 700, color: '#1B3A7A' }}>{row.avgScore?.toFixed(1) ?? '—'}</td>
-                    <td style={{ padding: '11px 14px', color: '#16a34a' }}>{row.maxScore?.toFixed(1) ?? '—'}</td>
-                    <td style={{ padding: '11px 14px', color: '#dc2626' }}>{row.minScore?.toFixed(1) ?? '—'}</td>
-                    <td style={{ padding: '11px 14px', color: '#94a3b8' }}>{row.stddevScore?.toFixed(1) ?? '—'}</td>
+            <div className="teacher-course-table-wrap" style={{ maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                  <tr style={{ background: '#f0f5ff' }}>
+                    {['과목', '수강', '평균', '최고', '최저', '표준편차'].map(h => (
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#1B3A7A', fontSize: '11px' }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {classCourses.map((row, i) => (
+                    <tr key={row.courseKey} style={{ background: i % 2 === 0 ? '#fff' : '#f8faff', borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '11px 14px', fontWeight: 600, color: '#1a2332' }}>{courseMap[row.courseKey] ?? row.courseName ?? row.courseKey}</td>
+                      <td style={{ padding: '11px 14px', color: '#64748b' }}>{row.studentCount ?? '—'}명</td>
+                      <td style={{ padding: '11px 14px', fontWeight: 700, color: '#1B3A7A' }}>{row.avgScore?.toFixed(1) ?? '—'}</td>
+                      <td style={{ padding: '11px 14px', color: '#16a34a' }}>{row.maxScore?.toFixed(1) ?? '—'}</td>
+                      <td style={{ padding: '11px 14px', color: '#dc2626' }}>{row.minScore?.toFixed(1) ?? '—'}</td>
+                      <td style={{ padding: '11px 14px', color: '#94a3b8' }}>{row.stddevScore?.toFixed(1) ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

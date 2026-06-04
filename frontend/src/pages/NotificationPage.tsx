@@ -143,38 +143,38 @@ export function NotificationPage() {
           {paginated.map((n, idx) => (
             <div key={n.id}
               style={{
-                padding: '16px 24px',
+                padding: '12px 16px',
                 borderBottom: idx < paginated.length - 1 ? '1px solid #f1f5f9' : 'none',
-                background: n.isRead ? '#fff' : '#fafcff',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px',
+                background: n.isRead ? '#fff' : '#f5f8ff',
               }}>
-              {/* 왼쪽: 타입 배지 + 제목 + 내용 */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              {/* 1행: 배지 + 날짜 + 읽음버튼 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {n.type && (
-                    <span style={{ flexShrink: 0, display: 'inline-block', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, background: typeBg[n.type] ?? '#f5f5f5', color: typeColor[n.type] ?? '#666' }}>
+                    <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, background: typeBg[n.type] ?? '#f5f5f5', color: typeColor[n.type] ?? '#666' }}>
                       {TYPE_LABELS[n.type] ?? n.type}
                     </span>
                   )}
-                  <span style={{ fontSize: '14px', fontWeight: n.isRead ? 500 : 700, color: '#1a2332' }}>
-                    {(n as any).title ?? n.message}
-                  </span>
-                  {!n.isRead && <span style={{ flexShrink: 0, width: '6px', height: '6px', borderRadius: '50%', background: '#1e5a99', display: 'inline-block' }} />}
+                  {!n.isRead && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#1e5a99', display: 'inline-block', flexShrink: 0 }} />}
                 </div>
-                <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>{n.message}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                    {n.createdAt?.slice(0, 16).replace('T', ' ')}
+                  </span>
+                  {!n.isRead && (
+                    <button onClick={() => markRead(n.id)}
+                      style={{ padding: '3px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', background: '#fff', fontSize: '11px', fontWeight: 600, color: '#64748b', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif", whiteSpace: 'nowrap' }}>
+                      읽음
+                    </button>
+                  )}
+                </div>
               </div>
-              {/* 오른쪽: 날짜 + 읽음 버튼 */}
-              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                  {n.createdAt?.slice(0, 16).replace('T', ' ')}
-                </span>
-                {!n.isRead && (
-                  <button onClick={() => markRead(n.id)}
-                    style={{ padding: '4px 10px', borderRadius: '4px', border: '1px solid #e2e8f0', background: '#fff', fontSize: '11px', fontWeight: 600, color: '#64748b', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif", whiteSpace: 'nowrap' }}>
-                    읽음
-                  </button>
-                )}
-              </div>
+              {/* 2행: 제목 */}
+              <p style={{ fontSize: '13px', fontWeight: n.isRead ? 500 : 700, color: '#1a2332', marginBottom: '2px' }}>
+                {(n as any).title ?? n.message}
+              </p>
+              {/* 3행: 메시지 */}
+              <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.5' }}>{n.message}</p>
             </div>
           ))}
           {totalPages > 1 && (

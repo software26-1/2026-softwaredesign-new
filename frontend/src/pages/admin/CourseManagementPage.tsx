@@ -30,9 +30,7 @@ export function CourseManagementPage() {
   const loadCourses = async () => {
     setLoading(true);
     try {
-      const res = await client.get<any[]>('/courses', {
-        params: { academic_year: year, semester },
-      });
+      const res = await client.get<any[]>('/courses', { params: { academic_year: year, semester } });
       setCourses(Array.isArray(res.data) ? res.data : []);
     } finally { setLoading(false); }
   };
@@ -92,13 +90,24 @@ export function CourseManagementPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .cm-filter-row { flex-direction: column !important; align-items: stretch !important; }
+          .cm-filter-row > div { width: 100% !important; }
+          .cm-form-grid4 { grid-template-columns: 1fr 1fr !important; }
+          .cm-form-grid3 { grid-template-columns: 1fr !important; }
+          .cm-table-wrap { overflow-x: auto; }
+          .cm-form-pad { padding: 16px !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>과목 관리</h1>
         <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px' }}>관리자가 과목을 개설하면, 교사가 마이페이지에서 담당 과목을 등록합니다.</p>
       </div>
 
       {/* 학년도/학기 */}
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '20px 24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
+      <div className="cm-filter-row" style={{ background: '#fff', borderRadius: '10px', padding: '20px 24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
         <div>
           <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년도</label>
           <select value={year} onChange={e => setYear(Number(e.target.value))} style={{ ...inputStyle, width: '140px' }}>
@@ -115,10 +124,10 @@ export function CourseManagementPage() {
       </div>
 
       {/* 신규 개설 폼 */}
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      <div className="cm-form-pad" style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '18px' }}>신규 과목 개설</h2>
         <form onSubmit={handleCreate}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '14px' }}>
+          <div className="cm-form-grid4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '14px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>과목명</label>
               <input required style={inputStyle} placeholder="예: 미적분, 수학I" value={form.courseName} onChange={e => setForm({ ...form, courseName: e.target.value })} />
@@ -145,7 +154,7 @@ export function CourseManagementPage() {
               </select>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
+          <div className="cm-form-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
             {([['중간고사', 'midtermRatio', 'finalRatio', 'taskRatio'], ['기말고사', 'finalRatio', 'midtermRatio', 'taskRatio'], ['수행평가', 'taskRatio', 'midtermRatio', 'finalRatio']] as [string, string, string, string][]).map(([label, key, otherA, otherB]) => (
               <div key={key}>
                 <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>{label} 비율(%)</label>
@@ -180,53 +189,57 @@ export function CourseManagementPage() {
                 {items.length === 0 ? (
                   <p style={{ padding: '20px 24px', fontSize: '13px', color: '#94a3b8' }}>개설된 과목이 없습니다.</p>
                 ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr>{['교과', '과목명', '담당 교사', '중간', '기말', '수행', '평가방식', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {items.map(c => (
-                        <tr key={c.id}>
-                          <td style={{ ...tdStyle, color: '#64748b' }}>{curriculumName(c.curriculumId)}</td>
-                          <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{c.courseName}</td>
-                          <td style={tdStyle}>
-                            <select value={c.teacherId ?? 0} onChange={e => assignTeacher(c.id, Number(e.target.value))}
-                              style={{ padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', color: c.teacherName ? '#475569' : '#94a3b8' }}>
-                              <option value={0}>미배정</option>
-                              {teachers.map(t => {
-                                const curriculum = CURRICULA.find(cu => cu.id === t.curriculumId);
-                                const label = [t.name, curriculum?.name, t.email].filter(Boolean).join(' · ');
-                                return <option key={t.id} value={t.id}>{label}</option>;
-                              })}
-                            </select>
-                          </td>
-                          <td style={tdStyle}>{c.midtermRatio}%</td>
-                          <td style={tdStyle}>{c.finalRatio}%</td>
-                          <td style={tdStyle}>{c.taskRatio}%</td>
-                          <td style={tdStyle}>
-                            <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: c.evaluationType === 'ABSOLUTE' ? '#e8f5e9' : '#ebf4ff', color: c.evaluationType === 'ABSOLUTE' ? '#2e7d32' : '#1e5a99' }}>
-                              {c.evaluationType === 'ABSOLUTE' ? '절대 (A~E)' : '상대 (1~9)'}
-                            </span>
-                          </td>
-                          <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
-                            <Button size="sm" variant="secondary" onClick={async () => {
-                              try {
-                                await client.post('/courses', {
-                                  courseName: c.courseName, curriculumId: c.curriculumId,
-                                  grade: c.grade, academicYear: year, semester,
-                                  midtermRatio: c.midtermRatio, finalRatio: c.finalRatio, taskRatio: c.taskRatio,
-                                  courseType: c.evaluationType === 'ABSOLUTE' ? 'CAREER' : 'ELECTIVE',
-                                  evaluationType: c.evaluationType,
-                                });
-                                loadCourses();
-                              } catch { }
-                            }}>+ 분반</Button>
-                            <Button size="sm" variant="secondary" onClick={() => handleDelete(c.id)}>삭제</Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="cm-table-wrap">
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>{['교과', '과목명', '담당 교사', '중간', '기말', '수행', '평가방식', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {items.map(c => (
+                          <tr key={c.id}>
+                            <td style={{ ...tdStyle, color: '#64748b' }}>{curriculumName(c.curriculumId)}</td>
+                            <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{c.courseName}</td>
+                            <td style={tdStyle}>
+                              <select value={c.teacherId ?? 0} onChange={e => assignTeacher(c.id, Number(e.target.value))}
+                                style={{ padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', color: c.teacherName ? '#475569' : '#94a3b8' }}>
+                                <option value={0}>미배정</option>
+                                {teachers.map(t => {
+                                  const curriculum = CURRICULA.find(cu => cu.id === t.curriculumId);
+                                  const label = [t.name, curriculum?.name, t.email].filter(Boolean).join(' · ');
+                                  return <option key={t.id} value={t.id}>{label}</option>;
+                                })}
+                              </select>
+                            </td>
+                            <td style={tdStyle}>{c.midtermRatio}%</td>
+                            <td style={tdStyle}>{c.finalRatio}%</td>
+                            <td style={tdStyle}>{c.taskRatio}%</td>
+                            <td style={tdStyle}>
+                              <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: c.evaluationType === 'ABSOLUTE' ? '#e8f5e9' : '#ebf4ff', color: c.evaluationType === 'ABSOLUTE' ? '#2e7d32' : '#1e5a99' }}>
+                                {c.evaluationType === 'ABSOLUTE' ? '절대 (A~E)' : '상대 (1~9)'}
+                              </span>
+                            </td>
+                            <td style={{ ...tdStyle }}>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <Button size="sm" variant="secondary" onClick={async () => {
+                                  try {
+                                    await client.post('/courses', {
+                                      courseName: c.courseName, curriculumId: c.curriculumId,
+                                      grade: c.grade, academicYear: year, semester,
+                                      midtermRatio: c.midtermRatio, finalRatio: c.finalRatio, taskRatio: c.taskRatio,
+                                      courseType: c.evaluationType === 'ABSOLUTE' ? 'CAREER' : 'ELECTIVE',
+                                      evaluationType: c.evaluationType,
+                                    });
+                                    loadCourses();
+                                  } catch { }
+                                }}>+ 분반</Button>
+                                <Button size="sm" variant="secondary" onClick={() => handleDelete(c.id)}>삭제</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             );

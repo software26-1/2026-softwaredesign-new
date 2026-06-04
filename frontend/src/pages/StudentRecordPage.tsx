@@ -124,14 +124,26 @@ export function StudentRecordPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .sr-select-row { flex-direction: column !important; align-items: stretch !important; }
+          .sr-year-grid { grid-template-columns: 1fr !important; }
+          .sr-vol-grid { grid-template-columns: 1fr !important; }
+          .sr-att-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .sr-record-table-wrap { overflow-x: auto; }
+          .sr-form-pad { padding: 16px !important; }
+          .sr-view-pad { padding: 16px !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>학생부 기록</h1>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      <div className="sr-form-pad" style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>학생부 작성</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-end' }}>
+          <div className="sr-select-row" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>이름 검색</label>
               <input
@@ -152,7 +164,7 @@ export function StudentRecordPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="sr-year-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년도</label>
               <select style={inputStyle} value={year} onChange={e => setYear(Number(e.target.value))}>
@@ -172,15 +184,15 @@ export function StudentRecordPage() {
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>특기사항 / 성취</label>
-            <textarea value={form.achievements} onChange={e => setForm({ ...form, achievements: e.target.value })} placeholder="특기사항 및 성취 내역을 입력하세요" style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
+            <textarea value={form.achievements} onChange={e => setForm({ ...form, achievements: e.target.value })} placeholder="특기사항 및 성취 내역을 입력하세요" style={{ ...inputStyle, minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' }} />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>비교과 활동</label>
-            <textarea value={form.extracurricular} onChange={e => setForm({ ...form, extracurricular: e.target.value })} placeholder="비교과 활동 내역을 입력하세요" style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+            <textarea value={form.extracurricular} onChange={e => setForm({ ...form, extracurricular: e.target.value })} placeholder="비교과 활동 내역을 입력하세요" style={{ ...inputStyle, minHeight: '80px', resize: 'vertical', boxSizing: 'border-box' }} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+          <div className="sr-vol-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>봉사 시간 (h)</label>
               <input type="number" min={0} style={inputStyle} value={form.volunteerHours} onChange={e => setForm({ ...form, volunteerHours: Number(e.target.value) })} />
@@ -207,9 +219,8 @@ export function StudentRecordPage() {
         {!selectedId ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>학생을 선택하면 학생부 기록이 표시됩니다.</p>
         ) : (
-          <div style={{ padding: '20px 24px' }}>
-            {/* 기본 정보 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', padding: '14px 18px', background: '#f8fafc', borderRadius: '10px' }}>
+          <div className="sr-view-pad" style={{ padding: '20px 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', padding: '14px 18px', background: '#f8fafc', borderRadius: '10px', flexWrap: 'wrap' }}>
               <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#1e5a99', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '16px', flexShrink: 0 }}>
                 {selectedStudent?.name?.[0]}
               </div>
@@ -223,9 +234,8 @@ export function StudentRecordPage() {
               </div>
             </div>
 
-            {/* 출결 상황 (성적 외 정보) */}
             <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>출결 상황</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
+            <div className="sr-att-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
               {[
                 ['출석률', summary?.attendanceRate != null ? `${summary.attendanceRate.toFixed(1)}%` : '—'],
                 ['결석', `${summary?.absentCount ?? 0}회`],
@@ -239,8 +249,7 @@ export function StudentRecordPage() {
               ))}
             </div>
 
-            {/* 특기사항 등 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
               <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332' }}>특기사항 및 기록</p>
               {record && (
                 <Button size="sm" variant="danger" onClick={handleDelete}>기록 삭제</Button>
@@ -249,17 +258,19 @@ export function StudentRecordPage() {
             {!record ? (
               <p style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', background: '#f8fafc', borderRadius: '8px' }}>작성된 학생부 기록이 없습니다. 위에서 작성해 주세요.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #f1f5f9', borderRadius: '8px' }}>
-                <thead><tr>{['특기사항', '비교과 활동', '봉사 시간', '진로 희망'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
-                <tbody>
-                  <tr>
-                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.achievements || '—'}</td>
-                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.extracurricular || '—'}</td>
-                    <td style={tdStyle}>{record.volunteerHours ?? 0}h</td>
-                    <td style={{ ...tdStyle, color: '#475569' }}>{record.careerAspirations || '—'}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="sr-record-table-wrap">
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #f1f5f9', borderRadius: '8px' }}>
+                  <thead><tr>{['특기사항', '비교과 활동', '봉사 시간', '진로 희망'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.achievements || '—'}</td>
+                      <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#475569' }}>{record.extracurricular || '—'}</td>
+                      <td style={tdStyle}>{record.volunteerHours ?? 0}h</td>
+                      <td style={{ ...tdStyle, color: '#475569' }}>{record.careerAspirations || '—'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}

@@ -15,6 +15,7 @@ export function MyFeedbackPage() {
   const [curGrade, setCurGrade] = useState(1);
   const [selGrade, setSelGrade] = useState(1);
   const [semester, setSemester] = useState<1 | 2>(1);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   // 학생 데이터는 student PK 기준이라 /users/me의 studentId로 조회해야 한다.
   useEffect(() => {
@@ -36,10 +37,8 @@ export function MyFeedbackPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>피드백 확인</h1>
-        </div>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', marginBottom: '12px' }}>피드백 확인</h1>
         <TermFilter curGrade={curGrade} selGrade={selGrade} semester={semester} onGrade={setSelGrade} onSemester={setSemester} />
       </div>
 
@@ -62,7 +61,19 @@ export function MyFeedbackPage() {
                 </div>
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)}</span>
               </div>
-              <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.75', padding: '12px 16px', background: '#f8fafc', borderRadius: '6px' }}>{f.content}</p>
+              <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.75', padding: '12px 16px', background: '#f8fafc', borderRadius: '6px' }}>
+                {f.content && f.content.length > 60 ? (
+                  <>
+                    {expandedId === f.id ? f.content : f.content.slice(0, 60) + '...'}
+                    <button
+                      onClick={() => setExpandedId(expandedId === f.id ? null : f.id)}
+                      style={{ marginLeft: '6px', fontSize: '11px', color: '#1e5a99', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Noto Sans KR', sans-serif" }}
+                    >
+                      {expandedId === f.id ? '접기' : '더보기'}
+                    </button>
+                  </>
+                ) : f.content}
+              </div>
             </div>
           ))}
         </div>

@@ -56,7 +56,6 @@ export function StudentSearchPage() {
   const [term, setTerm] = useState<{ year: number; semester: '' | '1' | '2' }>({ year: YEAR, semester: '' });
 
   const effSem = term.semester ? Number(term.semester) : SEMESTER;
-  // 학기 날짜 범위: 1학기 3/1~8/31, 2학기 9/1~다음해 2월
   const termRange = (year: number, sem: number): [string, string] =>
     sem === 1 ? [`${year}-03-01`, `${year}-09-01`] : [`${year}-09-01`, `${year + 1}-03-01`];
   const inTerm = (dateStr?: string) => {
@@ -84,7 +83,6 @@ export function StudentSearchPage() {
           }).catch(() => {});
       }
     }).catch(() => {});
-    // 과목명 매핑(레이더/성적표에서 '과목16' 대신 실제 이름 표시)
     client.get<any>('/courses/for-class', { params: { academic_year: YEAR, semester: SEMESTER } })
       .then((r: any) => {
         const list: any[] = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
@@ -167,7 +165,6 @@ export function StudentSearchPage() {
     }
   };
 
-  // 학기 변경 시: 성적은 해당 학기로 재조회, 피드백/상담은 클라이언트 필터(페이지 초기화)
   useEffect(() => {
     if (!selected) return;
     setFbPage(1);
@@ -201,12 +198,23 @@ export function StudentSearchPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .ss-filter-grid { grid-template-columns: 1fr 1fr !important; }
+          .ss-table-wrap { overflow-x: auto; }
+          .ss-result-pad { padding: 16px !important; }
+          .ss-modal-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+          .ss-modal-stats { gap: 12px !important; }
+          .ss-grade-table-wrap { overflow-x: auto; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>학생 검색 및 조회</h1>
       </div>
 
       <div style={{ background: '#fff', borderRadius: '10px', padding: '20px 24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
+        <div className="ss-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
           {[
             { label: '학년', key: 'grade', options: ['1','2','3'].map(v => ({ value: v, label: `${v}학년` })) },
             { label: '반', key: 'classNumber', options: allClassGroups
@@ -250,29 +258,31 @@ export function StudentSearchPage() {
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>불러오는 중...</p>
         ) : (
           <>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>{['학년/반/번호','이름','피드백','상담 건수',''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {results.length === 0 && (
-                  <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 결과가 없습니다.</td></tr>
-                )}
-                {results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((s) => (
-                  <tr key={s.id}>
-                    <td style={{ ...tdStyle, color: '#64748b' }}>{s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2,'0')}</td>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
-                    <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
-                    <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
-                    <td style={tdStyle}>
-                      <Button size="sm" onClick={() => handleSelectStudent(s)}>상세보기</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="ss-table-wrap">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>{['학년/반/번호','이름','피드백','상담 건수',''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {results.length === 0 && (
+                    <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>검색 결과가 없습니다.</td></tr>
+                  )}
+                  {results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((s) => (
+                    <tr key={s.id}>
+                      <td style={{ ...tdStyle, color: '#64748b' }}>{s.grade}-{s.classNumber}-{String(s.studentNumber).padStart(2,'0')}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
+                      <td style={tdStyle}>{s.feedbackCount != null ? `${s.feedbackCount}건` : '—'}</td>
+                      <td style={tdStyle}>{s.counselingCount != null ? `${s.counselingCount}회` : '—'}</td>
+                      <td style={tdStyle}>
+                        <Button size="sm" onClick={() => handleSelectStudent(s)}>상세보기</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {results.length > PAGE_SIZE && (
-              <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', borderTop: '1px solid #f1f5f9' }}>
+              <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                   style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e2e8f0', background: page === 1 ? '#f8fafc' : '#fff', color: page === 1 ? '#cbd5e1' : '#1B3A7A', cursor: page === 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 500 }}>
                   이전
@@ -296,8 +306,7 @@ export function StudentSearchPage() {
       <Modal isOpen={!!selected} title={selected ? `${selected.name} (${selected.studentNumber}번)` : ''} onClose={() => setSelected(null)} width={700}>
         {selected && (
           <div>
-            {/* 학생 헤더 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', background: 'linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%)', borderRadius: '12px', marginBottom: '20px', color: '#fff' }}>
+            <div className="ss-modal-header" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', background: 'linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%)', borderRadius: '12px', marginBottom: '20px', color: '#fff' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 700, flexShrink: 0 }}>
                 {selected.name[0]}
               </div>
@@ -305,7 +314,7 @@ export function StudentSearchPage() {
                 <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>{selected.name}</p>
                 <p style={{ fontSize: '13px', opacity: 0.8 }}>{selected.grade}학년 {selected.classNumber}반 {selected.studentNumber}번</p>
               </div>
-              <div style={{ display: 'flex', gap: '20px', textAlign: 'center' }}>
+              <div className="ss-modal-stats" style={{ display: 'flex', gap: '20px', textAlign: 'center' }}>
                 {[
                   { label: '피드백', value: selected.feedbackCount != null ? `${selected.feedbackCount}건` : '—' },
                   { label: '상담', value: selected.counselingCount != null ? `${selected.counselingCount}회` : '—' },
@@ -318,17 +327,17 @@ export function StudentSearchPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #f1f5f9', overflowX: 'auto' }}>
               {([['grade','성적'],['feedback','피드백'],['counseling','상담'],['record','학생부']] as const).map(([tab, label]) => (
                 <button key={tab} onClick={() => handleTabChange(tab)}
-                  style={{ padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#1e5a99' : '#94a3b8', borderBottom: activeTab === tab ? '2px solid #1e5a99' : '2px solid transparent', marginBottom: '-2px', fontFamily: "'Noto Sans KR', sans-serif" }}>
+                  style={{ padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#1e5a99' : '#94a3b8', borderBottom: activeTab === tab ? '2px solid #1e5a99' : '2px solid transparent', marginBottom: '-2px', fontFamily: "'Noto Sans KR', sans-serif", whiteSpace: 'nowrap' }}>
                   {label}
                 </button>
               ))}
             </div>
 
             {activeTab !== 'record' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>학기</span>
                 <select value={term.year} onChange={(e) => setTerm(t => ({ ...t, year: Number(e.target.value) }))}
                   style={{ ...inputStyle, padding: '6px 10px', fontSize: '12px' }}>
@@ -353,37 +362,38 @@ export function StudentSearchPage() {
                     <div style={{ maxWidth: '300px', margin: '0 auto 16px' }}>
                       <Radar data={radarData} options={{ scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }, plugins: { legend: { display: false } } }} />
                     </div>
-                    {/* 과목별 성적 상세표 (작게) */}
                     <p style={{ fontSize: '12px', fontWeight: 700, color: '#1a2332', marginBottom: '8px' }}>과목별 성적 ({term.year} {effSem}학기)</p>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                      <thead>
-                        <tr style={{ background: '#f8fafc' }}>
-                          {['과목', '원점수', '반 평균', '석차', '등급'].map(h => (
-                            <th key={h} style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '11px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...modalCourses].sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0)).map(c => {
-                          const isLetter = c.gradeLevel && isNaN(Number(c.gradeLevel));
-                          return (
-                            <tr key={c.courseKey} style={{ borderBottom: '1px solid #f8fafc' }}>
-                              <td style={{ padding: '7px 10px', fontWeight: 600 }}>{courseName(c.courseKey, c.courseName)}</td>
-                              <td style={{ padding: '7px 10px', fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '-'}</td>
-                              <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classAvgScore?.toFixed(1) ?? '-'}</td>
-                              <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classRank != null ? `${c.classRank}위` : '-'}</td>
-                              <td style={{ padding: '7px 10px' }}>
-                                {c.gradeLevel ? (
-                                  <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: isLetter ? '#e8f5e9' : '#ebf4ff', color: isLetter ? '#2e7d32' : '#1e5a99' }}>
-                                    {isLetter ? c.gradeLevel : `${c.gradeLevel}등급`}
-                                  </span>
-                                ) : '-'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                    <div className="ss-grade-table-wrap">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc' }}>
+                            {['과목', '원점수', '반 평균', '석차', '등급'].map(h => (
+                              <th key={h} style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '11px', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...modalCourses].sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0)).map(c => {
+                            const isLetter = c.gradeLevel && isNaN(Number(c.gradeLevel));
+                            return (
+                              <tr key={c.courseKey} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                <td style={{ padding: '7px 10px', fontWeight: 600 }}>{courseName(c.courseKey, c.courseName)}</td>
+                                <td style={{ padding: '7px 10px', fontWeight: 700, color: '#1e5a99' }}>{c.avgScore?.toFixed(1) ?? '-'}</td>
+                                <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classAvgScore?.toFixed(1) ?? '-'}</td>
+                                <td style={{ padding: '7px 10px', color: '#64748b' }}>{c.classRank != null ? `${c.classRank}위` : '-'}</td>
+                                <td style={{ padding: '7px 10px' }}>
+                                  {c.gradeLevel ? (
+                                    <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: isLetter ? '#e8f5e9' : '#ebf4ff', color: isLetter ? '#2e7d32' : '#1e5a99' }}>
+                                      {isLetter ? c.gradeLevel : `${c.gradeLevel}등급`}
+                                    </span>
+                                  ) : '-'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </>
                 ) : (
                   <p style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>성적 데이터가 없습니다. ETL 실행 후 확인하세요.</p>
@@ -404,7 +414,7 @@ export function StudentSearchPage() {
                       const cat = f.category as FeedbackCategory;
                       return (
                         <div key={f.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
                             <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)} · {f.teacherName} 선생님</span>
                             <span style={{ fontSize: '11px', fontWeight: 600, background: catBg[cat] ?? '#ebf4ff', color: catColor[cat] ?? '#1e5a99', padding: '2px 8px', borderRadius: '4px' }}>{CAT_LABELS[cat] ?? cat}</span>
                           </div>
@@ -435,7 +445,7 @@ export function StudentSearchPage() {
                       const open = expanded.has(key);
                       return (
                         <div key={c.id} style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', gap: '12px', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '12px', color: '#94a3b8' }}>{c.counseledAt?.slice(0, 10)}</span>
                             <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{c.teacherName} 선생님</span>
                           </div>

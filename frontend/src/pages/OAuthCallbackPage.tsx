@@ -7,7 +7,7 @@ function getRoleHome(role?: string) {
   switch (role) {
     case 'ADMIN':   return '/admin/users';
     case 'TEACHER': return '/dashboard';
-    case 'STUDENT': return '/my-grades';
+    case 'STUDENT': return '/dashboard';
     case 'PARENT':  return '/child-grades';
     default:        return '/dashboard';
   }

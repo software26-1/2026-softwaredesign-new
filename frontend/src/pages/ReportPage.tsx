@@ -21,12 +21,10 @@ interface ReportData {
   summary2: LearningSummary | null;
 }
 
-/** 생기부 양식 HTML 문자열 생성 (미리보기 + 인쇄에 공통 사용) */
 function buildReportHtml(d: ReportData): string {
   const s = d.student;
   const esc = (v: any) => (v == null ? '' : String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 
-  // 과목명 기준으로 1·2학기 병합
   const names = [...new Set([...d.courses1, ...d.courses2].map(c => c.courseName ?? `과목${c.courseKey}`))];
   const byName = (list: StudentCourseTerm[], name: string) =>
     list.find(c => (c.courseName ?? `과목${c.courseKey}`) === name);
@@ -164,17 +162,25 @@ export function ReportPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .report-year-grid { grid-template-columns: 1fr !important; }
+          .report-preview-wrap { padding: 16px !important; }
+          .report-form-pad { padding: 16px !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>생활기록부 보고서</h1>
         <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px' }}>학생을 선택해 학교생활기록부 양식의 보고서를 생성하고 인쇄(PDF 저장)할 수 있습니다.</p>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      <div className="report-form-pad" style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>보고서 대상</h2>
         <div style={{ marginBottom: '16px' }}>
           <StudentFilterSelect students={students} value={pick} onChange={setPick} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '16px', marginBottom: '20px' }}>
+        <div className="report-year-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '16px', marginBottom: '20px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>학년도</label>
             <select style={selectStyle} value={year} onChange={e => setYear(Number(e.target.value))}>
@@ -183,14 +189,14 @@ export function ReportPage() {
           </div>
         </div>
         {msg && <div style={{ padding: '10px 14px', background: '#fdecea', color: '#c62828', borderRadius: '6px', fontSize: '13px', marginBottom: '14px', borderLeft: '3px solid #e57373' }}>{msg}</div>}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <Button size="sm" onClick={handleGenerate} disabled={loading || !pick.studentId}>{loading ? '생성 중...' : '보고서 생성'}</Button>
           {data && <Button size="sm" variant="secondary" onClick={handlePrint}>인쇄 / PDF 저장</Button>}
         </div>
       </div>
 
       {data && (
-        <div style={{ background: '#e8eaed', borderRadius: '10px', padding: '28px', overflow: 'auto' }}>
+        <div className="report-preview-wrap" style={{ background: '#e8eaed', borderRadius: '10px', padding: '28px', overflow: 'auto' }}>
           <style>{PAPER_CSS}</style>
           <div style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}
             dangerouslySetInnerHTML={{ __html: buildReportHtml(data) }} />

@@ -38,16 +38,13 @@ export function SchoolManagementPage() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  // 학교 정보 수정
   const [editingSchool, setEditingSchool] = useState(false);
   const [schoolForm, setSchoolForm] = useState({ schoolName: '', schoolType: '' });
   const [schoolSaving, setSchoolSaving] = useState(false);
 
-  // 학급 추가
   const [addingGrade, setAddingGrade] = useState<number | null>(null);
   const [classForm, setClassForm] = useState({ grade: '', classNumber: '' });
   const [classSaving, setClassSaving] = useState(false);
-
 
   const loadData = async () => {
     setLoading(true);
@@ -126,6 +123,15 @@ export function SchoolManagementPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .school-info-grid { grid-template-columns: 1fr !important; }
+          .school-class-grid { grid-template-columns: 1fr !important; }
+          .school-class-col { border-right: none !important; border-bottom: 1px solid #e2e8f0; }
+          .school-unassigned-wrap { overflow-x: auto; }
+        }
+      `}</style>
+
       {Toast}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>학교 관리</h1>
@@ -135,7 +141,7 @@ export function SchoolManagementPage() {
 
       {/* 학교 기본 정보 */}
       <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '20px', overflow: 'hidden' }}>
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#1a2332' }}>학교 기본 정보</h2>
           {!editingSchool ? (
             <button onClick={() => setEditingSchool(true)} style={btnStyle('#1e5a99', '#ebf4ff')}>수정</button>
@@ -148,7 +154,7 @@ export function SchoolManagementPage() {
             </div>
           )}
         </div>
-        <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div className="school-info-grid" style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           <div>
             <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px' }}>학교명</p>
             {editingSchool ? (
@@ -179,8 +185,7 @@ export function SchoolManagementPage() {
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#1a2332' }}>학급 목록 <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 400 }}>{classGroups.length}개</span></h2>
         </div>
-        {/* 탭 */}
-        <div style={{ padding: '12px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '6px' }}>
+        <div style={{ padding: '12px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {([['classes', '학급 관리'], ['unassigned', `전학 배정 ${unassignedStudents.length}명`]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setSchoolTab(key)}
               style={{
@@ -198,70 +203,72 @@ export function SchoolManagementPage() {
           unassignedStudents.length === 0 ? (
             <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>배정 대기 학생이 없습니다.</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>{['이름', '이메일', '학급 배정', '번호', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {unassignedStudents.map(s => {
-                  const form = assignForm[s.id] ?? { classGroupId: '', studentNumber: '' };
-                  return (
-                    <tr key={s.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{s.email}</td>
-                      <td style={tdStyle}>
-                        <select value={form.classGroupId}
-                          onChange={e => setAssignForm(p => ({ ...p, [s.id]: { ...form, classGroupId: e.target.value } }))}
-                          style={{ ...inputStyle, minWidth: '120px' }}>
-                          <option value="">학급 선택</option>
-                          {[1,2,3].map(g => {
-                            const gc = classGroups.filter(c => c.grade === g);
-                            return gc.length > 0 ? (
-                              <optgroup key={g} label={`${g}학년`}>
-                                {gc.map(c => <option key={c.id} value={c.id}>{g}학년 {c.classNumber}반</option>)}
-                              </optgroup>
-                            ) : null;
-                          })}
-                        </select>
-                      </td>
-                      <td style={tdStyle}>
-                        <input type="number" min={1} placeholder="번호" value={form.studentNumber}
-                          onChange={e => setAssignForm(p => ({ ...p, [s.id]: { ...form, studentNumber: e.target.value } }))}
-                          style={{ ...inputStyle, width: '70px' }} />
-                      </td>
-                      <td style={tdStyle}>
-                        <button disabled={!form.classGroupId || !form.studentNumber}
-                          onClick={async () => {
-                            const selectedClass = classGroups.find(c => c.id === Number(form.classGroupId));
-                            const confirmMsg = selectedClass
-                              ? `${selectedClass.grade}학년 ${selectedClass.classNumber}반 ${form.studentNumber}번으로 배정하시겠습니까?`
-                              : '배정하시겠습니까?';
-                            if (!confirm(confirmMsg)) return;
-                            try {
-                              await client.patch(`/students/${s.id}/assign`, { classGroupId: Number(form.classGroupId), studentNumber: Number(form.studentNumber) });
-                              await loadData();
-                            } catch { setError('배정 실패'); }
-                          }}
-                          style={btnStyle('#fff', !form.classGroupId || !form.studentNumber ? '#94a3b8' : '#1e5a99')}>
-                          배정
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="school-unassigned-wrap">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>{['이름', '이메일', '학급 배정', '번호', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {unassignedStudents.map(s => {
+                    const form = assignForm[s.id] ?? { classGroupId: '', studentNumber: '' };
+                    return (
+                      <tr key={s.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
+                        <td style={{ ...tdStyle, color: '#64748b' }}>{s.email}</td>
+                        <td style={tdStyle}>
+                          <select value={form.classGroupId}
+                            onChange={e => setAssignForm(p => ({ ...p, [s.id]: { ...form, classGroupId: e.target.value } }))}
+                            style={{ ...inputStyle, minWidth: '120px' }}>
+                            <option value="">학급 선택</option>
+                            {[1,2,3].map(g => {
+                              const gc = classGroups.filter(c => c.grade === g);
+                              return gc.length > 0 ? (
+                                <optgroup key={g} label={`${g}학년`}>
+                                  {gc.map(c => <option key={c.id} value={c.id}>{g}학년 {c.classNumber}반</option>)}
+                                </optgroup>
+                              ) : null;
+                            })}
+                          </select>
+                        </td>
+                        <td style={tdStyle}>
+                          <input type="number" min={1} placeholder="번호" value={form.studentNumber}
+                            onChange={e => setAssignForm(p => ({ ...p, [s.id]: { ...form, studentNumber: e.target.value } }))}
+                            style={{ ...inputStyle, width: '70px' }} />
+                        </td>
+                        <td style={tdStyle}>
+                          <button disabled={!form.classGroupId || !form.studentNumber}
+                            onClick={async () => {
+                              const selectedClass = classGroups.find(c => c.id === Number(form.classGroupId));
+                              const confirmMsg = selectedClass
+                                ? `${selectedClass.grade}학년 ${selectedClass.classNumber}반 ${form.studentNumber}번으로 배정하시겠습니까?`
+                                : '배정하시겠습니까?';
+                              if (!confirm(confirmMsg)) return;
+                              try {
+                                await client.patch(`/students/${s.id}/assign`, { classGroupId: Number(form.classGroupId), studentNumber: Number(form.studentNumber) });
+                                await loadData();
+                              } catch { setError('배정 실패'); }
+                            }}
+                            style={btnStyle('#fff', !form.classGroupId || !form.studentNumber ? '#94a3b8' : '#1e5a99')}>
+                            배정
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )
         )}
 
         {schoolTab === 'classes' && (classGroups.length === 0 ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>등록된 학급이 없습니다.</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0', borderTop: '1px solid #f1f5f9' }}>
+          <div className="school-class-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0', borderTop: '1px solid #f1f5f9' }}>
             {[1, 2, 3].map((grade, gi) => {
               const gradeClasses = classGroups.filter(c => c.grade === grade).sort((a, b) => a.classNumber - b.classNumber);
               return (
-                <div key={grade} style={{ borderRight: gi < 2 ? '1px solid #e2e8f0' : 'none' }}>
+                <div key={grade} className="school-class-col" style={{ borderRight: gi < 2 ? '1px solid #e2e8f0' : 'none' }}>
                   <div style={{ padding: '10px 16px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e5a99' }}>{grade}학년</span>
@@ -270,7 +277,7 @@ export function SchoolManagementPage() {
                     <button onClick={() => { setAddingGrade(grade); setClassForm({ grade: String(grade), classNumber: '' }); }} style={btnStyle('#1e5a99', '#ebf4ff')}>+ 반 추가</button>
                   </div>
                   {addingGrade === grade && (
-                    <div style={{ padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                       <input style={{ ...inputStyle, width: '60px' }} type="number" min={1} placeholder="반"
                         value={classForm.classNumber} onChange={e => setClassForm(p => ({ ...p, classNumber: e.target.value }))} />
                       <button onClick={addClass} disabled={classSaving || !classForm.classNumber} style={btnStyle('#fff', '#1e5a99')}>
@@ -317,7 +324,6 @@ export function SchoolManagementPage() {
           </div>
         ))}
       </div>
-
     </div>
   );
 }

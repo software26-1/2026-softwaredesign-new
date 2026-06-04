@@ -18,6 +18,8 @@ const thStyle: React.CSSProperties = { padding: '11px 20px', textAlign: 'left', 
 const tdStyle: React.CSSProperties = { padding: '13px 20px', borderBottom: '1px solid #f8fafc', fontSize: '13px' };
 const selectStyle: React.CSSProperties = { padding: '9px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", outline: 'none', background: '#fff', width: '100%' };
 
+const TRUNCATE_LEN = 40;
+
 export function FeedbackPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [pick, setPick] = useState({ grade: '', classNumber: '', studentId: '' });
@@ -28,10 +30,10 @@ export function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
-  // 목록 필터(유형/날짜) + 페이지네이션
   const [listFilter, setListFilter] = useState({ category: '', startDate: '', endDate: '' });
   const [listPage, setListPage] = useState(1);
   const [detail, setDetail] = useState<Feedback | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
     studentService.search({}).then(res => setStudents(res as Student[])).catch(() => setStudents([]));
@@ -91,18 +93,27 @@ export function FeedbackPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .fb-type-grid { grid-template-columns: 1fr !important; }
+          .fb-filter-grid { grid-template-columns: 1fr !important; }
+          .fb-table-wrap { overflow-x: auto; }
+          .fb-form-pad { padding: 16px !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>피드백 작성</h1>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      <div className="fb-form-pad" style={{ background: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332', marginBottom: '20px' }}>피드백 작성</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
             <StudentFilterSelect students={students} value={pick} onChange={setPick} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="fb-type-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>피드백 유형</label>
               <select style={selectStyle} value={form.category} onChange={e => setForm({ ...form, category: e.target.value as FeedbackCategory })}>
@@ -116,13 +127,13 @@ export function FeedbackPage() {
             <textarea
               required value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
               placeholder="피드백 내용을 입력하세요"
-              style={{ width: '100%', padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", minHeight: '110px', resize: 'vertical', outline: 'none' }}
+              style={{ width: '100%', padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontFamily: "'Noto Sans KR', sans-serif", minHeight: '110px', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '10px' }}>공개 설정</label>
-            <div style={{ display: 'flex', gap: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               {([['isPublicToStudent', '학생에게 공개'], ['isPublicToParent', '학부모에게 공개']] as const).map(([key, label]) => (
                 <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer', color: '#475569' }}>
                   <input type="checkbox" checked={form[key]} onChange={e => setForm({ ...form, [key]: e.target.checked })} style={{ width: '15px', height: '15px' }} />
@@ -148,7 +159,7 @@ export function FeedbackPage() {
             {pick.studentId ? `${students.find(s => String(s.id) === pick.studentId)?.name ?? ''} 피드백 목록` : '피드백 목록 (학생 선택 시 표시)'}
           </h2>
           {pick.studentId && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div className="fb-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '5px' }}>유형</label>
                 <select style={selectStyle} value={listFilter.category} onChange={e => setListFilter({ ...listFilter, category: e.target.value })}>
@@ -175,35 +186,50 @@ export function FeedbackPage() {
           </p>
         ) : (
           <>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['작성일', '학생', '유형', '내용', '공개 대상', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
-            <tbody>
-              {pagedFeedbacks.map(fb => (
-                <tr key={fb.id}>
-                  <td style={{ ...tdStyle, color: '#94a3b8' }}>{fb.createdAt?.slice(0, 10)}</td>
-                  <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{fb.studentName}</td>
-                  <td style={tdStyle}>
-                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: catBg[fb.category], color: catColor[fb.category] }}>
-                      {CATEGORY_LABELS[fb.category]}
-                    </span>
-                  </td>
-                  <td style={{ ...tdStyle, maxWidth: '260px', color: '#475569' }}
-                    title="클릭하여 전체 내용 보기" onClick={() => setDetail(fb)}>
-                    <span style={{ display: 'inline-block', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom', cursor: 'pointer', color: fb.content && fb.content.length > 30 ? '#1e5a99' : '#475569', textDecoration: fb.content && fb.content.length > 30 ? 'underline' : 'none' }}>
-                      {fb.content}
-                    </span>
-                  </td>
-                  <td style={{ ...tdStyle, fontSize: '12px', color: '#64748b' }}>
-                    {[fb.isPublicToStudent && '학생', fb.isPublicToParent && '학부모'].filter(Boolean).join(' · ') || '비공개'}
-                  </td>
-                  <td style={{ ...tdStyle, display: 'flex', gap: '6px' }}>
-                    <Button size="sm" onClick={() => setDetail(fb)}>상세</Button>
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(fb.id)}>삭제</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="fb-table-wrap">
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr>{['작성일', '학생', '유형', '내용', '공개 대상', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+              <tbody>
+                {pagedFeedbacks.map(fb => {
+                  const isLong = (fb.content?.length ?? 0) > TRUNCATE_LEN;
+                  const isOpen = expandedId === fb.id;
+                  return (
+                    <tr key={fb.id}>
+                      <td style={{ ...tdStyle, color: '#94a3b8' }}>{fb.createdAt?.slice(0, 10)}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{fb.studentName}</td>
+                      <td style={tdStyle}>
+                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: catBg[fb.category], color: catColor[fb.category] }}>
+                          {CATEGORY_LABELS[fb.category]}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, color: '#475569' }}>
+                        <div>
+                          {isLong && !isOpen
+                            ? fb.content.slice(0, TRUNCATE_LEN) + '...'
+                            : fb.content}
+                          {isLong && (
+                            <button onClick={() => setExpandedId(isOpen ? null : fb.id)}
+                              style={{ display: 'block', marginTop: '2px', background: 'none', border: 'none', color: '#1e5a99', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: "'Noto Sans KR', sans-serif" }}>
+                              {isOpen ? '접기' : '더보기'}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ ...tdStyle, fontSize: '12px', color: '#64748b' }}>
+                        {[fb.isPublicToStudent && '학생', fb.isPublicToParent && '학부모'].filter(Boolean).join(' · ') || '비공개'}
+                      </td>
+                      <td style={{ ...tdStyle }}>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <Button size="sm" onClick={() => setDetail(fb)}>상세</Button>
+                          <Button size="sm" variant="danger" onClick={() => handleDelete(fb.id)}>삭제</Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <Pagination page={listPage} totalItems={filteredFeedbacks.length} pageSize={PAGE_SIZE} onChange={setListPage} />
           </>
         )}

@@ -134,12 +134,20 @@ export function MyPage() {
 
   return (
     <div>
+      <style>{`
+        .mypage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .mypage-profile { display: flex; align-items: center; gap: 28px; }
+        @media (max-width: 768px) {
+          .mypage-grid { grid-template-columns: 1fr; }
+          .mypage-profile { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+      `}</style>
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>마이페이지</h1>
       </div>
 
       {/* 프로필 */}
-      <div style={{ background: '#fff', borderRadius: '10px', padding: '28px 32px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '28px' }}>
+      <div className="mypage-profile" style={{ background: '#fff', borderRadius: '10px', padding: '28px 32px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: roleBg[user.role] ?? '#1e5a99', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '28px', fontWeight: 700, flexShrink: 0 }}>
           {user.name[0]}
         </div>
@@ -154,7 +162,7 @@ export function MyPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <div className="mypage-grid">
         {/* 비밀번호 변경 — admin만 */}
         {user.role === 'ADMIN' && (
           <Card title="비밀번호 변경">

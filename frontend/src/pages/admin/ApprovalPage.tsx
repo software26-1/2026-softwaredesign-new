@@ -110,11 +110,19 @@ export function ApprovalPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .ap-tab-row { flex-wrap: wrap !important; }
+          .ap-table-wrap { overflow-x: auto; }
+          .ap-modal-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>승인 대기</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
+      <div className="ap-tab-row" style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             style={{
@@ -141,80 +149,82 @@ export function ApprovalPage() {
         ) : items.length === 0 ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>대기 중인 신청이 없습니다.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-            <thead>
-              <tr>
-                {tab === 'join'
-                  ? ['이름', '이메일', '신청일', ''].map(h => <th key={h} style={thStyle}>{h}</th>)
-                  : [['신청자','15%'],['현재 학교','18%'],['이동 학교','18%'],['내 학교 승인','15%'],['상태','14%'],['','20%']].map(([h,w]) => <th key={h} style={{...thStyle, width: w}}>{h}</th>)
-                }
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  {tab === 'join' ? (
-                    <>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{item.requesterName}</td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{item.requesterEmail}</td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{item.createdAt?.slice(0, 10) ?? '—'}</td>
-                      <td style={tdStyle}>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => { setSelected(item); }}
-                            style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '12px', color: '#475569', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
-                            상세
-                          </button>
-                          <button onClick={() => handleApproveJoin(item.id)} disabled={actionLoading === item.id}
-                            style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#1e5a99', cursor: 'pointer', fontSize: '12px', color: '#fff', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
-                            승인
-                          </button>
-                          <button onClick={() => handleRejectJoin(item.id)} disabled={actionLoading === item.id}
-                            style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#fdecea', cursor: 'pointer', fontSize: '12px', color: '#c62828', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
-                            거절
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{item.requesterName}</td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{item.fromSchoolName ?? '—'}</td>
-                      <td style={{ ...tdStyle, color: '#1e5a99', fontWeight: 600 }}>{item.toSchoolName ?? '—'}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_STYLE[item.fromSchoolStatus ?? 'PENDING']?.color ?? '#64748b' }}>
-                        {STATUS_MAP[item.fromSchoolStatus ?? 'PENDING']}
-                      </td>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_STYLE[item.status]?.color ?? '#64748b' }}>
-                        {STATUS_MAP[item.status]}
-                      </td>
-                      <td style={tdStyle}>
-                        {item.fromSchoolStatus !== 'APPROVED' && item.fromSchoolStatus !== 'REJECTED' && (
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button onClick={() => handleTransfer(item.id, true)} disabled={actionLoading === item.id}
+          <div className="ap-table-wrap">
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <thead>
+                <tr>
+                  {tab === 'join'
+                    ? ['이름', '이메일', '신청일', ''].map(h => <th key={h} style={thStyle}>{h}</th>)
+                    : [['신청자','15%'],['현재 학교','18%'],['이동 학교','18%'],['내 학교 승인','15%'],['상태','14%'],['','20%']].map(([h,w]) => <th key={h} style={{...thStyle, width: w}}>{h}</th>)
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(item => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                    {tab === 'join' ? (
+                      <>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{item.requesterName}</td>
+                        <td style={{ ...tdStyle, color: '#64748b' }}>{item.requesterEmail}</td>
+                        <td style={{ ...tdStyle, color: '#64748b' }}>{item.createdAt?.slice(0, 10) ?? '—'}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <button onClick={() => { setSelected(item); }}
+                              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '12px', color: '#475569', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
+                              상세
+                            </button>
+                            <button onClick={() => handleApproveJoin(item.id)} disabled={actionLoading === item.id}
                               style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#1e5a99', cursor: 'pointer', fontSize: '12px', color: '#fff', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
                               승인
                             </button>
-                            <button onClick={() => handleTransfer(item.id, false)} disabled={actionLoading === item.id}
+                            <button onClick={() => handleRejectJoin(item.id)} disabled={actionLoading === item.id}
                               style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#fdecea', cursor: 'pointer', fontSize: '12px', color: '#c62828', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
                               거절
                             </button>
                           </div>
-                        )}
-                        {(item.fromSchoolStatus === 'APPROVED' || item.fromSchoolStatus === 'REJECTED') && (
-                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>처리 완료</span>
-                        )}
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{item.requesterName}</td>
+                        <td style={{ ...tdStyle, color: '#64748b' }}>{item.fromSchoolName ?? '—'}</td>
+                        <td style={{ ...tdStyle, color: '#1e5a99', fontWeight: 600 }}>{item.toSchoolName ?? '—'}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_STYLE[item.fromSchoolStatus ?? 'PENDING']?.color ?? '#64748b' }}>
+                          {STATUS_MAP[item.fromSchoolStatus ?? 'PENDING']}
+                        </td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_STYLE[item.status]?.color ?? '#64748b' }}>
+                          {STATUS_MAP[item.status]}
+                        </td>
+                        <td style={tdStyle}>
+                          {item.fromSchoolStatus !== 'APPROVED' && item.fromSchoolStatus !== 'REJECTED' && (
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              <button onClick={() => handleTransfer(item.id, true)} disabled={actionLoading === item.id}
+                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#1e5a99', cursor: 'pointer', fontSize: '12px', color: '#fff', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
+                                승인
+                              </button>
+                              <button onClick={() => handleTransfer(item.id, false)} disabled={actionLoading === item.id}
+                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#fdecea', cursor: 'pointer', fontSize: '12px', color: '#c62828', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 600 }}>
+                                거절
+                              </button>
+                            </div>
+                          )}
+                          {(item.fromSchoolStatus === 'APPROVED' || item.fromSchoolStatus === 'REJECTED') && (
+                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>처리 완료</span>
+                          )}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       <Modal isOpen={!!selected} title="가입 신청 상세" onClose={() => setSelected(null)}>
         {selected && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="ap-modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {[
               ['이름', selected.requesterName],
               ['이메일', selected.requesterEmail],

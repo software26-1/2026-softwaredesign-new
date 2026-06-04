@@ -57,7 +57,6 @@ export function AttendancePage() {
 
   useEffect(() => {
     if (!classGroupId || !date || students.length === 0) return;
-    // 날짜 변경 시 항상 PRESENT로 리셋 후 해당 날짜 데이터 로드
     const initial: Record<number, AttendanceRecord> = {};
     students.forEach(s => { initial[s.id] = { studentId: s.id, status: 'PRESENT' }; });
     setAttendance(initial);
@@ -109,7 +108,6 @@ export function AttendancePage() {
       }
       setMsg('출결이 저장되었습니다.');
       setTimeout(() => setMsg(''), 3000);
-      // reload to get IDs
       const r = await client.get<any[]>(`/attendances?class_group_id=${classGroupId}&date=${date}`);
       const list = Array.isArray(r.data) ? r.data : [];
       if (list.length > 0) {
@@ -133,11 +131,21 @@ export function AttendancePage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .att-stat-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .att-history-filter { flex-direction: column !important; align-items: stretch !important; }
+          .att-history-filter > div { width: 100% !important; }
+          .att-input-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+          .att-table-wrap { overflow-x: auto; }
+          .att-reason-input { width: 120px !important; }
+        }
+      `}</style>
+
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>출결 관리</h1>
       </div>
 
-      {/* 탭 */}
       <div style={{ display: 'flex', borderBottom: '2px solid #f1f5f9', marginBottom: '24px' }}>
         {([['input', '출결 입력'], ['history', '출결 현황']] as const).map(([tab, label]) => (
           <button key={tab} onClick={() => { setPageTab(tab); if (tab === 'history') loadHistory(); }}
@@ -149,7 +157,7 @@ export function AttendancePage() {
 
       {pageTab === 'history' && (
         <div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', marginBottom: '16px', background: '#fff', padding: '16px 20px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+          <div className="att-history-filter" style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', marginBottom: '16px', background: '#fff', padding: '16px 20px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>시작일</label>
               <input type="date" value={historyFrom} onChange={e => setHistoryFrom(e.target.value)} style={{ padding: '7px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }} />
@@ -160,8 +168,8 @@ export function AttendancePage() {
             </div>
             <button onClick={loadHistory} style={{ padding: '8px 16px', background: '#1e5a99', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif" }}>조회</button>
           </div>
-          <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="att-table-wrap" style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
               <thead><tr>{['번호', '이름', '출석', '결석', '지각', '조퇴', '병결', '특이사항'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
               <tbody>
                 {students.map(s => {
@@ -202,9 +210,9 @@ export function AttendancePage() {
       )}
 
       {pageTab === 'input' && <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
+      <div className="att-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {(Object.entries(STATUS_LABELS) as [AttendanceStatus, string][]).map(([status, label]) => (
-          <div key={status} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',  }}>
+          <div key={status} style={{ background: '#fff', borderRadius: '10px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, marginBottom: '6px' }}>{label}</p>
             <p style={{ fontSize: '24px', fontWeight: 700, color: statusStyle[status].color }}>{summary[status] ?? 0}명</p>
           </div>
@@ -212,8 +220,8 @@ export function AttendancePage() {
       </div>
 
       <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="att-input-header" style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1a2332' }}>출결 입력</h2>
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
               style={{ padding: '7px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }} />
@@ -229,38 +237,41 @@ export function AttendancePage() {
         {students.length === 0 ? (
           <p style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>학생이 없습니다.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['번호', '이름', '출결 상태', '사유'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
-            <tbody>
-              {students.map(s => {
-                const rec = attendance[s.id] ?? { studentId: s.id, status: 'PRESENT' as AttendanceStatus };
-                return (
-                  <tr key={s.id}>
-                    <td style={{ ...tdStyle, color: '#94a3b8' }}>{String(s.studentNumber).padStart(2, '0')}</td>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {(Object.entries(STATUS_LABELS) as [AttendanceStatus, string][]).map(([status, label]) => (
-                          <button key={status}
-                            onClick={() => setAttendance(prev => ({ ...prev, [s.id]: { ...rec, status } }))}
-                            style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, border: rec.status === status ? `2px solid ${statusStyle[status].color}` : '2px solid #e2e8f0', background: rec.status === status ? statusStyle[status].bg : '#fff', color: rec.status === status ? statusStyle[status].color : '#94a3b8', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif" }}>
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={tdStyle}>
-                      <input type="text" placeholder={rec.status === 'PRESENT' ? '출석은 사유 불필요' : '사유 입력 (선택)'}
-                        disabled={rec.status === 'PRESENT'}
-                        value={rec.status === 'PRESENT' ? '' : (rec.reason ?? '')}
-                        onChange={e => setAttendance(prev => ({ ...prev, [s.id]: { ...rec, reason: e.target.value } }))}
-                        style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', outline: 'none', width: '180px', background: rec.status === 'PRESENT' ? '#f8fafc' : '#fff', color: rec.status === 'PRESENT' ? '#cbd5e1' : '#1e293b' }} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="att-table-wrap">
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr>{['번호', '이름', '출결 상태', '사유'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+              <tbody>
+                {students.map(s => {
+                  const rec = attendance[s.id] ?? { studentId: s.id, status: 'PRESENT' as AttendanceStatus };
+                  return (
+                    <tr key={s.id}>
+                      <td style={{ ...tdStyle, color: '#94a3b8' }}>{String(s.studentNumber).padStart(2, '0')}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: '#1e293b' }}>{s.name}</td>
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {(Object.entries(STATUS_LABELS) as [AttendanceStatus, string][]).map(([status, label]) => (
+                            <button key={status}
+                              onClick={() => setAttendance(prev => ({ ...prev, [s.id]: { ...rec, status } }))}
+                              style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, border: rec.status === status ? `2px solid ${statusStyle[status].color}` : '2px solid #e2e8f0', background: rec.status === status ? statusStyle[status].bg : '#fff', color: rec.status === status ? statusStyle[status].color : '#94a3b8', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif" }}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <input type="text" placeholder={rec.status === 'PRESENT' ? '출석은 사유 불필요' : '사유 입력 (선택)'}
+                          disabled={rec.status === 'PRESENT'}
+                          value={rec.status === 'PRESENT' ? '' : (rec.reason ?? '')}
+                          onChange={e => setAttendance(prev => ({ ...prev, [s.id]: { ...rec, reason: e.target.value } }))}
+                          className="att-reason-input"
+                          style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', outline: 'none', width: '180px', background: rec.status === 'PRESENT' ? '#f8fafc' : '#fff', color: rec.status === 'PRESENT' ? '#cbd5e1' : '#1e293b' }} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
       </>}

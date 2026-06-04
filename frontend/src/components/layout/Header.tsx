@@ -40,9 +40,10 @@ function AppBadge() {
 interface HeaderProps {
   user: User;
   onLogout: () => void;
+  onMobileMenuToggle?: () => void;
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
+export function Header({ user, onLogout, onMobileMenuToggle }: HeaderProps) {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -91,6 +92,8 @@ export function Header({ user, onLogout }: HeaderProps) {
         .header-logo-text { display: none !important; }
         .header-btn { display: none !important; }
         .header-user-name { display: none !important; }
+        .header-user-pill { background: transparent !important; border: none !important; padding: 0 !important; }
+        .header-right { gap: 8px !important; }
       }
     `}</style>
     <header style={{
@@ -133,16 +136,17 @@ export function Header({ user, onLogout }: HeaderProps) {
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {/* 유저 정보 pill */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isDark ? '#1f2937' : '#f8fafc', padding: '6px 14px', borderRadius: '24px', border: `1px solid ${isDark ? '#374151' : '#e8ecf0'}`, lineHeight: 1 }}>
+        <div className="header-user-pill" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isDark ? '#1f2937' : '#f8fafc', padding: '6px 14px', borderRadius: '24px', border: `1px solid ${isDark ? '#374151' : '#e8ecf0'}`, lineHeight: 1 }}>
           <span className="header-user-name" style={{ fontSize: '13px', color: nameColor, fontWeight: 600, fontFamily: "'Noto Sans KR', sans-serif", lineHeight: 1 }}>{user.name}</span>
           <span style={{ fontSize: '11px', fontWeight: 600, color: roleBg[user.role] ?? '#1e5a99', background: isDark ? '#1f2937' : `${roleBg[user.role]}15`, padding: '3px 9px', borderRadius: '20px', fontFamily: "'Noto Sans KR', sans-serif", border: `1px solid ${roleBg[user.role]}40`, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
             {roleLabel[user.role] ?? user.role}
           </span>
         </div>
 
-        {/* 알림 벨 */}
+        {/* 알림 벨 + 햄버거 묶음 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowPopup(p => !p)}
@@ -161,7 +165,7 @@ export function Header({ user, onLogout }: HeaderProps) {
           {showPopup && (
             <>
               <div onClick={() => setShowPopup(false)} style={{ position: 'fixed', inset: 0, zIndex: 999 }} />
-              <div style={{ position: 'absolute', right: '-8px', top: '36px', width: '320px', background: popupBg, borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1000, overflow: 'hidden', border: `1px solid ${popupBorder}` }}>
+              <div style={{ position: 'fixed', right: '8px', top: '60px', width: 'min(320px, calc(100vw - 16px))', background: popupBg, borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1001, overflow: 'hidden', border: `1px solid ${popupBorder}` }}>
                 <div style={{ padding: '12px 16px', borderBottom: `1px solid ${popupBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: popupText }}>알림</span>
                   {unreadCount > 0 && <span style={{ fontSize: '11px', background: '#e53e3e', color: '#fff', borderRadius: '10px', padding: '2px 7px', fontWeight: 600 }}>{unreadCount}개 안읽음</span>}
@@ -193,6 +197,17 @@ export function Header({ user, onLogout }: HeaderProps) {
           )}
         </div>
 
+        {/* 햄버거 버튼 - 모바일 전용 */}
+        <button
+          className="mobile-hamburger"
+          onClick={onMobileMenuToggle}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', color: isDark ? '#9ca3af' : '#64748b' }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        </div>{/* 벨+햄버거 묶음 끝 */}
         <button className="header-btn" onClick={() => navigate('/mypage')}
           style={{ padding: '4px 12px', background: 'transparent', color: btnColor, border: `1px solid ${btnBorder}`, borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 500 }}>
           마이페이지

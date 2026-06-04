@@ -18,6 +18,7 @@ const typeColor: Record<string, string> = { ACADEMIC: '#1e5a99', GRADE: '#1e5a99
 
 export function ChildFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [child, setChild] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [curGrade, setCurGrade] = useState(1);
@@ -51,12 +52,10 @@ export function ChildFeedbackPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332' }}>
-            자녀 피드백{child ? ` · ${child.studentName ?? child.name}` : ''}
-          </h1>
-        </div>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2332', marginBottom: '12px' }}>
+          자녀 피드백{child ? ` · ${child.studentName ?? child.name}` : ''}
+        </h1>
         {child && <TermFilter curGrade={curGrade} selGrade={selGrade} semester={semester} onGrade={setSelGrade} onSemester={setSemester} />}
       </div>
 
@@ -83,7 +82,17 @@ export function ChildFeedbackPage() {
                 </div>
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>{f.createdAt?.slice(0, 10)}</span>
               </div>
-              <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.75', padding: '12px 16px', background: '#f8fafc', borderRadius: '6px' }}>{f.content}</p>
+              <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.75', padding: '12px 16px', background: '#f8fafc', borderRadius: '6px' }}>
+                {f.content && f.content.length > 60 ? (
+                  <>
+                    {expandedId === f.id ? f.content : f.content.slice(0, 60) + '...'}
+                    <button onClick={() => setExpandedId(expandedId === f.id ? null : f.id)}
+                      style={{ marginLeft: '6px', fontSize: '11px', color: '#1e5a99', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Noto Sans KR', sans-serif" }}>
+                      {expandedId === f.id ? '접기' : '더보기'}
+                    </button>
+                  </>
+                ) : f.content}
+              </div>
             </div>
           ))}
         </div>
