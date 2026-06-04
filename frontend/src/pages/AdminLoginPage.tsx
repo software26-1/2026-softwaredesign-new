@@ -135,6 +135,12 @@ export function AdminLoginPage() {
             {isLoading ? '로그인 중...' : '로그인'}
           </button>
         </form>
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <button onClick={() => navigate('/login')}
+            style={{ background: 'none', border: 'none', fontSize: '12px', color: '#64748b', cursor: 'pointer', textDecoration: 'underline' }}>
+            일반 로그인으로 돌아가기
+          </button>
+        </div>
       </div>
     </div>
   );

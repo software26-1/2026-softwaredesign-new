@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import client from '../api/client';
 
 function getRoleHome(role?: string) {
   switch (role) {
     case 'ADMIN':   return '/admin/users';
     case 'TEACHER': return '/dashboard';
-    case 'STUDENT': return '/my-grades';
+    case 'STUDENT': return '/dashboard';
     case 'PARENT':  return '/child-grades';
     default:        return '/dashboard';
   }
@@ -22,6 +23,7 @@ export function OAuthCallbackPage() {
     if (processed.current) return;
     processed.current = true;
 
+    const run = async () => {
     const params = new URLSearchParams(location.search);
     const accessToken = params.get('accessToken');
     const tempToken = params.get('tempToken');
@@ -39,6 +41,10 @@ export function OAuthCallbackPage() {
       navigate('/waiting-approval');
       return;
     }
+    if (status === 'inactive') {
+      navigate('/login?error=inactive');
+      return;
+    }
 
     if (!accessToken) {
       navigate('/login');
@@ -47,8 +53,14 @@ export function OAuthCallbackPage() {
 
     const userStr = params.get('user');
     const user = userStr ? JSON.parse(decodeURIComponent(userStr)) : null;
-    login(user, accessToken, refreshToken ?? '');
+    localStorage.setItem('accessToken', accessToken);
+    // 프로필 추가 정보(담당 학급 등) fetch
+    const profile = await client.get<any>('/users/me').then(r => r.data.data ?? r.data).catch(() => null);
+    const fullUser = profile ? { ...user, ...profile } : user;
+    login(fullUser, accessToken, refreshToken ?? '');
     navigate(getRoleHome(user?.role));
+    };
+    run();
   }, []);
 
   return (

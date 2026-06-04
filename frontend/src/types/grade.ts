@@ -1,9 +1,9 @@
-export type ExamType = 'MIDTERM' | 'FINAL' | 'TASK';
+export type ExamType = 'MIDTERM' | 'FINAL' | 'ASSIGNMENT';
 
 export const ExamTypeLabel: Record<ExamType, string> = {
   MIDTERM: '중간고사',
   FINAL: '기말고사',
-  TASK: '수행평가',
+  ASSIGNMENT: '수행평가',
 };
 
 export interface Course {
@@ -15,6 +15,13 @@ export interface Course {
   semester: number;
   classGroupId: number;
   classGroupName?: string;
+  grade?: number;
+  evaluationType?: string;
+  curriculumId?: number;
+  curriculumName?: string;
+  midtermRatio?: number;
+  finalRatio?: number;
+  taskRatio?: number;
 }
 
 export interface Grade {

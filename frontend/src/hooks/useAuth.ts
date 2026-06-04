@@ -24,6 +24,15 @@ export function useAuth() {
     setUser(userData);
   };
 
+  const updateUser = (partial: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...partial };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -31,5 +40,5 @@ export function useAuth() {
     setUser(null);
   };
 
-  return { user, isLoading, login, logout };
+  return { user, isLoading, login, logout, updateUser };
 }
