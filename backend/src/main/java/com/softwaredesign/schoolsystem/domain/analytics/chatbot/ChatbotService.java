@@ -1,90 +1,115 @@
 package com.softwaredesign.schoolsystem.domain.analytics.chatbot;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.softwaredesign.schoolsystem.domain.analytics.entity.FactStudentCourseTerm;
-import com.softwaredesign.schoolsystem.domain.analytics.entity.FactStudentLearningSummary;
-import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentCourseTermRepository;
-import com.softwaredesign.schoolsystem.domain.analytics.repository.FactStudentLearningSummaryRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softwaredesign.schoolsystem.domain.analytics.chatbot.dto.ChatMessage;
+import com.softwaredesign.schoolsystem.domain.analytics.entity.*;
+import com.softwaredesign.schoolsystem.domain.analytics.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-/**
- * AI chatbot grounded in a student's analytics facts. Builds a Korean system
- * prompt from the most recent learning summary + course-term rows and asks the
- * Claude API to answer using only that data.
- *
- * <p>If {@code ANTHROPIC_API_KEY} is unset/blank the service returns a graceful
- * fallback message instead of throwing, so the endpoint stays usable without an
- * API key configured.
- */
 @Service
 @RequiredArgsConstructor
 public class ChatbotService {
 
-    private static final String ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-    private static final String ANTHROPIC_VERSION = "2023-06-01";
-    private static final String MODEL = "claude-haiku-4-5";
+    private static final String GEMINI_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent";
     private static final int MAX_TOKENS = 1024;
-    private static final String NOT_CONFIGURED =
-            "AI 챗봇이 구성되지 않았습니다 (ANTHROPIC_API_KEY 미설정)";
+    private static final int MAX_HISTORY = 20;
+    private static final int MAX_RETRIES = 2;
+    private static final String NOT_CONFIGURED = "AI 챗봇이 구성되지 않았습니다 (GEMINI_API_KEY 미설정)";
 
-    @Value("${ANTHROPIC_API_KEY:}")
+    @Value("${GEMINI_API_KEY:}")
     private String apiKey;
 
     private final FactStudentLearningSummaryRepository learningSummaryRepository;
     private final FactStudentCourseTermRepository courseTermRepository;
-    // 내부에서 직접 생성 (RestClient.Builder 빈에 의존하지 않음 → 빈 부재로 인한 기동 실패 방지)
+    private final DimCourseRepository dimCourseRepository;
+    private final DimStudentRepository dimStudentRepository;
+    private final FactClassCourseStatsRepository classStatsRepository;
+    // 직접 생성 (RestClient.Builder 빈 없이도 기동 가능)
     private final RestClient restClient = RestClient.create();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional(readOnly = true)
-    public String chat(Long studentId, String question) {
+    public String chat(Long studentId, String question, List<ChatMessage> history, String role) {
         if (apiKey == null || apiKey.isBlank()) {
             return NOT_CONFIGURED;
         }
 
-        String systemPrompt = buildSystemPrompt(studentId);
+        String systemPrompt = buildSystemPrompt(studentId, role);
+        List<Map<String, Object>> contents = buildContents(history, question);
 
-        try {
-            JsonNode body = restClient
-                    .post()
-                    .uri(ANTHROPIC_URL)
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", ANTHROPIC_VERSION)
-                    .header("content-type", "application/json")
-                    .body(Map.of(
-                            "model", MODEL,
-                            "max_tokens", MAX_TOKENS,
-                            "system", systemPrompt,
-                            "messages", List.of(Map.of("role", "user", "content", question))))
-                    .retrieve()
-                    .body(JsonNode.class);
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("system_instruction", Map.of(
+                "parts", List.of(Map.of("text", systemPrompt))));
+        requestBody.put("contents", contents);
+        requestBody.put("generationConfig", Map.of("maxOutputTokens", MAX_TOKENS));
 
-            if (body != null && body.has("content") && body.get("content").isArray()
-                    && !body.get("content").isEmpty()) {
-                JsonNode text = body.get("content").get(0).get("text");
-                if (text != null) {
-                    return text.asText();
+        Exception lastEx = null;
+        for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                String responseBody = restClient
+                        .post()
+                        .uri(GEMINI_URL + "?key=" + apiKey)
+                        .header("content-type", "application/json")
+                        .body(requestBody)
+                        .retrieve()
+                        .body(String.class);
+
+                JsonNode body = objectMapper.readTree(responseBody);
+                if (body != null && body.has("candidates") && body.get("candidates").isArray()
+                        && !body.get("candidates").isEmpty()) {
+                    JsonNode text = body.get("candidates").get(0)
+                            .path("content").path("parts").get(0).path("text");
+                    if (!text.isMissingNode()) return text.asText();
+                }
+                return "AI 응답을 해석하지 못했습니다.";
+            } catch (Exception ex) {
+                lastEx = ex;
+                if (attempt < MAX_RETRIES) {
+                    try { Thread.sleep(1000L * (attempt + 1)); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
                 }
             }
-            return "AI 응답을 해석하지 못했습니다.";
-        } catch (RuntimeException ex) {
-            return "AI 챗봇 호출 중 오류가 발생했습니다: " + ex.getMessage();
         }
+        return "AI 챗봇 호출 중 오류가 발생했습니다: " + (lastEx != null ? lastEx.getMessage() : "알 수 없는 오류");
     }
 
-    /**
-     * Builds the Korean system prompt from the student's most recent term facts.
-     */
-    private String buildSystemPrompt(Long studentId) {
-        Optional<FactStudentLearningSummary> latest =
+    // Gemini uses "user"/"model" roles and "parts" array format
+    private List<Map<String, Object>> buildContents(List<ChatMessage> history, String question) {
+        List<Map<String, Object>> contents = new ArrayList<>();
+        if (history != null && !history.isEmpty()) {
+            int start = Math.max(0, history.size() - MAX_HISTORY);
+            history.subList(start, history.size()).forEach(h -> {
+                String geminiRole = "assistant".equals(h.role()) ? "model" : "user";
+                contents.add(Map.of(
+                        "role", geminiRole,
+                        "parts", List.of(Map.of("text", h.content()))));
+            });
+        }
+        contents.add(Map.of(
+                "role", "user",
+                "parts", List.of(Map.of("text", question))));
+        return contents;
+    }
+
+    private String buildSystemPrompt(Long studentId, String role) {
+        boolean isStaff = "TEACHER".equals(role) || "ADMIN".equals(role);
+
+        DimStudent dimStudent = dimStudentRepository.findById(studentId).orElse(null);
+        String studentName = dimStudent != null ? nz(dimStudent.getStudentName()) : "알 수 없음";
+        String classInfo = dimStudent != null
+                ? dimStudent.getGradeLevel() + "학년 " + nz(dimStudent.getClassName())
+                : "미배정";
+
+        Optional<FactStudentLearningSummary> latestOpt =
                 learningSummaryRepository.findByStudentKey(studentId).stream()
                         .max(Comparator
                                 .comparing(FactStudentLearningSummary::getYear,
@@ -93,44 +118,153 @@ public class ChatbotService {
                                         Comparator.nullsFirst(Comparator.naturalOrder())));
 
         StringBuilder sb = new StringBuilder();
-        sb.append("당신은 학교 학습 분석 도우미입니다. 아래 데이터에만 근거해 한국어로 답하세요. ")
-          .append("데이터에 없는 내용은 추측하지 말고 모른다고 답하세요.\n\n");
+        appendRoleInstructions(sb, role);
 
-        if (latest.isEmpty()) {
-            sb.append("학생 학습 요약: 분석 데이터가 없습니다.");
+        appendSection(sb, "학생 기본 정보");
+        sb.append("이름: ").append(studentName)
+          .append(" | 학년/반: ").append(classInfo).append("\n");
+
+        if (latestOpt.isEmpty()) {
+            sb.append("\n분석 데이터가 없습니다. ETL을 실행한 후 다시 시도하세요.\n");
             return sb.toString();
         }
 
-        FactStudentLearningSummary s = latest.get();
-        sb.append("학생 학습 요약 (").append(s.getYear()).append("년 ")
-          .append(s.getSemester()).append("학기):\n");
-        sb.append("- 전체 평균 점수: ").append(nz(s.getOverallAvgScore())).append("\n");
-        sb.append("- 석차: ").append(nz(s.getOverallClassRank())).append("\n");
-        sb.append("- 출석률: ").append(nz(s.getAttendanceRate())).append("%\n");
-        sb.append("- 결석 ").append(nz(s.getAbsentCount()))
-          .append("회, 지각 ").append(nz(s.getLateCount()))
-          .append("회, 조퇴 ").append(nz(s.getEarlyLeaveCount())).append("회\n");
-        sb.append("- 피드백 총 ").append(nz(s.getFeedbackTotal()))
-          .append("건 (긍정 ").append(nz(s.getPositiveFeedback()))
-          .append(", 부정 ").append(nz(s.getNegativeFeedback())).append(")\n");
-        sb.append("- 상담 횟수: ").append(nz(s.getCounselingCount())).append("\n");
-        sb.append("- 성적 추세: ").append(nz(s.getScoreTrend())).append("\n");
-        sb.append("- 위험 플래그: ").append(nz(s.getRiskFlag())).append("\n\n");
+        FactStudentLearningSummary s = latestOpt.get();
 
         List<FactStudentCourseTerm> courses = courseTermRepository
                 .findByStudentKeyAndYearAndSemester(studentId, s.getYear(), s.getSemester());
-        if (!courses.isEmpty()) {
-            sb.append("과목별 성적:\n");
+
+        // 과목명 일괄 조회
+        Set<Long> courseKeys = courses.stream()
+                .map(FactStudentCourseTerm::getCourseKey)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> courseNameMap = dimCourseRepository.findAllById(courseKeys).stream()
+                .collect(Collectors.toMap(
+                        DimCourse::getCourseKey,
+                        dc -> dc.getCourseName() != null ? dc.getCourseName() : "과목" + dc.getCourseKey()
+                ));
+
+        // 반 통계 (교사/관리자만, classGroupId 있을 때)
+        Map<Long, FactClassCourseStats> classStatsMap = Collections.emptyMap();
+        if (isStaff && dimStudent != null && dimStudent.getClassGroupId() != null) {
+            classStatsMap = classStatsRepository
+                    .findByClassGroupIdAndYearAndSemester(
+                            dimStudent.getClassGroupId(), s.getYear(), s.getSemester())
+                    .stream()
+                    .collect(Collectors.toMap(
+                            FactClassCourseStats::getCourseKey, Function.identity(), (a, b) -> a));
+        }
+
+        // 과목별 성적
+        appendSection(sb, s.getYear() + "년 " + s.getSemester() + "학기 과목별 성적");
+        if (courses.isEmpty()) {
+            sb.append("과목 데이터 없음\n");
+        } else {
+            if (isStaff) {
+                sb.append(String.format("%-12s %7s %7s %7s %7s %6s %6s %6s%n",
+                        "과목", "내점수", "반평균", "반최고", "반최저", "인원", "석차", "등급"));
+            } else {
+                sb.append(String.format("%-12s %7s %7s %6s %6s%n",
+                        "과목", "내점수", "반평균", "석차", "등급"));
+            }
             for (FactStudentCourseTerm c : courses) {
-                sb.append("- 과목ID ").append(c.getCourseKey())
-                  .append(": 평균 ").append(nz(c.getAvgScore()))
-                  .append(", 중간 ").append(nz(c.getMidtermScore()))
-                  .append(", 기말 ").append(nz(c.getFinalScore()))
-                  .append(", 수행 ").append(nz(c.getTaskScore()))
-                  .append("\n");
+                String name = courseNameMap.getOrDefault(c.getCourseKey(), "과목" + c.getCourseKey());
+                FactClassCourseStats cs = classStatsMap.get(c.getCourseKey());
+                String rankStr = c.getClassRank() != null ? c.getClassRank() + "위" : "-";
+                if (isStaff) {
+                    String maxStr = cs != null && cs.getMaxScore() != null ? cs.getMaxScore().toString() : "-";
+                    String minStr = cs != null && cs.getMinScore() != null ? cs.getMinScore().toString() : "-";
+                    String cntStr = cs != null && cs.getStudentCount() != null ? cs.getStudentCount() + "명" : "-";
+                    sb.append(String.format("%-12s %7s %7s %7s %7s %6s %6s %6s%n",
+                            name,
+                            nz(c.getAvgScore()), nz(c.getClassAvgScore()),
+                            maxStr, minStr, cntStr, rankStr, nz(c.getGradeLevel())));
+                    if (c.getAvgScore() != null && c.getClassAvgScore() != null
+                            && c.getAvgScore().compareTo(c.getClassAvgScore()) < 0) {
+                        sb.append("  [주의] ").append(name)
+                          .append(": 반평균 하회 (내 점수 ").append(c.getAvgScore())
+                          .append(" < 반평균 ").append(c.getClassAvgScore()).append(")\n");
+                    }
+                } else {
+                    sb.append(String.format("%-12s %7s %7s %6s %6s%n",
+                            name,
+                            nz(c.getAvgScore()), nz(c.getClassAvgScore()),
+                            rankStr, nz(c.getGradeLevel())));
+                }
             }
         }
+
+        // 학기 종합
+        appendSection(sb, "학기 종합");
+        sb.append("전체 평균: ").append(nz(s.getOverallAvgScore())).append("점");
+        if (isStaff) {
+            sb.append(" | 반 석차: ").append(nz(s.getOverallClassRank()));
+            sb.append(" | 성적 추세 지수: ").append(nz(s.getScoreTrend()));
+        }
+        sb.append("\n");
+
+        // 출결 현황
+        appendSection(sb, "출결 현황");
+        sb.append("출석률: ").append(nz(s.getAttendanceRate())).append("%")
+          .append(" | 결석 ").append(nz(s.getAbsentCount())).append("일")
+          .append(" | 지각 ").append(nz(s.getLateCount())).append("회")
+          .append(" | 조퇴 ").append(nz(s.getEarlyLeaveCount())).append("회\n");
+
+        // 피드백/상담 (학생은 건수만, 나머지는 상담 횟수 포함)
+        if ("STUDENT".equals(role)) {
+            appendSection(sb, "교사 피드백 요약");
+            sb.append("총 ").append(nz(s.getFeedbackTotal())).append("건")
+              .append(" (긍정 ").append(nz(s.getPositiveFeedback()))
+              .append("건 / 부정 ").append(nz(s.getNegativeFeedback())).append("건)\n");
+        } else {
+            appendSection(sb, "피드백 및 상담");
+            sb.append("피드백 총 ").append(nz(s.getFeedbackTotal())).append("건")
+              .append(" (긍정 ").append(nz(s.getPositiveFeedback()))
+              .append("건 / 부정 ").append(nz(s.getNegativeFeedback())).append("건)")
+              .append(" | 상담 ").append(nz(s.getCounselingCount())).append("회\n");
+        }
+
+        // 위험 지표 (교사/관리자만)
+        if (isStaff) {
+            appendSection(sb, "위험 지표");
+            boolean hasRisk = Boolean.TRUE.equals(s.getRiskFlag());
+            sb.append("위험 플래그: ").append(hasRisk ? "주의 필요" : "정상").append("\n");
+        }
+
         return sb.toString();
+    }
+
+    private void appendRoleInstructions(StringBuilder sb, String role) {
+        sb.append("══════════════════════════════\n");
+        sb.append("[공통 규칙]\n");
+        sb.append("- 반드시 한국어로 답하세요.\n");
+        sb.append("- 마크다운(##, **, -, * 등) 없이 일반 텍스트로만 답하세요.\n");
+        sb.append("- 아래 학습 데이터에만 근거해 간결하게 답하세요. 불필요한 전체 분석 보고서를 자동으로 생성하지 마세요.\n");
+        sb.append("- 질문이 학업/성적/출결/피드백과 무관하면 '학습 관련 질문만 답변드릴 수 있습니다'라고만 답하세요.\n");
+        sb.append("- 데이터에 없는 내용은 '데이터가 없습니다'라고 답하세요.\n");
+        switch (role) {
+            case "STUDENT" -> {
+                sb.append("- 학생 본인에게 친근하고 격려하는 톤으로 답하세요.\n");
+                sb.append("- 다른 학생 정보, 위험 지표, 상담 세부내용 질문에는 '해당 정보에 접근 권한이 없습니다'라고 답하세요.\n");
+            }
+            case "PARENT" -> {
+                sb.append("- 보호자에게 안심시키는 톤으로 답하세요.\n");
+                sb.append("- 다른 학생 정보, 위험 지표, 교내 행정 내용 질문에는 '해당 정보에 접근 권한이 없습니다'라고 답하세요.\n");
+            }
+            case "TEACHER" -> {
+                sb.append("- 교사에게 객관적이고 전문적으로 답하세요.\n");
+                sb.append("- 성적 추세, 위험 지표, 출결 패턴을 바탕으로 지도 방향을 제시하세요.\n");
+            }
+            case "ADMIN" -> {
+                sb.append("- 관리자에게 종합적이고 전문적으로 답하세요.\n");
+            }
+        }
+        sb.append("══════════════════════════════\n");
+    }
+
+    private static void appendSection(StringBuilder sb, String title) {
+        sb.append("\n── ").append(title).append(" ──\n");
     }
 
     private static String nz(Object value) {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import client from '../api/client';
+import type { ChatMessage } from '../types/analytics';
 
 interface Message {
   role: 'user' | 'bot';
@@ -42,6 +43,7 @@ export function ChatbotPage() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<ChatMessage[]>([]);
   const [studentId, setStudentId] = useState<number | null>(null);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
@@ -93,9 +95,16 @@ export function ChatbotPage() {
     setLoading(true);
 
     try {
-      const res = await client.post<any>(`/analytics/students/${effectiveStudentId}/chat`, { question: q });
+      const res = await client.post<any>(`/analytics/students/${effectiveStudentId}/chat`, { question: q, history });
       const answer = res.data?.answer ?? res.data?.data?.answer ?? '응답을 받지 못했습니다.';
       setMessages(prev => [...prev, { role: 'bot', text: answer }]);
+      setHistory(prev => {
+        const updated = [...prev,
+          { role: 'user' as const, content: q },
+          { role: 'assistant' as const, content: answer },
+        ];
+        return updated.slice(-20); // 최대 10턴 유지
+      });
     } catch (e: any) {
       setMessages(prev => [...prev, { role: 'bot', text: '오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }]);
     } finally {
@@ -133,6 +142,7 @@ export function ChatbotPage() {
               onChange={e => {
                 const id = Number(e.target.value) || null;
                 setSelectedStudentId(id);
+                setHistory([]);
                 if (id) setMessages([{ role: 'bot', text: `${students.find(s => s.id === id)?.name ?? '학생'} 학생의 학습 데이터를 불러왔습니다. 궁금한 점을 물어보세요.` }]);
               }}
               style={{ width: '100%', padding: '9px 12px', border: `1px solid ${border}`, borderRadius: '8px', fontSize: '14px', fontFamily: "'Noto Sans KR', sans-serif", background: inputBg, color: textPrimary, outline: 'none' }}

@@ -60,6 +60,11 @@ export interface ScoreDistribution {
   count: number;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface ChatResponse {
   answer: string;
 }

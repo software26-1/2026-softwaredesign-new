@@ -42,31 +42,6 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
 
-  backend:
-    build: ./backend
-    # 운영 배포 시 BACKEND_IMAGE 환경변수로 GHCR 이미지를 지정하면 해당 이미지를 pull 하여 사용한다.
-    image: ${BACKEND_IMAGE:-schoolsystem-backend:local}
-    container_name: school_backend
-    # Requires ./backend/.env with GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET.
-    env_file:
-      - ./backend/.env
-    environment:
-      # Override to talk to the compose services. Inside the compose network
-      # postgres listens on 5432 (5433 is only the host port mapping).
-      DB_URL: jdbc:postgresql://postgres:5432/school_mgmt
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: redis1234
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-      - redis
-      - kafka
-
   nginx:
     image: nginx:alpine
     container_name: school_nginx
@@ -75,7 +50,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - prometheus
 
   prometheus:
     image: prom/prometheus:latest
