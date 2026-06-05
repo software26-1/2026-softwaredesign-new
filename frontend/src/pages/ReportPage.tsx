@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+import { exportGradeAnalysisExcel, exportSchoolRecordExcel, exportCounselingExcel, exportFeedbackExcel, exportClassReportExcel } from '../utils/excelReport';
 import { Button } from '../components/common/Button';
 import { StudentFilterSelect } from '../components/common/StudentFilterSelect';
 import { studentService } from '../services/studentService';
@@ -631,84 +631,20 @@ export function ReportPage() {
     }
   };
 
-  const handleExcel = () => {
+  const handleExcel = async () => {
     if (!reportData) return;
-    const wb = XLSX.utils.book_new();
+    const student = students.find(s => String(s.id) === pick.studentId);
     const isMiddle = schoolType === 'MIDDLE';
-    const cHeader = ['과목', '중간', '기말', '수행', '원점수평균', '반평균', '등급', ...(isMiddle ? [] : ['석차'])];
-    const cRow = (c: StudentCourseTerm) => [
-      c.courseName ?? `과목${c.courseKey}`,
-      c.midtermScore ?? '-', c.finalScore ?? '-', c.taskScore ?? '-',
-      c.avgScore ?? '-', c.classAvgScore ?? '-', c.gradeLevel ?? '-',
-      ...(isMiddle ? [] : [c.classRank ?? '-']),
-    ];
-
-    if (reportData.type === 'grade-analysis' || reportData.type === 'school-record') {
-      const { student, year, courses1, courses2, summary1, summary2 } = reportData;
-      const mkSheet = (courses: StudentCourseTerm[], smry: any, label: string) => XLSX.utils.aoa_to_sheet([
-        [`${student.name} - ${year}학년도 ${label}`], [],
-        cHeader,
-        ...courses.map(cRow),
-        [],
-        ['평균', '-', '-', '-', computeRawAvg(courses), '-', computeGradeAvg(courses), ...(isMiddle ? [] : [smry?.overallClassRank ?? '-'])],
-      ]);
-      XLSX.utils.book_append_sheet(wb, mkSheet(courses1, summary1, '1학기'), '1학기 성적');
-      XLSX.utils.book_append_sheet(wb, mkSheet(courses2, summary2, '2학기'), '2학기 성적');
-      const smH = ['학기', '등급 평균', ...(isMiddle ? [] : ['반 석차']), '출석률', '결석', '지각'];
-      const smRow = (sm: any, label: string, cs: StudentCourseTerm[]) => sm
-        ? [label, computeGradeAvg(cs), ...(isMiddle ? [] : [sm.overallClassRank ?? '-']), sm.attendanceRate != null ? `${n1(sm.attendanceRate)}%` : '-', sm.absentCount ?? '-', sm.lateCount ?? '-']
-        : [label, '데이터 없음'];
-      const ws3 = XLSX.utils.aoa_to_sheet([[`${student.name} - ${year}학년도 학기별 종합`], [], smH, smRow(summary1, '1학기', courses1), smRow(summary2, '2학기', courses2)]);
-      XLSX.utils.book_append_sheet(wb, ws3, '학기별 종합');
-
-      if (reportData.type === 'school-record') {
-        const { counselings, feedbacks } = reportData;
-        const wsC = XLSX.utils.aoa_to_sheet([['날짜', '상담교사', '상담 내용', '다음 상담 계획'], ...counselings.map((c: Counseling) => [fmt(c.counseledAt), c.teacherName ?? '-', c.content ?? '', c.nextPlan ?? ''])]);
-        XLSX.utils.book_append_sheet(wb, wsC, '상담 내역');
-        const wsF = XLSX.utils.aoa_to_sheet([['날짜', '유형', '교사', '내용'], ...feedbacks.map((f: Feedback) => [fmt(f.createdAt), FeedbackCategoryLabel[f.category] ?? f.category, f.teacherName ?? '-', f.content ?? ''])]);
-        XLSX.utils.book_append_sheet(wb, wsF, '피드백');
-      }
-      XLSX.writeFile(wb, `${year}_${student.name}_${reportData.type === 'school-record' ? '종합보고서' : '성적분석'}.xlsx`);
-
+    if (reportData.type === 'grade-analysis') {
+      await exportGradeAnalysisExcel(student!, reportData.year, reportData.courses1, reportData.courses2, reportData.summary1, reportData.summary2, isMiddle);
+    } else if (reportData.type === 'school-record') {
+      await exportSchoolRecordExcel(student!, reportData.year, reportData.courses1, reportData.courses2, reportData.summary1, reportData.summary2, reportData.counselings, reportData.feedbacks, isMiddle);
     } else if (reportData.type === 'counseling') {
-      const { student, year, counselings } = reportData;
-      const ws = XLSX.utils.aoa_to_sheet([['날짜', '상담교사', '상담 내용', '다음 상담 계획'], ...counselings.map((c: Counseling) => [fmt(c.counseledAt), c.teacherName ?? '-', c.content ?? '', c.nextPlan ?? ''])]);
-      XLSX.utils.book_append_sheet(wb, ws, '상담 내역');
-      XLSX.writeFile(wb, `${year}_${student.name}_상담내역.xlsx`);
-
+      await exportCounselingExcel(student!, reportData.year, reportData.counselings);
     } else if (reportData.type === 'feedback') {
-      const { student, year, feedbacks } = reportData;
-      const cats = ['GRADE', 'BEHAVIOR', 'ATTENDANCE', 'ATTITUDE'] as const;
-      const wsStat = XLSX.utils.aoa_to_sheet([['유형', '건수'], ...cats.map(cat => [FeedbackCategoryLabel[cat], feedbacks.filter((f: Feedback) => f.category === cat).length])]);
-      XLSX.utils.book_append_sheet(wb, wsStat, '유형별 통계');
-      const wsList = XLSX.utils.aoa_to_sheet([['날짜', '유형', '교사', '내용'], ...feedbacks.map((f: Feedback) => [fmt(f.createdAt), FeedbackCategoryLabel[f.category] ?? f.category, f.teacherName ?? '-', f.content ?? ''])]);
-      XLSX.utils.book_append_sheet(wb, wsList, '피드백 목록');
-      XLSX.writeFile(wb, `${year}_${student.name}_피드백요약.xlsx`);
-
+      await exportFeedbackExcel(student!, reportData.year, reportData.feedbacks);
     } else if (reportData.type === 'class-report') {
-      const { year, semester, students: cls, classStats, coursesPerStudent } = reportData;
-      const sorted = [...cls].sort((a: Student, b: Student) => (a.studentNumber ?? 0) - (b.studentNumber ?? 0));
-      const statOf = (s: Student) => classStats.find((cs: any) => cs.studentId === s.id || cs.studentKey === s.id);
-      const courseOf = (s: Student) => coursesPerStudent[cls.indexOf(s)] ?? [];
-      const wsRows = sorted.map((s: Student) => {
-        const cs = statOf(s);
-        return [String(s.studentNumber ?? '').padStart(2, '0'), s.name, cs ? n1(cs.overallAvgScore) : '-', computeGradeAvg(courseOf(s)), ...(isMiddle ? [] : [cs?.overallClassRank ?? '-']), cs?.attendanceRate != null ? `${n1(cs.attendanceRate)}%` : '-'];
-      });
-      const wsH = ['번호', '이름', '원점수평균', '등급평균', ...(isMiddle ? [] : ['석차']), '출석률'];
-      const ws1 = XLSX.utils.aoa_to_sheet([[`${year}학년도 ${semester}학기 학급 성적`], [], wsH, ...wsRows]);
-      XLSX.utils.book_append_sheet(wb, ws1, '학생별 성적');
-      const validStats = classStats.filter((cs: any) => cs.overallAvgScore != null);
-      const attStats = classStats.filter((cs: any) => cs.attendanceRate != null);
-      const ws2 = XLSX.utils.aoa_to_sheet([
-        ['항목', '값'],
-        ['평균 원점수', validStats.length > 0 ? Math.round(validStats.reduce((s: number, cs: any) => s + Number(cs.overallAvgScore), 0) / validStats.length * 10) / 10 : '-'],
-        ['평균 출석률', attStats.length > 0 ? `${Math.round(attStats.reduce((s: number, cs: any) => s + Number(cs.attendanceRate), 0) / attStats.length * 10) / 10}%` : '-'],
-        ['총 결석', classStats.reduce((s: number, cs: any) => s + (cs.absentCount ?? 0), 0) + '일'],
-        ['총 지각', classStats.reduce((s: number, cs: any) => s + (cs.lateCount ?? 0), 0) + '회'],
-        ['총 조퇴', classStats.reduce((s: number, cs: any) => s + (cs.earlyLeaveCount ?? 0), 0) + '회'],
-      ]);
-      XLSX.utils.book_append_sheet(wb, ws2, '학급 출결');
-      XLSX.writeFile(wb, `${year}학년도_${semester}학기_학급성적.xlsx`);
+      await exportClassReportExcel(reportData.year, reportData.semester, reportData.students, reportData.classStats, reportData.coursesPerStudent, reportData.students[0]?.schoolName ?? '', isMiddle);
     }
   };
 
