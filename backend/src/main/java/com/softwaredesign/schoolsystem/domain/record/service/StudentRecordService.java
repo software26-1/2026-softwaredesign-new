@@ -35,11 +35,13 @@ public class StudentRecordService {
     private final EnrollmentRepository enrollmentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public StudentRecordResponse getByStudent(Long studentId, AuthUser authUser) {
+    public StudentRecordResponse getByStudent(Long studentId, Integer academicYear, Integer semester, AuthUser authUser) {
         studentId = resolveStudentId(studentId, authUser);
-        return studentRecordRepository.findByStudentId(studentId)
-                .map(StudentRecordResponse::from)
-                .orElse(null);
+        // 학년/학기 지정 시 해당 학기 학생부, 미지정 시 가장 최근 학생부(기존 호출 호환)
+        var record = (academicYear != null && semester != null)
+                ? studentRecordRepository.findByStudentIdAndAcademicYearAndSemester(studentId, academicYear, semester)
+                : studentRecordRepository.findTopByStudentIdOrderByAcademicYearDescSemesterDesc(studentId);
+        return record.map(StudentRecordResponse::from).orElse(null);
     }
 
     @Transactional
@@ -63,10 +65,11 @@ public class StudentRecordService {
 
         final int fYear = year;
         final int fSem = sem;
-        StudentRecord record = studentRecordRepository.findByStudentId(studentId)
+        // 학년/학기별 누적: 같은 학기 레코드가 있으면 수정, 없으면 새 학기 레코드 생성(기존 학기 보존)
+        StudentRecord record = studentRecordRepository
+                .findByStudentIdAndAcademicYearAndSemester(studentId, fYear, fSem)
                 .orElseGet(() -> studentRecordRepository.save(
                         StudentRecord.createStudentRecord(targetStudent, fYear, fSem)));
-        record.updateTerm(year, sem);
 
         record.updateStudentRecord(request.getAchievements(), request.getExtracurricular(),
                 request.getVolunteerHours(), request.getCareerAspirations());
@@ -75,7 +78,7 @@ public class StudentRecordService {
     }
 
     @Transactional
-    public void deleteByStudent(Long studentId, Long userId) {
+    public void deleteByStudent(Long studentId, Integer academicYear, Integer semester, Long userId) {
         Teacher teacher = teacherRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
         Student targetStudent = studentRepository.findById(studentId)
@@ -89,8 +92,11 @@ public class StudentRecordService {
             throw new AccessDeniedException("담임 교사만 자신의 반 학생 학생부를 삭제할 수 있습니다.");
         }
 
-        studentRecordRepository.findByStudentId(studentId)
-                .ifPresent(studentRecordRepository::delete);
+        // 학년/학기 지정 시 해당 학기만 삭제, 미지정 시 가장 최근 학생부 삭제(기존 호출 호환)
+        var record = (academicYear != null && semester != null)
+                ? studentRecordRepository.findByStudentIdAndAcademicYearAndSemester(studentId, academicYear, semester)
+                : studentRecordRepository.findTopByStudentIdOrderByAcademicYearDescSemesterDesc(studentId);
+        record.ifPresent(studentRecordRepository::delete);
         eventPublisher.publishEvent(new StudentRecordChangedEvent(studentId));
     }
 

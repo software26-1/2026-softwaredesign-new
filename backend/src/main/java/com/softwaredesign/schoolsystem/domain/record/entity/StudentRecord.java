@@ -16,8 +16,9 @@ public class StudentRecord extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false, unique = true)
+    // 학생부는 학년/학기별로 누적 보존한다(한 학생에 여러 레코드). 고유 키는 (student, academic_year, semester).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @Column(name = "academic_year", nullable = false)

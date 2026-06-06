@@ -62,7 +62,7 @@ export function StudentRecordPage() {
   useEffect(() => {
     if (!selectedId) { setRecord(null); return; }
     setLoading(true);
-    studentRecordService.get(Number(selectedId))
+    studentRecordService.get(Number(selectedId), year, semester)
       .then(data => {
         const r = data as RecordData;
         setRecord(r);
@@ -110,7 +110,7 @@ export function StudentRecordPage() {
     if (!selectedId || !record) return;
     if (!confirm(`${selectedStudent?.name ?? ''} 학생부 기록을 삭제하시겠습니까?`)) return;
     try {
-      await studentRecordService.remove(Number(selectedId));
+      await studentRecordService.remove(Number(selectedId), year, semester);
       setRecord(null);
       setForm({ achievements: '', extracurricular: '', volunteerHours: 0, careerAspirations: '' });
       setMsg('학생부 기록이 삭제되었습니다.');
