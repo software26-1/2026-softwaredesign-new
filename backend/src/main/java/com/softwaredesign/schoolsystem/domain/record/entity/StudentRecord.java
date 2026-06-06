@@ -16,8 +16,8 @@ public class StudentRecord extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @Column(name = "academic_year", nullable = false)
@@ -26,16 +26,16 @@ public class StudentRecord extends BaseEntity {
     @Column(nullable = false)
     private int semester;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "achievements", columnDefinition = "TEXT")
     private String achievements;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "extracurricular", columnDefinition = "TEXT")
     private String extracurricular;
 
-    @Column(nullable = false)
+    @Column(name = "volunteer_hours", nullable = false)
     private int volunteerHours = 0;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "career_aspirations", columnDefinition = "TEXT")
     private String careerAspirations;
 
     public static StudentRecord createStudentRecord(Student student, int academicYear, int semester) {

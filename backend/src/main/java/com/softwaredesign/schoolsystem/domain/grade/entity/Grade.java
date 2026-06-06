@@ -20,7 +20,7 @@ public class Grade extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id")
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,7 +34,7 @@ public class Grade extends BaseEntity {
     private BigDecimal maxScore;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
+    @Column(name = "grade_type", length = 20)
     private GradeType gradeType;
 
     public static Grade createGrade(Student student, Enrollment enrollment, BigDecimal score, GradeType gradeType) {

@@ -27,10 +27,10 @@ public class Counseling extends BaseEntity {
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @Column(nullable = false)
+    @Column(name = "counseled_at", nullable = false)
     private LocalDateTime counseledAt;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column(columnDefinition = "TEXT")

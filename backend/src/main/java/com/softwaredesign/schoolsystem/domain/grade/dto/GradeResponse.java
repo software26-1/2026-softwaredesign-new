@@ -23,13 +23,28 @@ public class GradeResponse {
     private final LocalDateTime updatedAt;
 
     public static GradeResponse from(Grade grade) {
+        // student_id 컬럼은 nullable (V22에서 추가됨) — enrollment 경유로 학생 정보 획득
+        Long studentId = grade.getStudent() != null
+                ? grade.getStudent().getId()
+                : (grade.getEnrollment() != null ? grade.getEnrollment().getStudent().getId() : null);
+        String studentName = grade.getStudent() != null
+                ? grade.getStudent().getUser().getName()
+                : (grade.getEnrollment() != null ? grade.getEnrollment().getStudent().getUser().getName() : null);
+
+        String teacherName = null;
+        if (grade.getEnrollment() != null && grade.getEnrollment().getCourse() != null
+                && grade.getEnrollment().getCourse().getTeacher() != null) {
+            teacherName = grade.getEnrollment().getCourse().getTeacher().getUser().getName();
+        }
+
         return new GradeResponse(
                 grade.getId(),
-                grade.getStudent().getId(),
-                grade.getStudent().getUser().getName(),
-                grade.getEnrollment().getId(),
-                grade.getEnrollment().getCourse().getCourseName(),
-                grade.getEnrollment().getCourse().getTeacher().getUser().getName(),
+                studentId,
+                studentName,
+                grade.getEnrollment() != null ? grade.getEnrollment().getId() : null,
+                grade.getEnrollment() != null && grade.getEnrollment().getCourse() != null
+                        ? grade.getEnrollment().getCourse().getCourseName() : null,
+                teacherName,
                 grade.getScore(),
                 grade.getGradeType(),
                 grade.getCreatedAt(),

@@ -45,7 +45,7 @@ public class GradeService {
 
         Grade grade = Grade.createGrade(student, enrollment, request.getScore(), request.getGradeType());
         gradeRepository.save(grade);
-        eventPublisher.publishEvent(new GradeChangedEvent(grade.getStudent().getId()));
+        eventPublisher.publishEvent(new GradeChangedEvent(student.getId()));
         return GradeResponse.from(grade);
     }
 
@@ -97,7 +97,8 @@ public class GradeService {
         validateTeacherPermission(grade.getEnrollment(), userId);
 
         grade.updateGrade(request.getScore(), request.getGradeType());
-        eventPublisher.publishEvent(new GradeChangedEvent(grade.getStudent().getId()));
+        Long studentId = resolveStudentId(grade);
+        eventPublisher.publishEvent(new GradeChangedEvent(studentId));
         return GradeResponse.from(grade);
     }
 
@@ -108,7 +109,7 @@ public class GradeService {
 
         validateTeacherPermission(grade.getEnrollment(), userId);
 
-        Long studentId = grade.getStudent().getId();
+        Long studentId = resolveStudentId(grade);
         gradeRepository.delete(grade);
         eventPublisher.publishEvent(new GradeChangedEvent(studentId));
     }
@@ -119,5 +120,19 @@ public class GradeService {
         if (!courseTeacherUserId.equals(userId)) {
             throw new AccessDeniedException("해당 과목 담당 교사만 성적을 관리할 수 있습니다.");
         }
+    }
+
+    /**
+     * grade.student는 nullable (V22에서 추가된 컬럼).
+     * student가 null이면 enrollment.student 경유로 ID를 획득한다.
+     */
+    private Long resolveStudentId(Grade grade) {
+        if (grade.getStudent() != null) {
+            return grade.getStudent().getId();
+        }
+        if (grade.getEnrollment() != null && grade.getEnrollment().getStudent() != null) {
+            return grade.getEnrollment().getStudent().getId();
+        }
+        return null;
     }
 }

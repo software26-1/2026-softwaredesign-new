@@ -27,15 +27,16 @@ public class GradeSummary extends BaseEntity {
     @JoinColumn(name = "class_group_id", nullable = false)
     private ClassGroup classGroup;
 
-    @Column(nullable = false)
+    @Column(name = "year", nullable = false)
     private int year;
 
-    @Column(nullable = false)
+    @Column(name = "semester", nullable = false)
     private int semester;
 
-    @Column(precision = 5, scale = 2)
+    @Column(name = "average_score", precision = 5, scale = 2, nullable = false)
     private BigDecimal averageScore;
 
+    @Column(name = "rank")
     private Integer rank;
 
     public static GradeSummary createGradeSummary(Student student, ClassGroup classGroup,

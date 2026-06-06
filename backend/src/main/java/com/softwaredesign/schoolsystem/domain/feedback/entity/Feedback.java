@@ -29,13 +29,13 @@ public class Feedback extends BaseEntity {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
+    @Column(name = "type", length = 20)
     private FeedbackType type;
 
-    @Column(nullable = false)
+    @Column(name = "visible_to_student", nullable = false)
     private boolean visibleToStudent = true;
 
-    @Column(nullable = false)
+    @Column(name = "visible_to_parent", nullable = false)
     private boolean visibleToParent = true;
 
     public static Feedback createFeedback(Teacher teacher, Student student, String content,
