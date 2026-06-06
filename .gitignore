@@ -25,3 +25,7 @@ backend/.env
 
 # 로컬 전용 프로젝트 컨텍스트 파일
 .project-context.md
+
+# DB 백업 파일 (db-backup.sh 산출물)
+backups/
+*.dump.gz
