@@ -45,7 +45,7 @@ function m(ws: ExcelJS.Worksheet, r1: number, c1: number, r2: number, c2: number
   ws.mergeCells(r1, c1, r2, c2);
 }
 
-function downloadBuffer(buf: ArrayBuffer | Buffer, filename: string) {
+function downloadBuffer(buf: ArrayBuffer, filename: string) {
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

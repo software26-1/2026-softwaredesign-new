@@ -85,6 +85,8 @@ class StudentRecordServiceTest {
 
     private StudentRecordCreateOrUpdateRequest request() {
         StudentRecordCreateOrUpdateRequest req = new StudentRecordCreateOrUpdateRequest();
+        ReflectionTestUtils.setField(req, "academicYear", 2026);
+        ReflectionTestUtils.setField(req, "semester", 1);
         ReflectionTestUtils.setField(req, "achievements", "수상 내역");
         ReflectionTestUtils.setField(req, "extracurricular", "동아리");
         ReflectionTestUtils.setField(req, "volunteerHours", 20);
@@ -96,10 +98,11 @@ class StudentRecordServiceTest {
     @DisplayName("학생부가 존재하면 조회된다")
     void getByStudent_success() {
         StudentRecord record = StudentRecord.createStudentRecord(student, 2026, 1);
-        given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
+        given(studentRecordRepository.findTopByStudentIdOrderByAcademicYearDescSemesterDesc(STUDENT_ID))
+                .willReturn(Optional.of(record));
 
         AuthUser authTeacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
-        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, authTeacher);
+        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, null, null, authTeacher);
 
         assertThat(response.getStudentId()).isEqualTo(STUDENT_ID);
         assertThat(response.getStudentName()).isEqualTo("이학생");
@@ -108,10 +111,11 @@ class StudentRecordServiceTest {
     @Test
     @DisplayName("학생부가 없으면 null 을 반환한다")
     void getByStudent_notFound() {
-        given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.empty());
+        given(studentRecordRepository.findTopByStudentIdOrderByAcademicYearDescSemesterDesc(STUDENT_ID))
+                .willReturn(Optional.empty());
 
         AuthUser authTeacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
-        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, authTeacher);
+        StudentRecordResponse response = studentRecordService.getByStudent(STUDENT_ID, null, null, authTeacher);
 
         assertThat(response).isNull();
     }
@@ -122,7 +126,8 @@ class StudentRecordServiceTest {
         StudentRecord record = StudentRecord.createStudentRecord(student, 2026, 1);
         given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
-        given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.of(record));
+        given(studentRecordRepository.findByStudentIdAndAcademicYearAndSemester(STUDENT_ID, 2026, 1))
+                .willReturn(Optional.of(record));
         givenHomeroomTeacher();
 
         StudentRecordResponse response = studentRecordService.upsert(STUDENT_ID, request(), TEACHER_USER_ID);
@@ -136,7 +141,8 @@ class StudentRecordServiceTest {
     @DisplayName("학생부가 없으면 새로 생성 후 저장한다")
     void upsert_createsNew() {
         given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
-        given(studentRecordRepository.findByStudentId(STUDENT_ID)).willReturn(Optional.empty());
+        given(studentRecordRepository.findByStudentIdAndAcademicYearAndSemester(STUDENT_ID, 2026, 1))
+                .willReturn(Optional.empty());
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(studentRecordRepository.save(any(StudentRecord.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
