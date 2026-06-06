@@ -59,7 +59,19 @@ export function NotificationPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // N3-2 준실시간: 알림 페이지를 열어둔 동안 30초마다 목록 자동 갱신.
+    // 탭이 숨겨지면 폴링을 멈추고, 복귀 시 즉시 갱신 후 재개한다.
+    const POLL_INTERVAL = 30000;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const start = () => { if (timer == null) timer = setInterval(load, POLL_INTERVAL); };
+    const stop = () => { if (timer != null) { clearInterval(timer); timer = null; } };
+    const onVisibility = () => { if (document.hidden) stop(); else { load(); start(); } };
+    start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { stop(); document.removeEventListener('visibilitychange', onVisibility); };
+  }, []);
 
   const visible = notifications.filter(n => !n.type || !muted.has(n.type));
   const unreadList = visible.filter(n => !n.isRead);

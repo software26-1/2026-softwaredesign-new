@@ -63,7 +63,34 @@ export function Header({ user, onLogout, onMobileMenuToggle }: HeaderProps) {
   useEffect(() => {
     fetchUnread();
     window.addEventListener('notification-updated', fetchUnread);
-    return () => window.removeEventListener('notification-updated', fetchUnread);
+
+    // N3-2 준실시간 알림: 30초 주기 폴링으로 새 알림을 자동 반영.
+    // 탭이 백그라운드(숨김)일 때는 폴링을 멈춰 불필요한 요청을 줄이고,
+    // 다시 화면으로 돌아오면 즉시 1회 갱신 후 폴링을 재개한다.
+    const POLL_INTERVAL = 30000;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => {
+      if (timer == null) timer = setInterval(fetchUnread, POLL_INTERVAL);
+    };
+    const stopPolling = () => {
+      if (timer != null) { clearInterval(timer); timer = null; }
+    };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        fetchUnread();
+        startPolling();
+      }
+    };
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('notification-updated', fetchUnread);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      stopPolling();
+    };
   }, []);
 
   const handleLogout = async () => {
