@@ -156,9 +156,11 @@ class GradeServiceTest {
     @Test
     @DisplayName("수강별 성적 목록을 조회한다")
     void getGradesByEnrollment_success() {
+        given(enrollmentRepository.findById(ENROLLMENT_ID)).willReturn(Optional.of(enrollment));
         given(gradeRepository.findByEnrollmentId(ENROLLMENT_ID)).willReturn(List.of(buildGrade()));
 
-        List<GradeResponse> result = gradeService.getGradesByEnrollment(ENROLLMENT_ID);
+        AuthUser teacher = new AuthUser(1L, "teacher@test.com", "TEACHER");
+        List<GradeResponse> result = gradeService.getGradesByEnrollment(ENROLLMENT_ID, teacher);
 
         assertThat(result).hasSize(1);
     }

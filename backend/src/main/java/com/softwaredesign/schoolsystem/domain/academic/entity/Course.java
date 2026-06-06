@@ -51,13 +51,20 @@ public class Course extends BaseEntity {
     @Column(nullable = false)
     private int taskRatio;
 
+    @Column(name = "grade")
+    private Integer grade;
+
+    @Column(name = "evaluation_type", length = 10)
+    private String evaluationType = "RELATIVE";
+
     @Column(nullable = false)
     private boolean isDeleted = false;
 
     public static Course createCourse(Curriculum curriculum, Teacher teacher, School school,
                                       CourseType courseType, String courseName,
                                       int academicYear, int semester,
-                                      int midtermRatio, int finalRatio, int taskRatio) {
+                                      int midtermRatio, int finalRatio, int taskRatio,
+                                      Integer grade, String evaluationType) {
         validateRatioSum(midtermRatio, finalRatio, taskRatio);
 
         Course course = new Course();
@@ -71,8 +78,12 @@ public class Course extends BaseEntity {
         course.midtermRatio = midtermRatio;
         course.finalRatio = finalRatio;
         course.taskRatio = taskRatio;
+        course.grade = grade;
+        course.evaluationType = evaluationType != null ? evaluationType : "RELATIVE";
         return course;
     }
+
+    public void assignTeacher(Teacher teacher) { this.teacher = teacher; }
 
     private static void validateRatioSum(int midtermRatio, int finalRatio, int taskRatio) {
         if (midtermRatio + finalRatio + taskRatio != 100) {

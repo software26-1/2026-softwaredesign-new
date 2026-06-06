@@ -4,9 +4,11 @@ import com.softwaredesign.schoolsystem.domain.counseling.dto.CounselingCreateReq
 import com.softwaredesign.schoolsystem.domain.counseling.dto.CounselingResponse;
 import com.softwaredesign.schoolsystem.domain.counseling.dto.CounselingUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.counseling.entity.Counseling;
+import com.softwaredesign.schoolsystem.auth.dto.AuthUser;
 import com.softwaredesign.schoolsystem.domain.counseling.repository.CounselingRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
+import com.softwaredesign.schoolsystem.domain.school.service.StudentAccessGuard;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
@@ -41,6 +43,8 @@ class CounselingServiceTest {
     private TeacherRepository teacherRepository;
     @Mock
     private StudentRepository studentRepository;
+    @Mock
+    private StudentAccessGuard studentAccessGuard;
 
     @InjectMocks
     private CounselingService counselingService;
@@ -66,6 +70,13 @@ class CounselingServiceTest {
         student = org.mockito.Mockito.mock(Student.class);
         lenient().when(student.getId()).thenReturn(STUDENT_ID);
         lenient().when(student.getUser()).thenReturn(studentUser);
+
+        // 같은 학교 격리 검증 통과용 (teacher/student 동일 학교)
+        com.softwaredesign.schoolsystem.domain.school.entity.School school =
+                org.mockito.Mockito.mock(com.softwaredesign.schoolsystem.domain.school.entity.School.class);
+        lenient().when(school.getId()).thenReturn(1L);
+        lenient().when(teacher.getSchool()).thenReturn(school);
+        lenient().when(student.getSchool()).thenReturn(school);
     }
 
     private Counseling buildCounseling() {
@@ -121,7 +132,8 @@ class CounselingServiceTest {
     void getByStudent_success() {
         given(counselingRepository.findByStudentId(STUDENT_ID)).willReturn(List.of(buildCounseling()));
 
-        List<CounselingResponse> result = counselingService.getByStudent(STUDENT_ID);
+        AuthUser teacher = new AuthUser(TEACHER_USER_ID, "teacher@test.com", "TEACHER");
+        List<CounselingResponse> result = counselingService.getByStudent(STUDENT_ID, teacher);
 
         assertThat(result).hasSize(1);
     }

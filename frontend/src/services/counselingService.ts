@@ -1,13 +1,12 @@
 import client from '../api/client';
 import type { Counseling, CounselingCreateRequest } from '../types/counseling';
-import type { ApiResponse } from '../types/common';
 
 export const counselingService = {
   async getByStudent(studentId: number): Promise<Counseling[]> {
-    const res = await client.get<ApiResponse<Counseling[]>>('/counselings', {
+    const res = await client.get<Counseling[]>('/counselings', {
       params: { student_id: studentId },
     });
-    return res.data.data;
+    return Array.isArray(res.data) ? res.data : [];
   },
 
   async getShared(params?: {
@@ -16,7 +15,7 @@ export const counselingService = {
     startDate?: string;
     endDate?: string;
   }): Promise<Counseling[]> {
-    const res = await client.get<ApiResponse<Counseling[]>>('/counselings/shared', {
+    const res = await client.get<Counseling[]>('/counselings/shared', {
       params: {
         student_name: params?.studentName || undefined,
         teacher_id: params?.teacherId || undefined,
@@ -24,17 +23,17 @@ export const counselingService = {
         end_date: params?.endDate ? `${params.endDate}T23:59:59` : undefined,
       },
     });
-    return res.data.data;
+    return Array.isArray(res.data) ? res.data : [];
   },
 
   async create(data: CounselingCreateRequest): Promise<Counseling> {
-    const res = await client.post<ApiResponse<Counseling>>('/counselings', data);
-    return res.data.data;
+    const res = await client.post<Counseling>('/counselings', data);
+    return res.data;
   },
 
   async update(id: number, data: Partial<CounselingCreateRequest>): Promise<Counseling> {
-    const res = await client.patch<ApiResponse<Counseling>>(`/counselings/${id}`, data);
-    return res.data.data;
+    const res = await client.patch<Counseling>(`/counselings/${id}`, data);
+    return res.data;
   },
 
   async delete(id: number): Promise<void> {

@@ -59,5 +59,15 @@ public class ClassGroupController {
         classGroupService.deleteClassGroup(classGroupId);
         return ResponseEntity.ok(Map.of("message", "삭제 완료"));
     }
+
+    // /api/class-groups/{classGroupId}/homeroom-teacher
+    @PatchMapping("/class-groups/{classGroupId}/homeroom-teacher")
+    public ResponseEntity<ClassGroupResponse> assignHomeroomTeacher(
+            @PathVariable Long classGroupId,
+            @RequestBody Map<String, Long> body) {
+        Long teacherId = body.get("teacherId");
+        ClassGroupResponse response = classGroupService.assignHomeroomTeacher(classGroupId, teacherId);
+        return ResponseEntity.ok(response);
+    }
 }
 

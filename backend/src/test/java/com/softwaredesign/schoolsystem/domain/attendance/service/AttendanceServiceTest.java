@@ -9,7 +9,9 @@ import com.softwaredesign.schoolsystem.domain.attendance.entity.Attendance;
 import com.softwaredesign.schoolsystem.domain.attendance.entity.AttendanceStatus;
 import com.softwaredesign.schoolsystem.domain.attendance.repository.AttendanceRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
+import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import com.softwaredesign.schoolsystem.domain.student.entity.Student;
 import com.softwaredesign.schoolsystem.domain.student.repository.StudentRepository;
 import com.softwaredesign.schoolsystem.domain.user.entity.User;
@@ -45,6 +47,8 @@ class AttendanceServiceTest {
     @Mock
     private ClassGroupRepository classGroupRepository;
     @Mock
+    private TeacherRepository teacherRepository;
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
@@ -52,10 +56,13 @@ class AttendanceServiceTest {
 
     private static final Long STUDENT_ID = 100L;
     private static final Long CLASS_GROUP_ID = 200L;
+    private static final Long TEACHER_USER_ID = 10L;
+    private static final Long TEACHER_ID = 5L;
     private static final LocalDate DATE = LocalDate.of(2026, 5, 1);
 
     private Student student;
     private ClassGroup classGroup;
+    private Teacher teacher;
 
     @BeforeEach
     void setUp() {
@@ -66,6 +73,17 @@ class AttendanceServiceTest {
         lenient().when(student.getUser()).thenReturn(studentUser);
         classGroup = org.mockito.Mockito.mock(ClassGroup.class);
         lenient().when(classGroup.getId()).thenReturn(CLASS_GROUP_ID);
+        lenient().when(student.getClassGroup()).thenReturn(classGroup);
+        teacher = org.mockito.Mockito.mock(Teacher.class);
+        lenient().when(teacher.getId()).thenReturn(TEACHER_ID);
+        lenient().when(teacher.getPosition()).thenReturn("HOMEROOM_SUBJECT");
+    }
+
+    /** 담임 권한 검증(createAttendance/update/delete 공통)을 통과하도록 스텁한다. */
+    private void givenHomeroomTeacher() {
+        given(teacherRepository.findByUserId(TEACHER_USER_ID)).willReturn(Optional.of(teacher));
+        given(classGroupRepository.findByHomeroomTeacherIdAndIsDeletedFalse(TEACHER_ID))
+                .willReturn(Optional.of(classGroup));
     }
 
     private Attendance buildAttendance(AttendanceStatus status) {
@@ -86,8 +104,9 @@ class AttendanceServiceTest {
     void createAttendance_success() {
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(classGroupRepository.findById(CLASS_GROUP_ID)).willReturn(Optional.of(classGroup));
+        givenHomeroomTeacher();
 
-        AttendanceResponse response = attendanceService.createAttendance(createRequest());
+        AttendanceResponse response = attendanceService.createAttendance(createRequest(), TEACHER_USER_ID);
 
         assertThat(response.getStatus()).isEqualTo(AttendanceStatus.PRESENT);
         verify(attendanceRepository).save(any(Attendance.class));
@@ -99,7 +118,7 @@ class AttendanceServiceTest {
     void createAttendance_studentNotFound() {
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> attendanceService.createAttendance(createRequest()))
+        assertThatThrownBy(() -> attendanceService.createAttendance(createRequest(), TEACHER_USER_ID))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("학생");
     }
@@ -110,7 +129,7 @@ class AttendanceServiceTest {
         given(studentRepository.findById(STUDENT_ID)).willReturn(Optional.of(student));
         given(classGroupRepository.findById(CLASS_GROUP_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> attendanceService.createAttendance(createRequest()))
+        assertThatThrownBy(() -> attendanceService.createAttendance(createRequest(), TEACHER_USER_ID))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("학급");
     }
@@ -193,8 +212,9 @@ class AttendanceServiceTest {
         AttendanceUpdateRequest req = new AttendanceUpdateRequest();
         ReflectionTestUtils.setField(req, "status", AttendanceStatus.ABSENT);
         ReflectionTestUtils.setField(req, "reason", "병결");
+        givenHomeroomTeacher();
 
-        AttendanceResponse response = attendanceService.updateAttendance(1L, req);
+        AttendanceResponse response = attendanceService.updateAttendance(1L, req, TEACHER_USER_ID);
 
         assertThat(response.getStatus()).isEqualTo(AttendanceStatus.ABSENT);
         assertThat(response.getReason()).isEqualTo("병결");
@@ -206,7 +226,7 @@ class AttendanceServiceTest {
     void updateAttendance_notFound() {
         given(attendanceRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> attendanceService.updateAttendance(1L, new AttendanceUpdateRequest()))
+        assertThatThrownBy(() -> attendanceService.updateAttendance(1L, new AttendanceUpdateRequest(), TEACHER_USER_ID))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -215,8 +235,9 @@ class AttendanceServiceTest {
     void deleteAttendance_success() {
         Attendance attendance = buildAttendance(AttendanceStatus.PRESENT);
         given(attendanceRepository.findById(1L)).willReturn(Optional.of(attendance));
+        givenHomeroomTeacher();
 
-        attendanceService.deleteAttendance(1L);
+        attendanceService.deleteAttendance(1L, TEACHER_USER_ID);
 
         verify(attendanceRepository).delete(attendance);
         verify(eventPublisher).publishEvent(any(Object.class));
@@ -227,7 +248,7 @@ class AttendanceServiceTest {
     void deleteAttendance_notFound() {
         given(attendanceRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> attendanceService.deleteAttendance(1L))
+        assertThatThrownBy(() -> attendanceService.deleteAttendance(1L, TEACHER_USER_ID))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

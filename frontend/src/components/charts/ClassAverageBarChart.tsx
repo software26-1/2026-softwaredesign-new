@@ -4,10 +4,11 @@ import type { ClassCourseStats } from '../../types/analytics';
 
 interface Props {
   stats: ClassCourseStats[];
+  courseMap?: Record<number, string>;
 }
 
-export function ClassAverageBarChart({ stats }: Props) {
-  const labels = stats.map((s) => s.courseName ?? `과목 ${s.courseKey}`);
+export function ClassAverageBarChart({ stats, courseMap }: Props) {
+  const labels = stats.map((s) => courseMap?.[s.courseKey] ?? s.courseName ?? `과목 ${s.courseKey}`);
   const data = {
     labels,
     datasets: [
@@ -15,7 +16,9 @@ export function ClassAverageBarChart({ stats }: Props) {
         label: '반 평균 점수',
         data: stats.map((s) => s.avgScore ?? 0),
         backgroundColor: '#1e5a99',
-        borderRadius: 4,
+        borderRadius: 0,
+        barPercentage: 0.65,
+        categoryPercentage: 0.75,
       },
     ],
   };

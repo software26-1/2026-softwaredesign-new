@@ -12,6 +12,8 @@ public class StudentRecordResponse {
     private final Long id;
     private final Long studentId;
     private final String studentName;
+    private final Integer academicYear;
+    private final Integer semester;
     private final String achievements;
     private final String extracurricular;
     private final int volunteerHours;
@@ -24,6 +26,8 @@ public class StudentRecordResponse {
                 record.getId(),
                 record.getStudent().getId(),
                 record.getStudent().getUser().getName(),
+                record.getAcademicYear(),
+                record.getSemester(),
                 record.getAchievements(),
                 record.getExtracurricular(),
                 record.getVolunteerHours(),

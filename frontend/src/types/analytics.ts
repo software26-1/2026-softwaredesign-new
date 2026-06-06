@@ -8,6 +8,7 @@ export interface LearningSummary {
   semester: number;
   overallAvgScore?: number;
   overallClassRank?: number;
+  overallYearRank?: number;
   attendanceRate?: number;
   absentCount?: number;
   lateCount?: number;
@@ -32,6 +33,7 @@ export interface StudentCourseTerm {
   weightedScore?: number;
   classRank?: number;
   classAvgScore?: number;
+  gradeLevel?: string;
 }
 
 export interface ScoreTrendPoint {
@@ -56,6 +58,11 @@ export interface ClassCourseStats {
 export interface ScoreDistribution {
   bucket: string;
   count: number;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export interface ChatResponse {

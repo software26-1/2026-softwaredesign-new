@@ -16,6 +16,7 @@ public class TeacherResponse {
     private final Long schoolId;
     private final String schoolName;
     private final String position;
+    private final Long curriculumId;
     private final LocalDateTime createdAt;
 
     public static TeacherResponse from(Teacher teacher) {
@@ -27,6 +28,7 @@ public class TeacherResponse {
                 teacher.getSchool() != null ? teacher.getSchool().getId() : null,
                 teacher.getSchool() != null ? teacher.getSchool().getSchoolName() : null,
                 teacher.getPosition(),
+                teacher.getCurriculumId(),
                 teacher.getCreatedAt()
         );
     }

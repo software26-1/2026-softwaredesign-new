@@ -51,6 +51,9 @@ public class FactStudentCourseTerm {
     @Column(name = "class_avg_score")
     private BigDecimal classAvgScore;
 
+    @Column(name = "grade_level")
+    private String gradeLevel;
+
     @Column(name = "last_refreshed_at")
     private LocalDateTime lastRefreshedAt;
 }

@@ -27,6 +27,10 @@ public class ClassGroup extends BaseEntity {
     @Column(nullable = false)
     private int academicYear;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "homeroom_teacher_id")
+    private Teacher homeroomTeacher;
+
     @Column(nullable = false)
     private boolean isDeleted = false;
 
@@ -41,9 +45,13 @@ public class ClassGroup extends BaseEntity {
         return classGroup;
     }
 
-    public void updateClassGroup(Integer grade, Integer classNumber) { // wrapper 클래스 -> null 허용
+    public void updateClassGroup(Integer grade, Integer classNumber) {
         if (grade != null) this.grade = grade;
         if (classNumber != null) this.classNumber = classNumber;
+    }
+
+    public void assignHomeroomTeacher(Teacher teacher) {
+        this.homeroomTeacher = teacher;
     }
 
     public void softDelete() {

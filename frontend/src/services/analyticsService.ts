@@ -5,6 +5,7 @@ import type {
   ScoreTrendPoint,
   ClassCourseStats,
   ScoreDistribution,
+  ChatMessage,
   ChatResponse,
   AtRiskStudent,
 } from '../types/analytics';
@@ -23,6 +24,11 @@ export const analyticsService = {
     const res = await client.get<StudentCourseTerm[]>(`/analytics/students/${studentId}/courses`, {
       params: { year, semester },
     });
+    return res.data;
+  },
+
+  async getAllStudentCourses(studentId: number): Promise<StudentCourseTerm[]> {
+    const res = await client.get<StudentCourseTerm[]>(`/analytics/students/${studentId}/courses/all`);
     return res.data;
   },
 
@@ -59,8 +65,8 @@ export const analyticsService = {
     return res.data;
   },
 
-  async chat(studentId: number, question: string): Promise<ChatResponse> {
-    const res = await client.post<ChatResponse>(`/analytics/students/${studentId}/chat`, { question });
+  async chat(studentId: number, question: string, history: ChatMessage[] = []): Promise<ChatResponse> {
+    const res = await client.post<ChatResponse>(`/analytics/students/${studentId}/chat`, { question, history });
     return res.data;
   },
 };

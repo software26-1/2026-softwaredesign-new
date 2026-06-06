@@ -29,4 +29,12 @@ public class UserProfileController {
             @RequestBody MyProfileUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(userProfileService.updateProfile(authUser.id(), request)));
     }
+
+    @PatchMapping("/curriculum")
+    public ResponseEntity<ApiResponse<Void>> updateCurriculum(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody java.util.Map<String, Long> body) {
+        userProfileService.updateCurriculum(authUser.id(), body.get("curriculumId"));
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
 }

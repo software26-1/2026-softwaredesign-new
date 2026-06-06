@@ -21,8 +21,10 @@ public class StudentRecordController {
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'STUDENT', 'PARENT')")
     public ResponseEntity<StudentRecordResponse> getStudentRecord(
             @RequestParam(name = "student_id", required = false) Long studentId,
+            @RequestParam(name = "academic_year", required = false) Integer academicYear,
+            @RequestParam(name = "semester", required = false) Integer semester,
             @AuthenticationPrincipal AuthUser authUser) {
-        return ResponseEntity.ok(studentRecordService.getByStudent(studentId, authUser));
+        return ResponseEntity.ok(studentRecordService.getByStudent(studentId, academicYear, semester, authUser));
     }
 
     @PostMapping
@@ -32,5 +34,16 @@ public class StudentRecordController {
             @RequestBody StudentRecordCreateOrUpdateRequest request,
             @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(studentRecordService.upsert(studentId, request, authUser.id()));
+    }
+
+    @DeleteMapping
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<java.util.Map<String, String>> deleteStudentRecord(
+            @RequestParam(name = "student_id") Long studentId,
+            @RequestParam(name = "academic_year", required = false) Integer academicYear,
+            @RequestParam(name = "semester", required = false) Integer semester,
+            @AuthenticationPrincipal AuthUser authUser) {
+        studentRecordService.deleteByStudent(studentId, academicYear, semester, authUser.id());
+        return ResponseEntity.ok(java.util.Map.of("message", "삭제 완료"));
     }
 }

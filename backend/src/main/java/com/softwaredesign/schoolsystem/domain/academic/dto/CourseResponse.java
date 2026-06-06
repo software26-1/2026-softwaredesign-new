@@ -24,18 +24,20 @@ public class CourseResponse {
     private final int midtermRatio;
     private final int finalRatio;
     private final int taskRatio;
+    private final Integer grade;
+    private final String evaluationType;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
     public static CourseResponse from(Course course) {
         return new CourseResponse(
                 course.getId(),
-                course.getCurriculum().getId(),
-                course.getCurriculum().getCurriculumName(),
-                course.getTeacher().getId(),
-                course.getTeacher().getUser().getName(),
-                course.getSchool().getId(),
-                course.getSchool().getSchoolName(),
+                course.getCurriculum() != null ? course.getCurriculum().getId() : null,
+                course.getCurriculum() != null ? course.getCurriculum().getCurriculumName() : null,
+                course.getTeacher() != null ? course.getTeacher().getId() : null,
+                course.getTeacher() != null ? course.getTeacher().getUser().getName() : null,
+                course.getSchool() != null ? course.getSchool().getId() : null,
+                course.getSchool() != null ? course.getSchool().getSchoolName() : null,
                 course.getCourseType(),
                 course.getCourseName(),
                 course.getAcademicYear(),
@@ -43,6 +45,8 @@ public class CourseResponse {
                 course.getMidtermRatio(),
                 course.getFinalRatio(),
                 course.getTaskRatio(),
+                course.getGrade(),
+                course.getEvaluationType(),
                 course.getCreatedAt(),
                 course.getUpdatedAt()
         );

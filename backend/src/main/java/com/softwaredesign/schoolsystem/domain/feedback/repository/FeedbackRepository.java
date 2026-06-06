@@ -10,4 +10,5 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     List<Feedback> findByStudentId(Long studentId);
     List<Feedback> findByTeacherId(Long teacherId);
     List<Feedback> findByStudentIdAndType(Long studentId, FeedbackType type);
+    long countByStudentId(Long studentId);
 }

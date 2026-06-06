@@ -16,9 +16,16 @@ public class StudentRecord extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false, unique = true)
+    // 학생부는 학년/학기별로 누적 보존한다(한 학생에 여러 레코드). 고유 키는 (student, academic_year, semester).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
+
+    @Column(name = "academic_year", nullable = false)
+    private int academicYear;
+
+    @Column(nullable = false)
+    private int semester;
 
     @Column(columnDefinition = "TEXT")
     private String achievements;
@@ -32,10 +39,17 @@ public class StudentRecord extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String careerAspirations;
 
-    public static StudentRecord createStudentRecord(Student student) {
+    public static StudentRecord createStudentRecord(Student student, int academicYear, int semester) {
         StudentRecord record = new StudentRecord();
         record.student = student;
+        record.academicYear = academicYear;
+        record.semester = semester;
         return record;
+    }
+
+    public void updateTerm(int academicYear, int semester) {
+        this.academicYear = academicYear;
+        this.semester = semester;
     }
 
     public void updateStudentRecord(String achievements, String extracurricular,

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record StudentCourseTermResponse(
         Long studentKey,
         Long courseKey,
+        String courseName,
         Integer year,
         Integer semester,
         BigDecimal avgScore,
@@ -17,12 +18,18 @@ public record StudentCourseTermResponse(
         BigDecimal weightedScore,
         Integer classRank,
         BigDecimal classAvgScore,
+        String gradeLevel,
         LocalDateTime lastRefreshedAt
 ) {
     public static StudentCourseTermResponse from(FactStudentCourseTerm e) {
+        return from(e, null);
+    }
+
+    public static StudentCourseTermResponse from(FactStudentCourseTerm e, String courseName) {
         return new StudentCourseTermResponse(
                 e.getStudentKey(),
                 e.getCourseKey(),
+                courseName,
                 e.getYear(),
                 e.getSemester(),
                 e.getAvgScore(),
@@ -32,6 +39,7 @@ public record StudentCourseTermResponse(
                 e.getWeightedScore(),
                 e.getClassRank(),
                 e.getClassAvgScore(),
+                e.getGradeLevel(),
                 e.getLastRefreshedAt()
         );
     }

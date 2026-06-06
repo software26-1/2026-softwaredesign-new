@@ -4,9 +4,11 @@ import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupCreateRequest
 import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupResponse;
 import com.softwaredesign.schoolsystem.domain.school.dto.ClassGroupUpdateRequest;
 import com.softwaredesign.schoolsystem.domain.school.entity.ClassGroup;
+import com.softwaredesign.schoolsystem.domain.school.entity.Teacher;
 import com.softwaredesign.schoolsystem.domain.school.repository.ClassGroupRepository;
 import com.softwaredesign.schoolsystem.domain.school.entity.School;
 import com.softwaredesign.schoolsystem.domain.school.repository.SchoolRepository;
+import com.softwaredesign.schoolsystem.domain.school.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ public class ClassGroupService {
 
     private final ClassGroupRepository classGroupRepository;
     private final SchoolRepository schoolRepository;
+    private final TeacherRepository teacherRepository;
 
     public List<ClassGroup> getClassGroups(Long schoolId, Integer academicYear, Integer grade) {
         if (academicYear != null && grade != null) {
@@ -59,6 +62,20 @@ public class ClassGroupService {
         ClassGroup classGroup = classGroupRepository.findById(classGroupId)
                 .orElseThrow(() -> new IllegalArgumentException("학급을 찾을 수 없습니다."));
         classGroup.softDelete();
+    }
+
+    @Transactional
+    public ClassGroupResponse assignHomeroomTeacher(Long classGroupId, Long teacherId) {
+        ClassGroup classGroup = classGroupRepository.findById(classGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("학급을 찾을 수 없습니다."));
+        if (teacherId == null) {
+            classGroup.assignHomeroomTeacher(null);
+        } else {
+            Teacher teacher = teacherRepository.findById(teacherId)
+                    .orElseThrow(() -> new IllegalArgumentException("교사를 찾을 수 없습니다."));
+            classGroup.assignHomeroomTeacher(teacher);
+        }
+        return ClassGroupResponse.from(classGroup);
     }
 
 }

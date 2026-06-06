@@ -18,4 +18,6 @@ public class CourseUpdateRequest {
     private Integer finalRatio;
 
     private Integer taskRatio;
+
+    private Long teacherId;
 }

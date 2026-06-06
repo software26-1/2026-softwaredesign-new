@@ -5,6 +5,7 @@ export interface User {
   loginId: string;
   name: string;
   role: UserRole;
+  schoolType?: 'MIDDLE' | 'HIGH';
 }
 
 export interface Teacher extends User {

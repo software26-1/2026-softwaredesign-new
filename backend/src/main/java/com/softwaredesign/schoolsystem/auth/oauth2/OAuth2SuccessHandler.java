@@ -48,6 +48,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth/callback")
                     .queryParam("status", "waiting_approval")
                     .build().toUriString();
+        } else if (user.getStatus() == UserStatus.INACTIVE) {
+            // 비활성화된 계정: 로그인 불가
+            redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth/callback")
+                    .queryParam("status", "inactive")
+                    .build().toUriString();
         } else {
             // 기존 유저: access + refresh 발급
             String refreshToken = jwtProvider.createRefreshToken();

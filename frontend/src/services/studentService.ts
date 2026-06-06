@@ -3,7 +3,13 @@ import type { Student, StudentDetail, StudentSearchParams } from '../types/stude
 
 export const studentService = {
   async search(params: StudentSearchParams): Promise<StudentDetail[]> {
-    const res = await client.get<StudentDetail[]>('/students', { params });
+    const res = await client.get<StudentDetail[]>('/students', {
+      params: {
+        grade: params.grade || undefined,
+        class_number: params.classNumber || undefined,
+        name: params.name || undefined,
+      },
+    });
     return res.data;
   },
 
