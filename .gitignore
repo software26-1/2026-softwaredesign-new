@@ -29,3 +29,6 @@ backend/.env
 # DB 백업 파일 (db-backup.sh 산출물)
 backups/
 *.dump.gz
+
+# 요구사항 검수 보고서 - 로컬 전용 (내부 검수 자료)
+docs/요구사항_검수_보고서_*.md
